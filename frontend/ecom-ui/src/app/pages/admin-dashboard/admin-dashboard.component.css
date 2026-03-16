@@ -1,0 +1,114 @@
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+}
+
+.small {
+  margin: 6px 0 0;
+  opacity: 0.8;
+}
+
+.tabs {
+  margin-top: 16px;
+}
+
+.info {
+  margin-top: 16px;
+}
+
+.error {
+  margin-top: 16px;
+  color: #b00020;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.col {
+  flex: 1 1 520px;
+  min-width: 320px;
+}
+
+.card {
+  padding: 10px;
+}
+
+.mt-12 {
+  margin-top: 12px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.card-title {
+  margin: 0;
+}
+
+.filters {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.w-280 { width: 280px; }
+.w-260 { width: 260px; }
+.w-240 { width: 240px; }
+
+.table-wrap {
+  margin-top: 10px;
+  overflow: auto;
+  border-radius: 12px;
+}
+
+.full {
+  width: 100%;
+}
+
+.col-actions {
+  width: 180px;
+  white-space: nowrap;
+}
+
+.ml-8 {
+  margin-left: 8px;
+}
+
+/* fallback for Orders plain table (your old style) */
+table.plain {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.plain th,
+table.plain td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+/* mat-table spacing */
+th.mat-mdc-header-cell,
+td.mat-mdc-cell {
+  padding: 10px 12px;
+}
+
+tr.mat-mdc-row:hover td.mat-mdc-cell {
+  background: rgba(0,0,0,0.03);
+}

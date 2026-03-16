@@ -1,0 +1,107 @@
+.dashboard-shell{
+  /* break out of the 1100px container used by the shop pages */
+  width: calc(100vw - 32px);
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 16px;
+
+  min-height: calc(100vh - 16px);
+  display:flex;
+  flex-direction:column;
+  gap: 12px;
+
+  /* Avoid any horizontal layout shift */
+  overflow-x: hidden;
+}
+
+.header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.h{font-size:22px;font-weight:800;}
+.sub{font-size:13px;opacity:.8;max-width:900px;line-height:1.35;}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+
+.filters{padding:12px}
+.filters-grid{display:grid;grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 1fr; gap:12px; align-items:center}
+.filters-grid .spinner{display:flex;justify-content:flex-end}
+.filters-grid.busy{opacity:.85}
+
+.tabs{background: transparent; flex: 1; min-height: 0;}
+.tab{padding: 12px 0; height: 100%;}
+
+/* Make tab content fill remaining space */
+:host ::ng-deep .tabs .mat-mdc-tab-body-wrapper{flex:1; min-height:0;}
+:host ::ng-deep .tabs .mat-mdc-tab-body{height:100%;}
+:host ::ng-deep .tabs .mat-mdc-tab-body-content{
+  height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-right:2px;
+
+  /* KEY: keep width stable when scrollbars appear */
+  scrollbar-gutter: stable;
+}
+
+/* ================== LAYOUT GRIDS ================== */
+.grid2{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap:16px;
+  margin-top:16px;
+  align-items:stretch;
+}
+.grid1{display:grid;grid-template-columns: 1fr; gap:16px; margin-top:16px}
+
+.card{padding:12px;margin-top:16px}
+.title{font-weight:800;margin-bottom:6px}
+.tablewrap{overflow:auto;}
+.right{text-align:right}
+.busy{display:flex;justify-content:center;padding:30px}
+
+.pager{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.ptext{opacity:.85;font-size:13px}
+
+@media (max-width:1200px){
+  .filters-grid{grid-template-columns: 1.4fr 1fr 1fr;}
+}
+@media (max-width:760px){
+  .filters-grid{grid-template-columns: 1fr;}
+}
+
+/* ================== HARD CHART LOCKING ==================
+   This is the part that prevents “hover stretching”.
+   It forces chart cards to have a stable height and prevents canvas reflow.
+*/
+
+/* Ensure the chart component participates nicely in grid sizing */
+app-chartjs-card.chart-card{
+  display:block;
+  min-width:0;       /* avoids flex/grid overflow causing resize */
+}
+
+/* Give every chart a fixed/locked vertical space (responsive but stable) */
+:host ::ng-deep app-chartjs-card.chart-card .card,
+:host ::ng-deep app-chartjs-card.chart-card mat-card{
+  height: clamp(320px, 42vh, 520px);
+  display:flex;
+  flex-direction:column;
+}
+
+/* Compact charts (doughnut/pie) can be shorter but still locked */
+:host ::ng-deep app-chartjs-card.chart-card-compact .card,
+:host ::ng-deep app-chartjs-card.chart-card-compact mat-card{
+  height: clamp(300px, 38vh, 460px);
+}
+
+/* Lock the internal chart host (if you have .chart-host inside chartjs-card) */
+:host ::ng-deep app-chartjs-card .chart-host{
+  position:relative;
+  flex: 1 1 auto;
+  min-height:0;
+  overflow:hidden;  /* prevents tooltip overflow changing layout */
+}
+
+/* Force the canvas to fill its container and never “auto-resize” on hover */
+:host ::ng-deep app-chartjs-card canvas{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+}

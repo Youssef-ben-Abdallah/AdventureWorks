@@ -1,0 +1,42 @@
+<mat-card style="max-width:520px;margin:0 auto;">
+  <mat-card-header>
+    <mat-card-title>{{ mode === 'login' ? 'Login' : 'Create account' }}</mat-card-title>
+    <mat-card-subtitle>JWT authentication + ASP.NET Identity</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <mat-button-toggle-group [value]="mode" (change)="switchMode($event.value)" style="margin:10px 0 16px;">
+      <mat-button-toggle value="login" data-testid="mode-login">Login</mat-button-toggle>
+      <mat-button-toggle value="register" data-testid="mode-register">Register</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline" style="width:100%;">
+        <mat-label>Username</mat-label>
+        <input matInput formControlName="username" data-testid="login-username" />
+        <mat-error *ngIf="usernameCtrl?.touched && usernameCtrl?.invalid">Username required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field *ngIf="mode==='register'" appearance="outline" style="width:100%;">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" data-testid="register-email" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" style="width:100%;">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" data-testid="login-password" />
+        <mat-error *ngIf="passwordCtrl?.touched && passwordCtrl?.invalid">Password required</mat-error>
+      </mat-form-field>
+
+      <div class="error" *ngIf="error" style="margin-top:10px;">{{ error }}</div>
+
+      <button mat-raised-button color="primary" type="submit" [disabled]="loading || form.invalid" style="margin-top:12px;" data-testid="auth-submit">
+        {{ loading ? '...' : (mode==='login' ? 'Login' : 'Create account') }}
+      </button>
+    </form>
+
+    <p class="small" style="margin-top:14px;">
+      Dev admin: <b>admin</b> / <b>Admin123!</b>
+    </p>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,59 @@
+<div class="page-head">
+  <div>
+    <h1 style="margin:0;">Cart</h1>
+    <div class="small" style="margin-top:6px;">Review your items and checkout.</div>
+  </div>
+  <div>
+    <button mat-stroked-button color="warn" (click)="cart.clear()" [disabled]="items.length===0" data-testid="cart-clear">Clear</button>
+  </div>
+</div>
+
+<div *ngIf="error" class="error" style="margin-top:12px;">{{ error }}</div>
+
+<mat-card *ngIf="items.length===0" style="margin-top:14px;">
+  <mat-card-content>
+    Your cart is empty.
+    <div style="margin-top:10px;">
+      <a mat-raised-button color="primary" routerLink="/products">Browse products</a>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<div class="cart-grid" *ngIf="items.length>0">
+  <mat-card class="items">
+    <mat-card-content>
+      <div class="item cart-item" *ngFor="let i of items">
+        <img class="thumb" [src]="imgUrl(i.product.imageFileName)" [alt]="i.product.name" />
+        <div class="info">
+          <div class="name">{{ i.product.name }}</div>
+          <div class="small">{{ i.product.categoryName }} / {{ i.product.subCategoryName }}</div>
+          <div class="price">{{ i.product.price | number:'1.2-2' }}</div>
+        </div>
+        <div class="qty">
+          <button mat-icon-button (click)="dec(i)" [disabled]="i.qty<=1" data-testid="cart-qty-dec"><mat-icon>remove</mat-icon></button>
+          <mat-form-field appearance="outline" class="qtyField">
+            <input matInput type="number" [ngModel]="i.qty" (ngModelChange)="update(i,$event)" min="1" data-testid="cart-qty-input" />
+          </mat-form-field>
+          <button mat-icon-button (click)="inc(i)" data-testid="cart-qty-inc"><mat-icon>add</mat-icon></button>
+        </div>
+        <div class="lineTotal">{{ (i.qty*i.product.price) | number:'1.2-2' }}</div>
+        <button mat-icon-button color="warn" (click)="cart.remove(i.product.id)" data-testid="cart-remove-item">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="summary">
+    <mat-card-content>
+      <div class="sumRow"><span>Items</span><b>{{ cart.count }}</b></div>
+      <div class="sumRow"><span>Total</span><b>{{ cart.total | number:'1.2-2' }}</b></div>
+      <mat-divider style="margin:12px 0;"></mat-divider>
+      <button mat-raised-button color="primary" (click)="checkout()" [disabled]="loading" data-testid="cart-checkout">
+        <mat-icon>shopping_bag</mat-icon>
+        Checkout
+      </button>
+      <div class="small" style="margin-top:10px;">Creates an order using your account.</div>
+    </mat-card-content>
+  </mat-card>
+</div>

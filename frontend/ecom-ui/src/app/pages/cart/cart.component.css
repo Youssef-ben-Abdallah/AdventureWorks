@@ -1,0 +1,11 @@
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.cart-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;margin-top:14px}
+@media(max-width:900px){.cart-grid{grid-template-columns:1fr}}
+.item{display:grid;grid-template-columns:72px 1fr 200px 110px 44px;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #eee}
+.thumb{width:72px;height:72px;border-radius:10px;object-fit:cover;background:#f5f5f5}
+.name{font-weight:700}
+.price{margin-top:4px;font-weight:700}
+.qty{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.qtyField{width:84px}
+.lineTotal{font-weight:800;text-align:right}
+.summary .sumRow{display:flex;justify-content:space-between;margin:6px 0}

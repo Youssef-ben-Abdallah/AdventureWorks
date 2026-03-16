@@ -1,0 +1,23 @@
+{
+  "coverage": {
+    "cs": 50,
+    "ts": 32,
+    "html": 14
+  },
+  "fixed": [
+    "Stock is decremented when an order is created.",
+    "Cart manual quantity updates are capped by stock quantity.",
+    "Category delete action returns Conflict instead of a raw database failure.",
+    "Subcategory delete action returns Conflict instead of a raw database failure.",
+    "Product delete action returns Conflict instead of a raw database failure.",
+    "Stable data-testid selectors were added to key pages for Selenium automation.",
+    "Image tags in Angular templates include alt text in the scanned pages."
+  ],
+  "warnings": [
+    "CORS policy allows every origin in development configuration.",
+    "Development secrets are hardcoded in appsettings.json and must be changed outside local use.",
+    "Program.cs contains extra seed logic after DbSeeder.SeedAsync; this is acceptable in dev but redundant."
+  ],
+  "warning_count": 3,
+  "fixed_count": 7
+}

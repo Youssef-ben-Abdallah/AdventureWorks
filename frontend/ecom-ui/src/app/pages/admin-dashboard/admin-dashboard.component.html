@@ -1,0 +1,312 @@
+<div class="page-head">
+  <div>
+    <h1 class="title">Admin Dashboard</h1>
+    <p class="small">Manage catalog and order statuses.</p>
+  </div>
+
+  <button mat-raised-button color="primary" (click)="reloadAll()" data-testid="admin-refresh">
+    <mat-icon>refresh</mat-icon>
+    Refresh
+  </button>
+</div>
+
+<div *ngIf="loading" class="info">Loading...</div>
+<div class="error" *ngIf="error">{{ error }}</div>
+
+<mat-tab-group class="tabs">
+  <!-- ===================== CATALOG TAB ===================== -->
+  <mat-tab label="Catalog">
+    <div class="row">
+      <!-- ===================== CATEGORIES ===================== -->
+      <div class="col">
+        <mat-card class="card">
+          <div class="card-head">
+            <h3 class="card-title" data-testid="admin-categories-title">Categories</h3>
+            <button mat-raised-button color="primary" (click)="newCategory()">
+              <mat-icon>add</mat-icon>
+              New
+            </button>
+          </div>
+
+          <div class="filters">
+            <mat-form-field appearance="outline" class="w-280">
+              <mat-label>Search category</mat-label>
+              <input
+                matInput
+                [(ngModel)]="catFilter"
+                (ngModelChange)="applyCatFilter()"
+                placeholder="Name..."
+              />
+              <button
+                *ngIf="catFilter"
+                matSuffix
+                mat-icon-button
+                aria-label="Clear"
+                (click)="catFilter=''; applyCatFilter()"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </mat-form-field>
+          </div>
+
+          <div class="table-wrap">
+            <table mat-table [dataSource]="catsDs" matSort #catsSort="matSort" class="mat-elevation-z1 full">
+
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+                <td mat-cell *matCellDef="let c">{{ c.name }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let c" class="col-actions">
+                  <button mat-stroked-button (click)="editCategory(c)">Edit</button>
+                  <button mat-stroked-button color="warn" (click)="deleteCategory(c)" class="ml-8">Delete</button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="catsCols"></tr>
+              <tr mat-row *matRowDef="let row; columns: catsCols;"></tr>
+            </table>
+          </div>
+
+          <mat-paginator
+            #catsPaginator
+            [pageSize]="8"
+            [pageSizeOptions]="[5,8,15,30]"
+            showFirstLastButtons>
+          </mat-paginator>
+        </mat-card>
+      </div>
+
+      <!-- ===================== SUB-CATEGORIES ===================== -->
+      <div class="col">
+        <mat-card class="card">
+          <div class="card-head">
+            <h3 class="card-title" data-testid="admin-subcategories-title">Sub-categories</h3>
+            <button mat-raised-button color="primary" (click)="newSubCategory()" [disabled]="!categories.length">
+              <mat-icon>add</mat-icon>
+              New
+            </button>
+          </div>
+
+          <div class="filters">
+            <mat-form-field appearance="outline" class="w-260">
+              <mat-label>Search</mat-label>
+              <input
+                matInput
+                [(ngModel)]="subTextFilter"
+                (ngModelChange)="applySubFilter()"
+                placeholder="Name / category..."
+              />
+              <button
+                *ngIf="subTextFilter"
+                matSuffix
+                mat-icon-button
+                aria-label="Clear"
+                (click)="subTextFilter=''; applySubFilter()"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-260">
+              <mat-label>Category</mat-label>
+              <mat-select [(ngModel)]="subCategoryIdFilter" (ngModelChange)="applySubFilter()">
+                <mat-option [value]="''">All</mat-option>
+                <mat-option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="table-wrap">
+            <table mat-table [dataSource]="subsDs" matSort #subsSort="matSort" class="mat-elevation-z1 full">
+
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+                <td mat-cell *matCellDef="let s">{{ s.name }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="categoryName">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+                <td mat-cell *matCellDef="let s">{{ s.categoryName }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let s" class="col-actions">
+                  <button mat-stroked-button (click)="editSubCategory(s)">Edit</button>
+                  <button mat-stroked-button color="warn" (click)="deleteSubCategory(s)" class="ml-8">Delete</button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="subsCols"></tr>
+              <tr mat-row *matRowDef="let row; columns: subsCols;"></tr>
+            </table>
+          </div>
+
+          <mat-paginator
+            #subsPaginator
+            [pageSize]="8"
+            [pageSizeOptions]="[5,8,15,30]"
+            showFirstLastButtons>
+          </mat-paginator>
+        </mat-card>
+      </div>
+    </div>
+
+    <!-- ===================== PRODUCTS ===================== -->
+    <mat-card class="card mt-12">
+      <div class="card-head">
+        <h3 class="card-title" data-testid="admin-products-title">Products</h3>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="newProduct()"
+          [disabled]="!categories.length || !subCategories.length">
+          <mat-icon>add</mat-icon>
+          New product
+        </button>
+      </div>
+
+      <div class="filters">
+        <mat-form-field appearance="outline" class="w-280">
+          <mat-label>Search</mat-label>
+          <input
+            matInput
+            [(ngModel)]="prodTextFilter"
+            (ngModelChange)="applyProdFilter()"
+            placeholder="SKU / name / category..."
+          />
+          <button
+            *ngIf="prodTextFilter"
+            matSuffix
+            mat-icon-button
+            aria-label="Clear"
+            (click)="prodTextFilter=''; applyProdFilter()"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-240">
+          <mat-label>Category</mat-label>
+          <mat-select [(ngModel)]="prodCategoryIdFilter" (ngModelChange)="onProdCategoryChange()">
+            <mat-option [value]="''">All</mat-option>
+            <mat-option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-240">
+          <mat-label>Sub-category</mat-label>
+          <mat-select [(ngModel)]="prodSubCategoryIdFilter" (ngModelChange)="applyProdFilter()">
+            <mat-option [value]="''">All</mat-option>
+            <mat-option *ngFor="let s of filteredSubCatsForProduct()" [value]="s.id">{{ s.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="table-wrap">
+        <table mat-table [dataSource]="prodsDs" matSort #prodsSort="matSort" class="mat-elevation-z1 full">
+
+          <ng-container matColumnDef="sku">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>SKU</th>
+            <td mat-cell *matCellDef="let p">{{ p.sku }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+            <td mat-cell *matCellDef="let p">{{ p.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="categoryName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+            <td mat-cell *matCellDef="let p">{{ p.categoryName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="subCategoryName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Sub</th>
+            <td mat-cell *matCellDef="let p">{{ p.subCategoryName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="price">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Price</th>
+            <td mat-cell *matCellDef="let p">{{ p.price | number:'1.2-2' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="stockQty">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Stock</th>
+            <td mat-cell *matCellDef="let p">{{ p.stockQty }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+            <td mat-cell *matCellDef="let p" class="col-actions">
+              <button mat-stroked-button (click)="editProduct(p)">Edit</button>
+              <button mat-stroked-button color="warn" (click)="deleteProduct(p)" class="ml-8">Delete</button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="prodsCols"></tr>
+          <tr mat-row *matRowDef="let row; columns: prodsCols;"></tr>
+        </table>
+      </div>
+
+      <mat-paginator
+        #prodsPaginator
+        [pageSize]="10"
+        [pageSizeOptions]="[5,10,20,50]"
+        showFirstLastButtons>
+      </mat-paginator>
+    </mat-card>
+  </mat-tab>
+
+  <!-- ===================== ORDERS TAB (unchanged) ===================== -->
+  <mat-tab label="Orders">
+    <mat-card class="card mt-12">
+      <div class="table-wrap">
+        <table class="plain">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>User</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Total</th>
+              <th style="width:240px;">Change status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let o of orders">
+              <td>{{ o.id }}</td>
+              <td>{{ o.username }}</td>
+              <td>{{ o.createdAtUtc | date:'short' }}</td>
+              <td>
+                <mat-chip class="status-chip" [ngStyle]="statusChipStyle(o.status)">
+                  <mat-icon class="status-icon">{{ statusIcon(o.status) }}</mat-icon>
+                  {{ statusLabel(o.status) }}
+                </mat-chip>
+              </td>
+              <td>{{ o.total | number:'1.2-2' }}</td>
+              <td>
+                <mat-select style="width:220px;" [ngModel]="o.status" (ngModelChange)="changeStatus(o,$event)">
+                  <mat-option *ngFor="let s of statuses" [value]="s.id">
+                    <mat-icon style="margin-right:6px;vertical-align:middle;">{{ s.icon }}</mat-icon>
+                    {{ s.label }}
+                  </mat-option>
+                </mat-select>
+              </td>
+              <td>
+                <button mat-stroked-button (click)="viewTicket(o)">
+                  <mat-icon>receipt_long</mat-icon>
+                  Ticket
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </mat-card>
+  </mat-tab>
+</mat-tab-group>

@@ -1,0 +1,7 @@
+# SSIS / ETL ignore rules
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.ispac

@@ -1,0 +1,77 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Visual Studio / SSIS user state
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.dtproj.user
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+**/__pycache__/
+**/.pytest_cache/
+**/.venv/
+**/.coverage
+**/htmlcov/
+*.py[cod]
+
+# .NET build output
+**/bin/
+**/obj/
+*.cache
+*.pdb
+
+# Node / Angular
+**/node_modules/
+**/.angular/
+**/dist/
+**/coverage/
+**/.sass-cache/
+
+# Environment / secrets
+**/.env
+**/.env.*
+**/appsettings.Development.json
+**/secrets.json
+
+# SQL / database local artifacts
+*.mdf
+*.ldf
+*.ndf
+*.bak
+*.dacpac
+*.bacpac
+
+# SSIS / deployment output
+**/*.ispac
+
+# QA runtime evidence
+quality-assurance/reports/runs/
+quality-assurance/reports/latest_run.txt
+quality-assurance/reports/logs/
+quality-assurance/reports/screenshots/
+
+# Test / temp
+*.tmp
+*.temp
+*.swp
+*.orig
+
+**/.idea/

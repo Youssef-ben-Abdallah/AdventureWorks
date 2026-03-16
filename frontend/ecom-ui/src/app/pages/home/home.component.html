@@ -1,0 +1,164 @@
+<!-- PAGE WRAP -->
+<div class="page">
+
+  <!-- HEADER STRIP (buttons moved here) -->
+  <div class="page-header">
+    <div class="title-block">
+      <h1 class="page-title">AdventureWorks Bike Store</h1>
+      <p class="page-subtitle">
+        Explore a realistic bike-commerce dataset: products, customers, territories, and sales history —
+        presented like a modern storefront + analytics-ready catalog.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a mat-raised-button color="primary" routerLink="/products" data-testid="home-browse-products">
+        <mat-icon>shopping_bag</mat-icon>
+        Browse products
+      </a>
+      <a mat-stroked-button routerLink="/orders" data-testid="home-my-orders">
+        <mat-icon>receipt_long</mat-icon>
+        My orders
+      </a>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div *ngIf="loading" class="state">Loading...</div>
+  <div *ngIf="error" class="state error">{{ error }}</div>
+
+  <!-- ADVENTUREWORKS STORY + MODULE CARDS -->
+  <mat-card class="section-card">
+    <mat-card-content>
+      <div class="section-head">
+        <div class="section-title">
+          <mat-icon class="icon">insights</mat-icon>
+          <div>
+            <h2>What’s inside the AdventureWorks data?</h2>
+            <p class="muted">
+              Not “just tables” — it’s a complete business story: a bike company with product lines,
+              inventory-like attributes, customers, regions, and order history.
+            </p>
+          </div>
+        </div>
+
+        <div class="pill-row">
+          <span class="pill"><mat-icon>pedal_bike</mat-icon> Bikes</span>
+          <span class="pill"><mat-icon>build</mat-icon> Parts</span>
+          <span class="pill"><mat-icon>sports_motorsports</mat-icon> Accessories</span>
+          <span class="pill"><mat-icon>groups</mat-icon> Customers</span>
+          <span class="pill"><mat-icon>public</mat-icon> Territories</span>
+          <span class="pill"><mat-icon>timeline</mat-icon> Sales history</span>
+        </div>
+      </div>
+
+      <div class="modules">
+        <mat-card class="module">
+          <mat-card-content>
+            <div class="module-head">
+              <mat-icon>pedal_bike</mat-icon>
+              <div>
+                <div class="module-title">Products: Bikes</div>
+                <div class="muted small">
+                  Road, mountain, touring, e-bikes — described by model, size, color, price, and category structure.
+                </div>
+              </div>
+            </div>
+            <ul class="bullets">
+              <li>Great for “Top sellers”, “Price bands”, “Stock awareness”.</li>
+              <li>Supports category/subcategory browsing and product details pages.</li>
+            </ul>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="module">
+          <mat-card-content>
+            <div class="module-head">
+              <mat-icon>build</mat-icon>
+              <div>
+                <div class="module-title">Products: Parts & Accessories</div>
+                <div class="muted small">
+                  Components (drivetrain, wheels, brakes) + accessories (helmets, lights, bags).
+                </div>
+              </div>
+            </div>
+            <ul class="bullets">
+              <li>Perfect for basket insights (“often bought together”).</li>
+              <li>Supports cross-sell recommendations on product pages.</li>
+            </ul>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="module">
+          <mat-card-content>
+            <div class="module-head">
+              <mat-icon>groups</mat-icon>
+              <div>
+                <div class="module-title">Customers</div>
+                <div class="muted small">
+                  Customer profiles, buying behavior over time, and segmentation signals.
+                </div>
+              </div>
+            </div>
+            <ul class="bullets">
+              <li>Useful for loyalty, repeat purchase rates, and cohort tracking.</li>
+              <li>Pairs naturally with territory + time for trend analysis.</li>
+            </ul>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="module">
+          <mat-card-content>
+            <div class="module-head">
+              <mat-icon>public</mat-icon>
+              <div>
+                <div class="module-title">Territories & Time</div>
+                <div class="muted small">
+                  Regions/territories plus date breakdowns enable dashboard KPIs and drilldowns.
+                </div>
+              </div>
+            </div>
+            <ul class="bullets">
+              <li>Sales by territory, month, quarter, year.</li>
+              <li>Trend lines, seasonality, growth comparisons.</li>
+            </ul>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- TOP PICKS -->
+  <div class="section-row">
+    <h2 class="section-h2">Top picks</h2>
+    <div class="muted">A few featured items from the catalog (seeded data).</div>
+  </div>
+
+  <div class="grid">
+    <mat-card class="product-card" *ngFor="let p of top">
+      <div class="img-wrap">
+        <img [src]="imgUrl(p)" [alt]="p.name" />
+      </div>
+
+      <mat-card-content class="product-content">
+        <div class="product-top">
+          <div class="name-wrap">
+            <div class="product-name">{{ p.name }}</div>
+            <div class="muted small">{{ p.categoryName }} • {{ p.subCategoryName }}</div>
+          </div>
+          <div class="price">{{ p.price | number:'1.2-2' }}</div>
+        </div>
+
+        <p class="muted small desc" *ngIf="p.description">{{ p.description }}</p>
+      </mat-card-content>
+
+      <mat-card-actions class="product-actions">
+        <a mat-button [routerLink]="['/products', p.id]">View details</a>
+        <button mat-raised-button color="primary" (click)="addToCart(p,1)">
+          <mat-icon>add_shopping_cart</mat-icon>
+          Add
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

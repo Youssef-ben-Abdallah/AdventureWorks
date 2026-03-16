@@ -1,0 +1,42 @@
+<mat-toolbar color="primary">
+  <button mat-icon-button routerLink="/" aria-label="Home">
+    <span class="material-icons" style="margin-right: 4px;">directions_bike</span>
+  </button>
+
+  <span style="margin-left:8px;font-weight:600;">Adventure Works</span>
+  <span class="spacer"></span>
+
+  <a mat-button routerLink="/" data-testid="nav-home">Home</a>
+  <a mat-button routerLink="/products" data-testid="nav-products">Products</a>
+  <a mat-button routerLink="/orders" *ngIf="(auth.isLoggedIn$ | async)" data-testid="nav-orders">My Orders</a>
+  <a mat-button routerLink="/admin" *ngIf="auth.isAdmin()" data-testid="nav-admin">Admin</a>
+  <a mat-button routerLink="/dashboard" *ngIf="auth.isAdmin()" data-testid="nav-dashboard">Dashboard</a>
+ <a mat-button routerLink="/cart" *ngIf="(auth.isLoggedIn$ | async)" data-testid="nav-cart"
+    [matBadge]="cart.count > 0 ? cart.count : null"  
+    matBadgeOverlap="true" 
+    matBadgeSize="medium" 
+    matBadgeColor="warn"
+    matBadgePosition="above"
+    style="margin-right: 20px;"> 
+  <span class="material-icons" style="margin-right: 4px;">shopping_cart</span>
+  <span>Cart</span>
+</a>
+
+
+  <ng-container *ngIf="(auth.isLoggedIn$ | async); else guest">
+    <button mat-button [matMenuTriggerFor]="menu" data-testid="nav-account-menu">
+      <span class="material-icons" style="margin-right:6px;">account_circle</span>
+      {{ auth.getUsername() || 'Account' }}
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="logout()" data-testid="nav-logout">
+        <span class="material-icons" style="margin-right:6px;">logout</span>
+        Logout
+      </button>
+    </mat-menu>
+  </ng-container>
+
+  <ng-template #guest>
+    <a mat-raised-button color="accent" routerLink="/login" data-testid="nav-login">Login</a>
+  </ng-template>
+</mat-toolbar>

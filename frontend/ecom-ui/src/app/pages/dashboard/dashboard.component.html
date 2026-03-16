@@ -1,0 +1,464 @@
+<div class="dashboard-shell">
+  <div class="header">
+    <div class="title">
+      <div class="h">Analytics Dashboard</div>
+      <div class="sub">
+        Sales performance, product mix, customers, and operations.
+      </div>
+    </div>
+    <div class="actions">
+      <button mat-stroked-button (click)="clear()">Reset</button>
+      <button mat-raised-button color="primary" (click)="apply()">Apply filters</button>
+    </div>
+  </div>
+
+  <mat-card class="filters">
+    <div class="filters-grid" [class.busy]="loadingFilters">
+      <mat-form-field appearance="outline">
+        <mat-label>Date range</mat-label>
+        <mat-date-range-input [rangePicker]="picker">
+          <input matStartDate placeholder="From" [formControl]="form.controls.from">
+          <input matEndDate placeholder="To" [formControl]="form.controls.to">
+        </mat-date-range-input>
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker></mat-date-range-picker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Territory</mat-label>
+        <mat-select [formControl]="form.controls.territoryId">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let t of (filters?.territories ?? [])" [value]="t.id">{{t.name}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Territory group</mat-label>
+        <mat-select [formControl]="form.controls.territoryGroup">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let t of (filters?.territoryGroups ?? [])" [value]="t.id">{{t.name}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Salesperson</mat-label>
+        <mat-select [formControl]="form.controls.salesPersonId">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let s of (filters?.salesPeople ?? [])" [value]="s.id">{{s.name}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Ship method</mat-label>
+        <mat-select [formControl]="form.controls.shipMethodId">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let s of (filters?.shipMethods ?? [])" [value]="s.id">{{s.name}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Category</mat-label>
+        <mat-select [formControl]="form.controls.category">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let c of (filters?.productCategories ?? [])" [value]="c.id">{{c.name}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Subcategory</mat-label>
+        <mat-select [formControl]="form.controls.subCategory">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let c of (filters?.productSubCategories ?? [])" [value]="c.id">{{c.name}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Currency</mat-label>
+        <mat-select [formControl]="form.controls.currencyCode">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let c of (filters?.currencies ?? [])" [value]="c.id">{{c.name}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Online order</mat-label>
+        <mat-select [formControl]="form.controls.online">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option value="true">Online</mat-option>
+          <mat-option value="false">Offline</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="spinner" *ngIf="loadingFilters"><mat-spinner diameter="26"></mat-spinner></div>
+    </div>
+    <div class="error" *ngIf="error">{{error}}</div>
+  </mat-card>
+
+  <mat-tab-group (selectedIndexChange)="tabChanged($event)" class="tabs">
+    <!-- ===================== OVERVIEW ===================== -->
+    <mat-tab label="Overview">
+      <div class="tab">
+        <div class="busy" *ngIf="loadingOverview"><mat-spinner></mat-spinner></div>
+
+        <ng-container *ngIf="overview">
+          <app-kpi-cards [kpis]="overview.kpis"></app-kpi-cards>
+
+          <div class="grid2">
+            <app-chartjs-card
+              class="chart-card"
+              title="Revenue trend"
+              sub="Monthly revenue (line items summed)"
+              hint="Hover to see exact values."
+              [type]="'line'"
+              [labels]="spLabels(overview.revenueTrend)"
+              [values]="spValues(overview.revenueTrend)"
+              [datasetLabel]="'Revenue'"
+              [xAxisLabel]="'Month'"
+              [yAxisLabel]="'Revenue'"
+              [valueFormat]="'money'"
+            ></app-chartjs-card>
+
+            <app-chartjs-card
+              class="chart-card"
+              title="Revenue by territory"
+              sub="Geo distribution"
+              hint="Top territories only (keeps readability)."
+              [type]="'bar'"
+              [labels]="bdLabels(overview.revenueByTerritory, 12)"
+              [values]="bdValues(overview.revenueByTerritory, 12)"
+              [datasetLabel]="'Revenue'"
+              [xAxisLabel]="'Territory'"
+              [yAxisLabel]="'Revenue'"
+              [valueFormat]="'money'"
+            ></app-chartjs-card>
+          </div>
+
+          <div class="grid2">
+            <app-chartjs-card
+              class="chart-card chart-card-compact"
+              title="Revenue by category"
+              sub="Product mix"
+              hint="Doughnut makes share-of-total easy to read."
+              [type]="'doughnut'"
+              [labels]="bdLabels(overview.revenueByCategory, 10)"
+              [values]="bdValues(overview.revenueByCategory, 10)"
+              [datasetLabel]="'Revenue'"
+              [showLegend]="true"
+              [valueFormat]="'money'"
+              [compact]="true"
+            ></app-chartjs-card>
+
+            <app-chartjs-card
+              class="chart-card"
+              title="Top products"
+              sub="Pareto view"
+              hint="Hover to see exact revenue per SKU."
+              [type]="'bar'"
+              [labels]="bdLabels(overview.topProducts, 12)"
+              [values]="bdValues(overview.topProducts, 12)"
+              [datasetLabel]="'Revenue'"
+              [xAxisLabel]="'Product'"
+              [yAxisLabel]="'Revenue'"
+              [valueFormat]="'money'"
+            ></app-chartjs-card>
+          </div>
+
+          <app-notes-panel [notes]="[
+            { title: 'KPI row (Revenue, Orders, Units, AOV, On-time %, Freight %)', body: 'A single glance summary. AOV = revenue / orders. On-time % uses ShipDate ≤ DueDate. Freight % highlights logistics cost pressure.' },
+            { title: 'Revenue trend', body: 'Shows seasonality and whether growth is driven by more orders, price, or mix. It is the best “are we up or down?” chart.' },
+            { title: 'Territory breakdown', body: 'Territory + CountryRegionCode enables geo analysis. You can later swap this bar chart to a map once you add coordinates or a territory-to-geo mapping.' },
+            { title: 'Category + Top products', body: 'Category identifies strategic mix shifts; Top products supports inventory focus and marketing emphasis. Together they explain revenue composition.' }
+          ]"></app-notes-panel>
+        </ng-container>
+      </div>
+    </mat-tab>
+
+    <!-- ===================== PRODUCTS ===================== -->
+    <mat-tab label="Products">
+      <div class="tab">
+        <div class="busy" *ngIf="loadingProducts"><mat-spinner></mat-spinner></div>
+
+        <ng-container *ngIf="products">
+          <app-kpi-cards [kpis]="products.kpis"></app-kpi-cards>
+
+          <div class="grid2">
+            <app-chartjs-card
+              class="chart-card"
+              title="Category / Subcategory (Top 5)"
+              sub="Mix drill-down"
+              hint="Bar chart keeps ordering + magnitude obvious."
+              [type]="'bar'"
+              [labels]="bdLabels(products.categoryMatrix, 20)"
+              [values]="bdValues(products.categoryMatrix, 20)"
+              [datasetLabel]="'Revenue'"
+              [xAxisLabel]="'Segment'"
+              [yAxisLabel]="'Revenue'"
+              [valueFormat]="'money'"
+            ></app-chartjs-card>
+
+            <app-chartjs-card
+              class="chart-card chart-card-compact"
+              title="Discount bands"
+              sub="Promo intensity"
+              hint="Doughnut emphasizes contribution (share-of-total)."
+              [type]="'doughnut'"
+              [labels]="bdLabels(products.discountBands, 6)"
+              [values]="bdValues(products.discountBands, 6)"
+              [datasetLabel]="'Revenue'"
+              [showLegend]="true"
+              [valueFormat]="'money'"
+              [compact]="true"
+            ></app-chartjs-card>
+          </div>
+
+          <mat-card class="card">
+            <div class="title">Product performance table (Top 10)</div>
+            <div class="sub">Sorted by revenue. Use this as a practical replacement for a scatter plot (keeps the dashboard dependency-free).</div>
+            <div class="tablewrap">
+              <table mat-table [dataSource]="products.scatter" class="mat-elevation-z0">
+                <ng-container matColumnDef="product">
+                  <th mat-header-cell *matHeaderCellDef>Product</th>
+                  <td mat-cell *matCellDef="let r">{{r.productName}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="category">
+                  <th mat-header-cell *matHeaderCellDef>Category</th>
+                  <td mat-cell *matCellDef="let r">{{r.category}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="units">
+                  <th mat-header-cell *matHeaderCellDef class="right">Units</th>
+                  <td mat-cell *matCellDef="let r" class="right">{{r.units | number}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="revenue">
+                  <th mat-header-cell *matHeaderCellDef class="right">Revenue</th>
+                  <td mat-cell *matCellDef="let r" class="right">{{fmtMoney(r.revenue)}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="margin">
+                  <th mat-header-cell *matHeaderCellDef class="right">Est. Margin %</th>
+                  <td mat-cell *matCellDef="let r" class="right">{{r.marginPct | number:'1.0-1'}}%</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="['product','category','units','revenue','margin']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['product','category','units','revenue','margin'];"></tr>
+              </table>
+            </div>
+          </mat-card>
+
+          <app-notes-panel [notes]="[
+            { title: 'Category/Subcategory matrix', body: 'A “drill path” view: executives start at Category then ask which SubCategory is moving the needle. Keeping Top 20 prevents clutter.' },
+            { title: 'Discount bands', body: 'Shows whether revenue is being bought via discounts. If high revenue concentrates in >15%, consider price integrity or smarter targeting.' },
+            { title: 'Product performance', body: 'We display Units + Revenue + estimated Margin%. In BI tools you’d use a scatter (Units vs Margin vs Revenue bubble), but a table is more actionable in-app.' }
+          ]"></app-notes-panel>
+        </ng-container>
+      </div>
+    </mat-tab>
+
+    <!-- ===================== CUSTOMERS ===================== -->
+    <mat-tab label="Customers">
+      <div class="tab">
+        <div class="busy" *ngIf="loadingCustomers"><mat-spinner></mat-spinner></div>
+
+        <ng-container *ngIf="customers">
+          <app-kpi-cards [kpis]="customers.kpis"></app-kpi-cards>
+
+          <div class="grid2">
+            <app-chartjs-card
+              class="chart-card"
+              title="Revenue per customer distribution"
+              sub="Whales vs long tail"
+              hint="Use bins to spot concentration."
+              [type]="'bar'"
+              [labels]="bdLabels(customers.revenueDistribution, 12)"
+              [values]="bdValues(customers.revenueDistribution, 12)"
+              [datasetLabel]="'Revenue'"
+              [xAxisLabel]="'Customer bucket'"
+              [yAxisLabel]="'Revenue'"
+              [valueFormat]="'money'"
+            ></app-chartjs-card>
+
+            <app-chartjs-card
+              class="chart-card"
+              title="Active customers trend"
+              sub="Unique customers per month"
+              hint="Hover to see exact customer counts."
+              [type]="'line'"
+              [labels]="spLabels(customers.customerTrend)"
+              [values]="spValues(customers.customerTrend)"
+              [datasetLabel]="'Active customers'"
+              [xAxisLabel]="'Month'"
+              [yAxisLabel]="'Customers'"
+              [valueFormat]="'integer'"
+            ></app-chartjs-card>
+          </div>
+
+          <mat-card class="card">
+            <div class="title">Top customers</div>
+            <div class="tablewrap">
+              <table mat-table [dataSource]="customers.topCustomers" class="mat-elevation-z0">
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef>Customer</th>
+                  <td mat-cell *matCellDef="let r">{{r.customerName}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="orders">
+                  <th mat-header-cell *matHeaderCellDef class="right">Orders</th>
+                  <td mat-cell *matCellDef="let r" class="right">{{r.orders}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="revenue">
+                  <th mat-header-cell *matHeaderCellDef class="right">Revenue</th>
+                  <td mat-cell *matCellDef="let r" class="right">{{fmtMoney(r.revenue)}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="last">
+                  <th mat-header-cell *matHeaderCellDef>Last order</th>
+                  <td mat-cell *matCellDef="let r">{{fmtDate(r.lastOrderDate)}}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="['name','orders','revenue','last']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['name','orders','revenue','last'];"></tr>
+              </table>
+            </div>
+          </mat-card>
+
+          <app-notes-panel [notes]="[
+            { title: 'Active Customers + Revenue/Customer', body: 'Separates “more people buying” from “same customers spending more”. Great for cohort and CRM decisions.' },
+            { title: 'Distribution bands', body: 'A quick proxy for customer segmentation: <1k is the long tail, >=50k are whales. Helps decide account management coverage.' },
+            { title: 'Top customers table', body: 'Operational list for outreach (retention, upsell). Last order date helps identify churn risk among high-value customers.' }
+          ]"></app-notes-panel>
+        </ng-container>
+      </div>
+    </mat-tab>
+
+    <!-- ===================== SALES TEAM ===================== -->
+    <mat-tab label="Sales team">
+      <div class="tab">
+        <div class="busy" *ngIf="loadingSalesTeam"><mat-spinner></mat-spinner></div>
+
+        <ng-container *ngIf="salesTeam">
+          <app-kpi-cards [kpis]="salesTeam.kpis"></app-kpi-cards>
+
+          <div class="grid2">
+            <app-chartjs-card
+              class="chart-card"
+              title="Leaderboard"
+              sub="Top salespeople by revenue"
+              hint="Hover to see exact revenue per salesperson."
+              [type]="'bar'"
+              [labels]="bdLabels(salesTeam.leaderboard, 12)"
+              [values]="bdValues(salesTeam.leaderboard, 12)"
+              [datasetLabel]="'Revenue'"
+              [xAxisLabel]="'Salesperson'"
+              [yAxisLabel]="'Revenue'"
+              [valueFormat]="'money'"
+            ></app-chartjs-card>
+
+            <mat-card class="card">
+              <div class="title">Quota vs actual (Top 10)</div>
+              <div class="tablewrap">
+                <table mat-table [dataSource]="salesTeam.quota" class="mat-elevation-z0">
+                  <ng-container matColumnDef="sp">
+                    <th mat-header-cell *matHeaderCellDef>Salesperson</th>
+                    <td mat-cell *matCellDef="let r">{{r.salesPersonName || ('SP ' + r.salesPersonId)}}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="rev">
+                    <th mat-header-cell *matHeaderCellDef class="right">Revenue</th>
+                    <td mat-cell *matCellDef="let r" class="right">{{fmtMoney(r.revenue)}}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="quota">
+                    <th mat-header-cell *matHeaderCellDef class="right">Quota</th>
+                    <td mat-cell *matCellDef="let r" class="right">{{r.quota ? fmtMoney(r.quota) : '—'}}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="attain">
+                    <th mat-header-cell *matHeaderCellDef class="right">Attainment</th>
+                    <td mat-cell *matCellDef="let r" class="right">
+                      {{r.quota ? (100 * (r.revenue / r.quota) | number:'1.0-0') + '%' : '—'}}
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="['sp','rev','quota','attain']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['sp','rev','quota','attain'];"></tr>
+                </table>
+              </div>
+            </mat-card>
+          </div>
+
+          <app-notes-panel [notes]="[
+            { title: 'Leaderboard', body: 'Immediate performance view. Use filters (territory, category) to see who performs where — supports coaching and territory planning.' },
+            { title: 'Quota vs actual', body: 'Shows whether revenue is coming from a few overachievers or broad-based attainment. When quota is missing, we still show actuals.' },
+            { title: 'Territory heat (backend-ready)', body: 'The API also returns salesperson×territory cells. If you want a true heatmap later, you already have the data shape.' }
+          ]"></app-notes-panel>
+        </ng-container>
+      </div>
+    </mat-tab>
+
+    <!-- ===================== SHIPPING ===================== -->
+    <mat-tab label="Shipping">
+      <div class="tab">
+        <div class="busy" *ngIf="loadingShipping"><mat-spinner></mat-spinner></div>
+
+        <ng-container *ngIf="shipping">
+          <app-kpi-cards [kpis]="shipping.kpis"></app-kpi-cards>
+
+          <div class="grid2">
+            <app-chartjs-card
+              class="chart-card"
+              title="Lead time by ship method"
+              sub="Average days (ShipDate - OrderDate)"
+              hint="Find slow carriers quickly."
+              [type]="'bar'"
+              [labels]="bdLabels(shipping.leadTimeByShipMethod, 10)"
+              [values]="bdValues(shipping.leadTimeByShipMethod, 10)"
+              [datasetLabel]="'Days'"
+              [xAxisLabel]="'Ship method'"
+              [yAxisLabel]="'Days'"
+              [valueFormat]="'compact'"
+            ></app-chartjs-card>
+
+            <app-chartjs-card
+              class="chart-card chart-card-compact"
+              title="Freight by ship method"
+              sub="Cost concentration"
+              hint="Doughnut is great for contribution breakdowns."
+              [type]="'doughnut'"
+              [labels]="bdLabels(shipping.freightByShipMethod, 8)"
+              [values]="bdValues(shipping.freightByShipMethod, 8)"
+              [datasetLabel]="'Freight'"
+              [showLegend]="true"
+              [valueFormat]="'money'"
+              [compact]="true"
+            ></app-chartjs-card>
+          </div>
+
+          <div class="grid1">
+            <app-chartjs-card
+              class="chart-card"
+              title="Lead time by territory"
+              sub="Where delivery speed breaks"
+              hint="Use this with filters to isolate a category or ship method."
+              [type]="'bar'"
+              [labels]="bdLabels(shipping.leadTimeByTerritory, 12)"
+              [values]="bdValues(shipping.leadTimeByTerritory, 12)"
+              [datasetLabel]="'Days'"
+              [xAxisLabel]="'Territory'"
+              [yAxisLabel]="'Days'"
+              [valueFormat]="'compact'"
+            ></app-chartjs-card>
+          </div>
+
+          <app-notes-panel [notes]="[
+            { title: 'Lead time + On-time %', body: 'Operations metrics. Lead time tells speed; On-time % tells reliability. Both matter for customer experience and returns.' },
+            { title: 'Freight %', body: 'Freight as a share of revenue is a margin lever. Use this with category filters to see which products are expensive to deliver.' },
+            { title: 'Method/territory cuts', body: 'Breakdowns are designed for root-cause: Is it the carrier (ShipMethod) or the geography (Territory)?' }
+          ]"></app-notes-panel>
+        </ng-container>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

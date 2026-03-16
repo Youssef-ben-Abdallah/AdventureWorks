@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: AdventureWorks Sales BI Platform
+message: "If you use this repository, please cite it using the metadata below."
+type: software
+authors:
+  - given-names: Youssef
+    family-names: Ben Abdallah
+  - given-names: Mariem
+    family-names: Ben Slim
+repository-code: https://github.com/your-org-or-username/adventureworks-sales-bi-platform
+abstract: >-
+  Full-stack academic project combining an ASP.NET Core e-commerce API,
+  Angular frontend, AdventureWorks-based data warehouse, SSIS ETL pipeline,
+  and QA documentation.
+keywords:
+  - ASP.NET Core
+  - Angular
+  - SQL Server
+  - SSIS
+  - AdventureWorks
+  - Data Warehouse
+license: NOASSERTION

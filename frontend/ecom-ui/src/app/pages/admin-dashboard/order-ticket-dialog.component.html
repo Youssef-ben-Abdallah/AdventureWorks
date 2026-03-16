@@ -1,0 +1,62 @@
+<div class="ticket">
+  <div class="ticket-header">
+    <div class="brand">
+      <mat-icon>receipt_long</mat-icon>
+      <div>
+        <div class="title">Order Ticket</div>
+        <div class="muted">Admin preview</div>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div><b>#{{ o.id }}</b></div>
+      <div class="muted">{{ o.createdAtUtc | date:'medium' }}</div>
+    </div>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <div class="section">
+    <div class="row">
+      <span class="muted">Customer</span>
+      <span>{{ o.username || o.userId }}</span>
+    </div>
+    <div class="row">
+      <span class="muted">Status</span>
+
+      <mat-chip class="status-chip" [ngStyle]="statusChipStyle(o.status)">
+        <mat-icon matChipAvatar>{{ statusIcon(o.status) }}</mat-icon>
+        {{ statusLabel(o.status) }}
+      </mat-chip>
+    </div>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <div class="section">
+    <div class="items-title">Items</div>
+
+    <div class="item" *ngFor="let i of o.items">
+      <div class="name">{{ i.productName }}</div>
+      <div class="qty muted">x{{ i.qty }}</div>
+      <div class="price">{{ (i.lineTotal ?? (i.qty * i.unitPrice)) | number:'1.2-2' }}</div>
+    </div>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <div class="section totals">
+    <div class="row">
+      <span class="muted">Subtotal</span>
+      <span>{{ subTotal() | number:'1.2-2' }}</span>
+    </div>
+    <div class="row total">
+      <span>Total</span>
+      <span>{{ o.total | number:'1.2-2' }}</span>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button mat-stroked-button mat-dialog-close>Close</button>
+  </div>
+</div>

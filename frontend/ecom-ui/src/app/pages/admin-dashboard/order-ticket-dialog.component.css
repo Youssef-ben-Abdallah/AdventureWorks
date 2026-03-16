@@ -1,0 +1,102 @@
+.ticket {
+  width: 100%;
+  max-width: 480px;
+  box-sizing: border-box;
+  padding: 25px;
+}
+/* HEADER */
+.ticket-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.brand {
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.title {
+  font-size:18px;
+  font-weight:800;
+}
+
+.meta {
+  text-align:right;
+}
+
+.muted {
+  opacity:.65;
+  font-size:12px;
+}
+
+/* SECTIONS */
+.section {
+  padding:12px 0;
+}
+
+.row {
+  display:flex;
+  justify-content:space-between;
+  padding:4px 0;
+}
+
+/* ITEMS */
+.items-title {
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+.item {
+  display:grid;
+  grid-template-columns: 1fr auto auto;
+  gap:12px;
+  padding:8px 0;
+  border-bottom:1px dashed rgba(0,0,0,.2);
+}
+
+.item:last-child {
+  border-bottom:none;
+}
+
+.name {
+  font-weight:600;
+}
+
+.price {
+  font-weight:700;
+}
+
+/* TOTAL */
+.totals .total {
+  font-size:18px;
+  font-weight:900;
+  margin-top:6px;
+}
+
+/* BUTTON */
+.actions {
+  display:flex;
+  justify-content:flex-end;
+  margin-top:12px;
+}
+
+/* STATUS STYLE */
+.status {
+  font-weight:700;
+  color:#3f51b5;
+}
+
+.status-chip {
+  font-weight: 800;
+  border-radius: 999px;
+}
+
+.status-chip mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}

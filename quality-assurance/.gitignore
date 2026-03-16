@@ -1,0 +1,15 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.vscode/
+.coverage
+htmlcov/
+reports/runs/
+reports/latest_run.txt
+
+# Local Selenium / browser evidence generated at runtime
+reports/logs/
+reports/screenshots/
+
+# Python tooling
+*.py[cod]

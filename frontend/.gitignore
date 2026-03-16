@@ -1,0 +1,8 @@
+# Frontend wrapper ignore rules
+node_modules/
+dist/
+.angular/
+coverage/
+.vscode/
+.idea/
+*.log

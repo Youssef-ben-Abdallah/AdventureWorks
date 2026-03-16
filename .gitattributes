@@ -1,0 +1,20 @@
+* text=auto
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.dtsx text eol=crlf
+*.dtproj text eol=crlf
+*.sln text eol=crlf
+*.cs text eol=crlf
+*.csproj text eol=crlf
+*.sql text eol=crlf
+*.ts text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf

@@ -1,0 +1,99 @@
+<div class="page-head">
+  <div>
+    <h1 style="margin:0;">Products</h1>
+    <div class="small" style="margin-top:6px;">Browse and filter the catalog. Add items to your cart.</div>
+  </div>
+  <a mat-stroked-button routerLink="/cart" data-testid="products-open-cart">
+    <mat-icon>shopping_cart</mat-icon>
+    Cart
+  </a>
+</div>
+
+<div *ngIf="loading" style="margin-top:14px;">Loading...</div>
+<div *ngIf="error" class="error" style="margin-top:14px;">{{ error }}</div>
+
+<div class="filters" *ngIf="!loading">
+  <mat-form-field appearance="outline">
+    <mat-label>Search</mat-label>
+    <input
+      matInput
+      [(ngModel)]="q"
+      (ngModelChange)="resetPage()"
+      placeholder="name, sku, description"
+      data-testid="products-search"
+    />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Category</mat-label>
+    <mat-select [(ngModel)]="categoryId" (selectionChange)="onCategoryChange()" data-testid="products-category">
+      <mat-option [value]="0">All</mat-option>
+      <mat-option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Sub-category</mat-label>
+    <mat-select [(ngModel)]="subCategoryId" (selectionChange)="resetPage()" data-testid="products-subcategory">
+      <mat-option [value]="0">All</mat-option>
+      <mat-option *ngFor="let s of subsForSelected" [value]="s.id">{{ s.name }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Max price</mat-label>
+    <input
+      matInput
+      type="number"
+      [(ngModel)]="maxPrice"
+      (ngModelChange)="resetPage()"
+      placeholder="e.g. 500"
+      data-testid="products-max-price"
+    />
+  </mat-form-field>
+</div>
+
+<!-- Cards grid (paged) -->
+<div class="row" *ngIf="!loading && filteredTotal">
+  <div class="col product-card" *ngFor="let p of pagedProducts">
+    <mat-card>
+      <img mat-card-image [src]="imgUrl(p)" [alt]="p.name" class="img" />
+      <mat-card-content>
+        <div class="top">
+          <div>
+            <div class="name">{{ p.name }}</div>
+            <div class="small">{{ p.categoryName }} / {{ p.subCategoryName }}</div>
+          </div>
+          <div class="price">{{ p.price | number:'1.2-2' }}</div>
+        </div>
+        <p class="small" *ngIf="p.description" style="margin:10px 0 0;">{{ p.description }}</p>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <a mat-button [routerLink]="['/products', p.id]" data-testid="product-details-link">Details</a>
+        <button mat-raised-button color="primary" (click)="addToCart(p,1)" data-testid="product-add-to-cart">
+          <mat-icon>add_shopping_cart</mat-icon>
+          Add
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>
+
+<!-- Pager -->
+<div class="pager" *ngIf="!loading && filteredTotal">
+  <div class="small">
+    Showing
+    <b>{{ startItem }}</b>–<b>{{ endItem }}</b>
+    of <b>{{ filteredTotal }}</b>
+  </div>
+
+  <div class="pager-actions">
+    <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1" data-testid="products-prev-page">Prev</button>
+    <div class="page-pill">Page {{ page }} / {{ totalPages }}</div>
+    <button mat-raised-button color="primary" (click)="nextPage()" [disabled]="page >= totalPages" data-testid="products-next-page">Next</button>
+  </div>
+</div>
+
+<mat-card *ngIf="!loading && !filteredTotal" style="margin-top:14px;">
+  <mat-card-content>No products match your filters.</mat-card-content>
+</mat-card>

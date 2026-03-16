@@ -1,0 +1,38 @@
+<div *ngIf="loading">Loading...</div>
+<div *ngIf="error" class="error">{{ error }}</div>
+
+<mat-card *ngIf="product as p">
+  <mat-card-header>
+    <mat-card-title>{{ p.name }}</mat-card-title>
+    <mat-card-subtitle>{{ p.categoryName }} / {{ p.subCategoryName }}</mat-card-subtitle>
+  </mat-card-header>
+
+  <img mat-card-image [src]="imgUrl(p)" [alt]="p.name" style="max-height:360px;object-fit:cover;" />
+
+  <mat-card-content>
+    <p *ngIf="p.description">{{ p.description }}</p>
+    <p class="small">SKU: {{ p.sku }}</p>
+    <p><b>{{ p.price | number:'1.2-2' }}</b> TND</p>
+    <p class="small">Stock: {{ p.stockQty }}</p>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px;">
+      <mat-form-field appearance="outline" style="width:140px;">
+        <mat-label>Qty</mat-label>
+        <input matInput type="number" [(ngModel)]="qty" min="1" [max]="p.stockQty" data-testid="details-qty" />
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="addToCart(p , qty)" [disabled]="p.stockQty<=0" data-testid="details-add-to-cart">
+        <mat-icon>add_shopping_cart</mat-icon>
+        Add to cart
+      </button>
+      <a mat-stroked-button routerLink="/cart" data-testid="details-go-cart">
+        <mat-icon>shopping_cart</mat-icon>
+        Go to cart
+      </a>
+    </div>
+  </mat-card-content>
+
+  <mat-card-actions>
+    <a mat-button routerLink="/products">Back to products</a>
+  </mat-card-actions>
+</mat-card>

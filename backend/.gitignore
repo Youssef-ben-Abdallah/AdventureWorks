@@ -1,0 +1,10 @@
+# Backend-specific ignore rules
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+*.cache
+*.pdb
+appsettings.Development.json
+secrets.json

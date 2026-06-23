@@ -13,4 +13,9 @@ public class OrderItem
     public int Qty { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal LineTotal => UnitPrice * Qty;
+
+    public int SpecialOfferID { get; set; } = 1;
+    public decimal UnitPriceDiscount { get; set; } = 0m;
+    public Guid rowguid { get; set; } = Guid.NewGuid();
+    public DateTime ModifiedDate { get; set; } = DateTime.UtcNow;
 }

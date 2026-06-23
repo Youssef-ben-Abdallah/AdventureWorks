@@ -63,13 +63,25 @@ export class CartComponent implements OnInit, OnDestroy {
     this.cart.setQty(i.product.id, Number(v));
   }
 
+  customerID = 1;
+  billToAddressID = 1;
+  shipToAddressID = 1;
+  shipMethodID = 1;
+
   checkout() {
     if (this.items.length === 0) return;
     this.loading = true;
     this.error = '';
 
-    const payload = this.items.map(i => ({ productId: i.product.id, qty: i.qty }));
-    this.orders.createOrder(payload).subscribe({
+    const payload = {
+      items: this.items.map(i => ({ productId: i.product.id, qty: i.qty })),
+      customerID: this.customerID,
+      billToAddressID: this.billToAddressID,
+      shipToAddressID: this.shipToAddressID,
+      shipMethodID: this.shipMethodID
+    };
+    
+    this.orders.createOrder(payload as any).subscribe({
       next: () => {
         this.cart.clear();
         this.loading = false;

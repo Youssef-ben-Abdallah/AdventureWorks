@@ -72,6 +72,33 @@ public class OltpDbContext : IdentityDbContext<AppUser>
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        b.Entity<Category>().ToTable("Categories", t => t.ExcludeFromMigrations());
+        b.Entity<SubCategory>().ToTable("SubCategories", t => t.ExcludeFromMigrations());
+        b.Entity<Product>().ToTable("Products", t => {
+            t.ExcludeFromMigrations();
+            t.HasTrigger("TR_Products_Insert");
+            t.HasTrigger("TR_Products_Update");
+        });
+
+        b.Entity<Order>().ToTable("SalesOrderHeader", "Sales", t => {
+            t.ExcludeFromMigrations();
+            t.HasTrigger("uSalesOrderHeader");
+        });
+        b.Entity<Order>().Property(o => o.Id).HasColumnName("SalesOrderID");
+        b.Entity<Order>().Property(o => o.CreatedAtUtc).HasColumnName("OrderDate");
+        b.Entity<Order>().Property(o => o.Total).HasColumnName("SubTotal");
+        b.Entity<Order>().Property(o => o.UserId).HasColumnName("Comment");
+        b.Entity<Order>().Property(o => o.Status).HasColumnType("tinyint");
+
+        b.Entity<OrderItem>().ToTable("SalesOrderDetail", "Sales", t => {
+            t.ExcludeFromMigrations();
+            t.HasTrigger("iduSalesOrderDetail");
+        });
+        b.Entity<OrderItem>().Property(o => o.Id).HasColumnName("SalesOrderDetailID");
+        b.Entity<OrderItem>().Property(o => o.OrderId).HasColumnName("SalesOrderID");
+        b.Entity<OrderItem>().Property(o => o.Qty).HasColumnName("OrderQty").HasColumnType("smallint");
+        b.Entity<OrderItem>().Ignore(o => o.LineTotal);
+
         b.Entity<OrderItem>()
             .HasOne(x => x.Order)
             .WithMany(x => x.Items)

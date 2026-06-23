@@ -33,6 +33,10 @@ export interface Order {
   userId: string;
   username: string;
   total: number;
+  customerID: number;
+  billToAddressID: number;
+  shipToAddressID: number;
+  shipMethodID: number;
   items: OrderItem[];
 }
 

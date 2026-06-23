@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Ecom.Api.Migrations
 {
     [DbContext(typeof(OltpDbContext))]
-    [Migration("20260224003006_SyncModel")]
-    partial class SyncModel
+    [Migration("20260623195401_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -107,7 +107,10 @@ namespace Ecom.Api.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("Ecom.Api.Entities.Order", b =>
@@ -118,8 +121,20 @@ namespace Ecom.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BillToAddressID")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("CustomerID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShipMethodID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShipToAddressID")
+                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -136,7 +151,14 @@ namespace Ecom.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+
+                            t.HasTrigger("TR_Orders_Insert");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("Ecom.Api.Entities.OrderItem", b =>
@@ -166,7 +188,14 @@ namespace Ecom.Api.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+
+                            t.HasTrigger("TR_OrderItems_Insert");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("Ecom.Api.Entities.Product", b =>
@@ -213,7 +242,10 @@ namespace Ecom.Api.Migrations
 
                     b.HasIndex("SubCategoryId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("Ecom.Api.Entities.SubCategory", b =>
@@ -236,7 +268,10 @@ namespace Ecom.Api.Migrations
                     b.HasIndex("CategoryId", "Name")
                         .IsUnique();
 
-                    b.ToTable("SubCategories");
+                    b.ToTable("SubCategories", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

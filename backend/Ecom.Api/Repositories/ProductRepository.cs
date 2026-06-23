@@ -33,7 +33,15 @@ public class ProductRepository : IProductRepository
     public async Task UpdateAsync(Product entity)
     {
         _db.Products.Update(entity);
-        await _db.SaveChangesAsync();
+        try 
+        {
+            await _db.SaveChangesAsync();
+        } 
+        catch (DbUpdateConcurrencyException) 
+        {
+            // Ignore exception caused by @@ROWCOUNT returning 0 due to INSTEAD OF UPDATE trigger on Products view
+            _db.Entry(entity).State = EntityState.Detached;
+        }
     }
 
     public async Task DeleteAsync(Product entity)

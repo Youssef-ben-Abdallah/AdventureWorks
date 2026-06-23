@@ -10,8 +10,8 @@ export class OrdersService {
   myOrders() { return this.http.get<Order[]>(`${environment.apiBaseUrl}/api/orders/mine`); }
   allOrders() { return this.http.get<Order[]>(`${environment.apiBaseUrl}/api/orders`); }
 
-  createOrder(items: { productId: number; qty: number }[]) {
-    return this.http.post<Order>(`${environment.apiBaseUrl}/api/orders`, { items });
+  createOrder(payload: any) {
+    return this.http.post<Order>(`${environment.apiBaseUrl}/api/orders`, payload);
   }
 
   updateStatus(id: number, status: number) {

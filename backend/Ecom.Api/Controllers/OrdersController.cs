@@ -73,7 +73,11 @@ public class OrdersController : ControllerBase
             UserId = userId,
             Status = OrderStatus.Pending,
             Items = items,
-            Total = items.Sum(x => x.LineTotal)
+            Total = items.Sum(x => x.LineTotal),
+            CustomerID = dto.CustomerID,
+            BillToAddressID = dto.BillToAddressID,
+            ShipToAddressID = dto.ShipToAddressID,
+            ShipMethodID = dto.ShipMethodID
         };
 
         var created = await _repo.AddAsync(order);
@@ -117,6 +121,10 @@ public class OrdersController : ControllerBase
         o.UserId,
         o.User?.UserName ?? "",
         o.Total,
+        o.CustomerID,
+        o.BillToAddressID,
+        o.ShipToAddressID,
+        o.ShipMethodID,
         o.Items.Select(i => new OrderItemDto(
             i.Id,
             i.ProductId,

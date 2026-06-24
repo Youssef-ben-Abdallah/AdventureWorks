@@ -1,32 +1,92 @@
-<h1>My Orders</h1>
+<div class="orders-page">
 
-<div *ngIf="loading">Loading...</div>
-<div class="error" *ngIf="error">{{error}}</div>
-
-<div class="card order-card" *ngFor="let o of orders" data-testid="order-card">
-  <div style="display:flex;justify-content:space-between;gap:10px;">
+  <!-- Page Header -->
+  <div class="orders-header">
     <div>
-      <b>Order #{{o.id}}</b>
-      <div class="small">{{o.createdAtUtc | date:'medium'}}</div>
+      <div class="aw-badge" style="margin-bottom:0.5rem;">
+        <mat-icon style="font-size:12px; height: 12px; width: 12px; line-height: 12px; vertical-align: middle;">receipt_long</mat-icon>
+        Order History
+      </div>
+      <h1 class="orders-title">My Orders</h1>
+      <p class="orders-subtitle">Track and review your purchase history.</p>
     </div>
-    <div>
-      <mat-chip class="status-chip" [ngStyle]="statusChipStyle(o.status)">
-        <mat-icon class="status-icon">{{ statusIcon(o.status) }}</mat-icon>
-        {{ statusLabel(o.status) }}
-      </mat-chip>
-      <span class="badge">{{o.total | number:'1.2-2'}}</span>
+    <a class="btn-secondary-glass" routerLink="/products">
+      <mat-icon>pedal_bike</mat-icon>
+      Shop More
+    </a>
+  </div>
+
+  <div class="neon-divider"></div>
+
+  <!-- Loading skeleton -->
+  <div class="orders-content" *ngIf="loading">
+    <div class="order-skeleton" *ngFor="let i of [1,2,3]">
+      <div class="skeleton" style="height:20px;width:30%;margin-bottom:10px;border-radius:4px;"></div>
+      <div class="skeleton" style="height:12px;width:20%;margin-bottom:16px;border-radius:4px;"></div>
+      <div class="skeleton" style="height:60px;border-radius:8px;"></div>
     </div>
   </div>
 
-  <table style="margin-top:10px;">
-    <thead><tr><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th></tr></thead>
-    <tbody>
-      <tr *ngFor="let i of o.items">
-        <td>{{i.productName}}</td>
-        <td>{{i.qty}}</td>
-        <td>{{i.unitPrice | number:'1.2-2'}}</td>
-        <td>{{i.lineTotal | number:'1.2-2'}}</td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- Error -->
+  <div class="orders-empty" *ngIf="error">
+    <mat-icon>error_outline</mat-icon>
+    <h3>Something went wrong</h3>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Empty state -->
+  <div class="orders-empty" *ngIf="!loading && !error && orders.length === 0">
+    <mat-icon>shopping_bag</mat-icon>
+    <h3>No orders yet</h3>
+    <p>Your order history will appear here once you make a purchase.</p>
+    <a class="btn-primary-glow" routerLink="/products">
+      <mat-icon>pedal_bike</mat-icon>
+      Start Shopping
+    </a>
+  </div>
+
+  <!-- Orders list -->
+  <div class="orders-content" *ngIf="!loading && !error && orders.length > 0">
+    <div class="order-card gradient-border" *ngFor="let o of orders" data-testid="order-card">
+
+      <!-- Order header -->
+      <div class="order-head">
+        <div class="order-id-block">
+          <div class="order-id">
+            <mat-icon class="order-id-icon">receipt</mat-icon>
+            Order #{{ o.id }}
+          </div>
+          <div class="order-date">{{ o.createdAtUtc | date:'MMMM d, y · h:mm a' }}</div>
+        </div>
+
+        <div class="order-head-right">
+          <div class="order-status-badge" [class]="statusClass(o.status)">
+            <mat-icon>{{ statusIcon(o.status) }}</mat-icon>
+            {{ statusLabel(o.status) }}
+          </div>
+          <div class="order-total">
+            <span class="order-total-label">Total</span>
+            <span class="order-total-value">${{ o.total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order items table -->
+      <div class="order-items">
+        <div class="order-items-header">
+          <span>Product</span>
+          <span class="right">Qty</span>
+          <span class="right">Unit Price</span>
+          <span class="right">Line Total</span>
+        </div>
+        <div class="order-item-row" *ngFor="let item of o.items">
+          <span class="item-name">{{ item.productName }}</span>
+          <span class="right item-qty">{{ item.qty }}</span>
+          <span class="right item-price">${{ item.unitPrice | number:'1.2-2' }}</span>
+          <span class="right item-total">${{ item.lineTotal | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>

@@ -9,17 +9,18 @@ import { Kpi } from 'src/app/core/services/dashboard.service';
   imports: [CommonModule, MatCardModule],
   template: `
   <div class="kpi-grid" *ngIf="kpis?.length">
-    <mat-card class="kpi" *ngFor="let k of kpis">
+    <div class="kpi glass" *ngFor="let k of kpis">
       <div class="label">{{ k.label }}</div>
-      <div class="value">{{ format(k.value, k.unit) }}</div>
-    </mat-card>
+      <div class="value text-glow-cyan">{{ format(k.value, k.unit) }}</div>
+    </div>
   </div>
   `,
   styles: [`
-    .kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(140px,1fr));gap:12px;align-items:stretch}
-    .kpi{padding:12px}
-    .label{font-size:12px;opacity:.75}
-    .value{font-size:22px;font-weight:700;margin-top:6px;line-height:1.1}
+    .kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(140px,1fr));gap:1rem;align-items:stretch}
+    .kpi{padding:1.25rem; border-radius:16px; border: 1px solid rgba(6,182,212,0.2); transition: transform 0.2s, box-shadow 0.2s;}
+    .kpi:hover { transform: translateY(-3px); box-shadow: 0 0 20px rgba(6,182,212,0.2); }
+    .label{font-size:0.75rem;font-weight:600;opacity:.75;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted)}
+    .value{font-size:1.75rem;font-weight:700;margin-top:0.5rem;line-height:1.1;color:var(--text-primary)}
     @media (max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,minmax(140px,1fr));}}
     @media (max-width:700px){.kpi-grid{grid-template-columns:repeat(2,minmax(140px,1fr));}}
   `]

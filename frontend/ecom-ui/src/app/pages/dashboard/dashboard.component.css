@@ -1,107 +1,274 @@
-.dashboard-shell{
-  /* break out of the 1100px container used by the shop pages */
-  width: calc(100vw - 32px);
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  padding: 16px;
-
-  min-height: calc(100vh - 16px);
-  display:flex;
-  flex-direction:column;
-  gap: 12px;
-
-  /* Avoid any horizontal layout shift */
+.dashboard-shell {
+  background: var(--bg-primary);
+  min-height: calc(100vh - 64px);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   overflow-x: hidden;
 }
 
-.header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.h{font-size:22px;font-weight:800;}
-.sub{font-size:13px;opacity:.8;max-width:900px;line-height:1.35;}
-.actions{display:flex;gap:10px;flex-wrap:wrap}
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 2.5rem clamp(1rem, 4vw, 3rem) 1.5rem;
+  border-bottom: 1px solid rgba(99,102,241,0.12);
+  background: linear-gradient(135deg, var(--hero-gradient-1), var(--hero-gradient-2));
+}
+.h {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+.sub {
+  font-size: 0.875rem;
+  color: #64748b;
+  max-width: 800px;
+  line-height: 1.5;
+  margin-top: 0.25rem;
+}
+.actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
-.filters{padding:12px}
-.filters-grid{display:grid;grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 1fr; gap:12px; align-items:center}
-.filters-grid .spinner{display:flex;justify-content:flex-end}
-.filters-grid.busy{opacity:.85}
+/* ===== Filters card ===== */
+.filters {
+  margin: 1.5rem clamp(1rem, 4vw, 3rem);
+  padding: 1.25rem !important;
+  background: linear-gradient(135deg, var(--hero-gradient-1), var(--hero-gradient-2)) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+.filters-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1 1 140px;
+}
+.filter-item label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.filter-item input, .filter-item select {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+  height: 38px;
+}
 
-.tabs{background: transparent; flex: 1; min-height: 0;}
-.tab{padding: 12px 0; height: 100%;}
+.filter-item input:focus, .filter-item select:focus {
+  border-color: var(--color-primary-bright);
+}
+.filters-grid .spinner { display: flex; align-items: center; height: 38px; margin-left: auto; }
+.filters-grid.busy { opacity: 0.7; }
 
-/* Make tab content fill remaining space */
-:host ::ng-deep .tabs .mat-mdc-tab-body-wrapper{flex:1; min-height:0;}
-:host ::ng-deep .tabs .mat-mdc-tab-body{height:100%;}
-:host ::ng-deep .tabs .mat-mdc-tab-body-content{
-  height:100%;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding-right:2px;
+.error {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: rgba(244,63,94,0.08);
+  border: 1px solid rgba(244,63,94,0.2);
+  color: #f87171;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
 
-  /* KEY: keep width stable when scrollbars appear */
+/* ===== Tab layout ===== */
+.tabs {
+  background: transparent !important;
+  flex: 1;
+  padding: 0 clamp(1rem, 4vw, 3rem);
+}
+.tab {
+  padding: 1.5rem 0 6rem 0;
+  height: 100%;
+}
+
+/* ===== Grid layouts ===== */
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 2.5rem;
+  margin: 2.5rem 0;
+  align-items: stretch;
+}
+.grid1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  margin: 2.5rem 0;
+}
+
+/* ===== Data table card ===== */
+.card {
+  padding: 1.5rem;
+  margin: 2.5rem 0;
+  background: linear-gradient(135deg, var(--hero-gradient-1), var(--hero-gradient-2)) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+.title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+.tablewrap { overflow: auto; }
+.right { text-align: right; }
+.busy {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+  .filters-grid { grid-template-columns: 1.4fr 1fr 1fr; }
+}
+@media (max-width: 760px) {
+  .filters-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== Chart sizing (prevents hover-stretch) ===== */
+app-chartjs-card.chart-card { display: block; min-width: 0; }
+
+:host ::ng-deep app-chartjs-card.chart-card .card,
+:host ::ng-deep app-chartjs-card.chart-card mat-card {
+  height: clamp(360px, 45vh, 540px);
+  display: flex;
+  flex-direction: column;
+}
+:host ::ng-deep app-chartjs-card.chart-card-compact .card,
+:host ::ng-deep app-chartjs-card.chart-card-compact mat-card {
+  height: clamp(360px, 41vh, 490px);
+}
+:host ::ng-deep app-chartjs-card .chart-host {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+:host ::ng-deep app-chartjs-card canvas {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ===== Material tab overrides ===== */
+:host ::ng-deep .mat-mdc-tab-header {
+  border-bottom: 1px solid rgba(99,102,241,0.12) !important;
+  background: transparent !important;
+}
+:host ::ng-deep .mat-mdc-tab-label-container {
+  background: transparent !important;
+}
+:host ::ng-deep .mdc-tab__text-label {
+  color: #64748b !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 600 !important;
+}
+:host ::ng-deep .mat-mdc-option .mdc-list-item__primary-text {
+  color: var(--text-primary) !important;
+}
+:host ::ng-deep .mdc-tab--active .mdc-tab__text-label {
+  color: #a5b4fc !important;
+}
+:host ::ng-deep .mdc-tab-indicator__content--underline {
+  border-color: #6366f1 !important;
+}
+:host ::ng-deep .mat-mdc-tab-body-wrapper {
+  flex: 1;
+  min-height: 0;
+}
+:host ::ng-deep .mat-mdc-tab-body-content {
+  overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-gutter: stable;
 }
 
-/* ================== LAYOUT GRIDS ================== */
-.grid2{
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap:16px;
-  margin-top:16px;
-  align-items:stretch;
+/* Material form fields in dark mode */
+:host ::ng-deep .mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  background: var(--bg-glass) !important;
+  border-radius: 10px !important;
 }
-.grid1{display:grid;grid-template-columns: 1fr; gap:16px; margin-top:16px}
-
-.card{padding:12px;margin-top:16px}
-.title{font-weight:800;margin-bottom:6px}
-.tablewrap{overflow:auto;}
-.right{text-align:right}
-.busy{display:flex;justify-content:center;padding:30px}
-
-.pager{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0}
-.ptext{opacity:.85;font-size:13px}
-
-@media (max-width:1200px){
-  .filters-grid{grid-template-columns: 1.4fr 1fr 1fr;}
+:host ::ng-deep .mat-mdc-form-field .mdc-floating-label {
+  color: var(--text-muted) !important;
 }
-@media (max-width:760px){
-  .filters-grid{grid-template-columns: 1fr;}
+:host ::ng-deep .mat-mdc-form-field .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+:host ::ng-deep .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) .mdc-list-item__primary-text {
+  color: var(--color-primary-bright) !important;
+  font-weight: 600;
+}
+:host ::ng-deep .mat-mdc-form-field .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+  border-color: rgba(99,102,241,0.25) !important;
+}
+:host ::ng-deep .mat-mdc-form-field .mat-mdc-input-element,
+:host ::ng-deep .mat-mdc-form-field .mat-mdc-select-value-text {
+  color: var(--text-primary) !important;
 }
 
-/* ================== HARD CHART LOCKING ==================
-   This is the part that prevents “hover stretching”.
-   It forces chart cards to have a stable height and prevents canvas reflow.
-*/
-
-/* Ensure the chart component participates nicely in grid sizing */
-app-chartjs-card.chart-card{
-  display:block;
-  min-width:0;       /* avoids flex/grid overflow causing resize */
+/* Material table dark */
+:host ::ng-deep .mat-mdc-table { background: transparent !important; }
+:host ::ng-deep .mat-mdc-header-cell {
+  background: var(--bg-glass) !important;
+  color: var(--text-muted) !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.07em !important;
+  border-bottom: 1px solid rgba(99,102,241,0.12) !important;
+}
+:host ::ng-deep .mat-mdc-cell {
+  color: var(--text-dim) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  font-size: 0.875rem !important;
+}
+:host ::ng-deep .mat-mdc-row:hover .mat-mdc-cell {
+  background: rgba(99,102,241,0.04) !important;
 }
 
-/* Give every chart a fixed/locked vertical space (responsive but stable) */
-:host ::ng-deep app-chartjs-card.chart-card .card,
-:host ::ng-deep app-chartjs-card.chart-card mat-card{
-  height: clamp(320px, 42vh, 520px);
-  display:flex;
-  flex-direction:column;
+/* Select panel dark */
+:host ::ng-deep .mat-mdc-select-panel {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-glow) !important;
+}
+:host ::ng-deep .mat-mdc-option {
+  color: #94a3b8 !important;
+}
+:host ::ng-deep .mat-mdc-option:hover,
+:host ::ng-deep .mat-mdc-option.mat-mdc-option-active {
+  background: rgba(99,102,241,0.12) !important;
+  color: #a5b4fc !important;
 }
 
-/* Compact charts (doughnut/pie) can be shorter but still locked */
-:host ::ng-deep app-chartjs-card.chart-card-compact .card,
-:host ::ng-deep app-chartjs-card.chart-card-compact mat-card{
-  height: clamp(300px, 38vh, 460px);
+/* Material spinner dark */
+:host ::ng-deep .mat-mdc-progress-spinner circle {
+  stroke: #6366f1 !important;
 }
 
-/* Lock the internal chart host (if you have .chart-host inside chartjs-card) */
-:host ::ng-deep app-chartjs-card .chart-host{
-  position:relative;
-  flex: 1 1 auto;
-  min-height:0;
-  overflow:hidden;  /* prevents tooltip overflow changing layout */
-}
-
-/* Force the canvas to fill its container and never “auto-resize” on hover */
-:host ::ng-deep app-chartjs-card canvas{
-  display:block !important;
-  width:100% !important;
-  height:100% !important;
+/* Date range picker dark */
+:host ::ng-deep .mat-calendar {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
 }

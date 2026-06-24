@@ -1,14 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, SlicePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatIconModule } from '@angular/material/icon';
 
 import { CatalogService } from '../../core/services/catalog.service';
 import { CartService } from '../../core/services/cart.service';
@@ -22,12 +15,7 @@ import { AuthService } from 'src/app/core/services/auth.service';
     CommonModule,
     RouterModule,
     FormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatIconModule,
+    SlicePipe,
   ],
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.css']
@@ -95,7 +83,12 @@ export class ProductsComponent implements OnInit {
         p.name.toLowerCase().includes(q) ||
         p.sku.toLowerCase().includes(q) ||
         (p.description ?? '').toLowerCase().includes(q)
-      ) : true);
+      ) : true)
+      .sort((a, b) => {
+        if (a.price === 0 && b.price !== 0) return 1;
+        if (b.price === 0 && a.price !== 0) return -1;
+        return 0;
+      });
   }
 
   get filteredTotal(): number {
@@ -155,6 +148,22 @@ export class ProductsComponent implements OnInit {
     }
   }
 
+  goToPage(n: number) {
+    this.page = n;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  get pageRange(): number[] {
+    const total = this.totalPages;
+    const cur = this.page;
+    const range: number[] = [];
+    const delta = 2;
+    for (let i = Math.max(1, cur - delta); i <= Math.min(total, cur + delta); i++) {
+      range.push(i);
+    }
+    return range;
+  }
+
   // ----- CART -----
   addToCart(p: Product, qty: number = 1) {
     if (!this.auth.getToken()) {
@@ -162,5 +171,13 @@ export class ProductsComponent implements OnInit {
       return;
     }
     this.cart.add(p, qty);
+  }
+
+  clearFilters() {
+    this.q = '';
+    this.categoryId = 0;
+    this.subCategoryId = 0;
+    this.maxPrice = undefined;
+    this.resetPage();
   }
 }

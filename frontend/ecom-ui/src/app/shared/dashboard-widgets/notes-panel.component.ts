@@ -28,11 +28,25 @@ import { MatIconModule } from '@angular/material/icon';
   </mat-accordion>
   `,
   styles: [`
-    .acc{margin-top:12px}
-    .content{display:grid;gap:12px}
-    .note{padding:10px;border:1px solid rgba(0,0,0,.12);border-radius:12px}
-    .h{font-weight:700;margin-bottom:4px}
-    .b{font-size:13px;opacity:.85;line-height:1.35}
+    .acc{margin: 2.5rem 0; display: block;}
+    .content{display:grid;gap:12px;padding-top:12px;}
+    .note{padding:10px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--bg-glass)}
+    .h{font-weight:700;margin-bottom:4px;color:var(--text-primary)}
+    .b{font-size:13px;opacity:.85;line-height:1.35;color:var(--text-dim)}
+    
+    ::ng-deep .mat-expansion-panel {
+      background: var(--bg-card) !important;
+      border: 1px solid var(--border-glow) !important;
+      border-radius: 12px !important;
+    }
+    ::ng-deep .mat-expansion-panel-header-title {
+      color: var(--text-primary) !important;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+    }
+    ::ng-deep .mat-expansion-panel-header .material-icons {
+      color: var(--color-primary-bright);
+    }
   `]
 })
 export class NotesPanelComponent {

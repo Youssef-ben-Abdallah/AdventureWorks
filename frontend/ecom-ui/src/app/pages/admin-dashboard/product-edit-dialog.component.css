@@ -22,10 +22,10 @@
 }
 
 .upload-box {
-    border: 1px solid rgba(0, 0, 0, .08);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
     padding: 12px;
-    background: #fff;
+    background: var(--bg-glass);
     display: grid;
     gap: 10px;
 }
@@ -38,10 +38,11 @@
 .upload-title {
     font-weight: 800;
     letter-spacing: -.2px;
+    color: var(--text-primary);
 }
 
 .upload-sub {
-    color: rgba(0, 0, 0, .65);
+    color: var(--text-muted);
 }
 
 .upload-row {
@@ -53,6 +54,7 @@
 
 .upload-input {
     max-width: 100%;
+    color: var(--text-primary);
 }
 
 .file-pill {
@@ -62,7 +64,7 @@
     padding: 6px 10px;
     border-radius: 999px;
     background: rgba(46, 125, 50, .10);
-    color: rgba(27, 94, 32, .95);
+    color: rgba(46, 125, 50, .95);
     border: 1px solid rgba(46, 125, 50, .20);
 }
 
@@ -73,18 +75,19 @@
 }
 
 .upload-note {
-    background: rgba(0, 0, 0, .04);
+    background: var(--bg-card-hover);
     padding: 8px 10px;
     border-radius: 10px;
-    color: rgba(0, 0, 0, .72);
+    color: var(--text-muted);
     line-height: 1.35;
 }
 
 .upload-note code {
-    background: rgba(0, 0, 0, .08);
+    background: var(--bg-card);
     padding: 2px 6px;
     border-radius: 6px;
     font-family: monospace;
+    color: var(--text-primary);
 }
 
 .small {

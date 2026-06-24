@@ -25,23 +25,28 @@ public class ProductRepository : IProductRepository
 
     public async Task<Product> AddAsync(Product entity)
     {
-        _db.Products.Add(entity);
-        await _db.SaveChangesAsync();
+        // Use raw SQL to bypass EF Core's implicit transaction and @@ROWCOUNT checking which fails 
+        // due to the INSTEAD OF INSERT trigger on the Products view.
+        await _db.Database.ExecuteSqlRawAsync(
+            "INSERT INTO Products (CategoryId, Description, ImageFileName, Name, Price, Sku, StockQty, SubCategoryId) " +
+            "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
+            entity.CategoryId, entity.Description, entity.ImageFileName, entity.Name, entity.Price, entity.Sku, entity.StockQty, entity.SubCategoryId);
+
+        var inserted = await _db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Sku == entity.Sku);
+        if (inserted != null)
+        {
+            entity.Id = inserted.Id;
+        }
         return entity;
     }
 
     public async Task UpdateAsync(Product entity)
     {
-        _db.Products.Update(entity);
-        try 
-        {
-            await _db.SaveChangesAsync();
-        } 
-        catch (DbUpdateConcurrencyException) 
-        {
-            // Ignore exception caused by @@ROWCOUNT returning 0 due to INSTEAD OF UPDATE trigger on Products view
-            _db.Entry(entity).State = EntityState.Detached;
-        }
+        // Use raw SQL to bypass EF Core's implicit transaction and @@ROWCOUNT checking which fails 
+        // due to the INSTEAD OF UPDATE trigger on the Products view.
+        await _db.Database.ExecuteSqlRawAsync(
+            "UPDATE Products SET CategoryId = {0}, Description = {1}, ImageFileName = {2}, Name = {3}, Price = {4}, Sku = {5}, StockQty = {6}, SubCategoryId = {7} WHERE Id = {8}",
+            entity.CategoryId, entity.Description, entity.ImageFileName, entity.Name, entity.Price, entity.Sku, entity.StockQty, entity.SubCategoryId, entity.Id);
     }
 
     public async Task DeleteAsync(Product entity)

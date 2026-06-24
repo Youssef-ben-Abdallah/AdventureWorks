@@ -1,42 +1,138 @@
-<mat-toolbar color="primary">
-  <button mat-icon-button routerLink="/" aria-label="Home">
-    <span class="material-icons" style="margin-right: 4px;">directions_bike</span>
-  </button>
+<nav class="aw-navbar" [class.scrolled]="scrolled" [class.menu-open]="menuOpen">
+  <div class="navbar-inner">
+    
+    <!-- LOGO -->
+    <a class="navbar-brand" routerLink="/" (click)="menuOpen=false">
+      <div class="brand-icon-wrap">
+        <span class="material-icons brand-icon">directions_bike</span>
+        <div class="brand-pulse"></div>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">AdventureWorks</span>
+        <span class="brand-sub">Bike Store</span>
+      </div>
+    </a>
 
-  <span style="margin-left:8px;font-weight:600;">Adventure Works</span>
-  <span class="spacer"></span>
+    <!-- DESKTOP NAV LINKS -->
+    <div class="nav-links" [class.open]="menuOpen">
+      <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="menuOpen=false" data-testid="nav-home">
+        <span class="material-icons nav-link-icon">home</span>
+        <span>Home</span>
+      </a>
+      <a class="nav-link" routerLink="/products" routerLinkActive="active" (click)="menuOpen=false" data-testid="nav-products">
+        <span class="material-icons nav-link-icon">pedal_bike</span>
+        <span>Products</span>
+      </a>
+      <a class="nav-link" routerLink="/orders" routerLinkActive="active" (click)="menuOpen=false"
+         *ngIf="(auth.isLoggedIn$ | async)" data-testid="nav-orders">
+        <span class="material-icons nav-link-icon">receipt_long</span>
+        <span>My Orders</span>
+      </a>
+      <a class="nav-link" routerLink="/admin" routerLinkActive="active" (click)="menuOpen=false"
+         *ngIf="auth.isAdmin()" data-testid="nav-admin">
+        <span class="material-icons nav-link-icon">admin_panel_settings</span>
+        <span>Admin</span>
+      </a>
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="active" (click)="menuOpen=false"
+         *ngIf="auth.isAdmin()" data-testid="nav-dashboard">
+        <span class="material-icons nav-link-icon">insights</span>
+        <span>Dashboard</span>
+      </a>
+    </div>
 
-  <a mat-button routerLink="/" data-testid="nav-home">Home</a>
-  <a mat-button routerLink="/products" data-testid="nav-products">Products</a>
-  <a mat-button routerLink="/orders" *ngIf="(auth.isLoggedIn$ | async)" data-testid="nav-orders">My Orders</a>
-  <a mat-button routerLink="/admin" *ngIf="auth.isAdmin()" data-testid="nav-admin">Admin</a>
-  <a mat-button routerLink="/dashboard" *ngIf="auth.isAdmin()" data-testid="nav-dashboard">Dashboard</a>
- <a mat-button routerLink="/cart" *ngIf="(auth.isLoggedIn$ | async)" data-testid="nav-cart"
-    [matBadge]="cart.count > 0 ? cart.count : null"  
-    matBadgeOverlap="true" 
-    matBadgeSize="medium" 
-    matBadgeColor="warn"
-    matBadgePosition="above"
-    style="margin-right: 20px;"> 
-  <span class="material-icons" style="margin-right: 4px;">shopping_cart</span>
-  <span>Cart</span>
-</a>
-
-
-  <ng-container *ngIf="(auth.isLoggedIn$ | async); else guest">
-    <button mat-button [matMenuTriggerFor]="menu" data-testid="nav-account-menu">
-      <span class="material-icons" style="margin-right:6px;">account_circle</span>
-      {{ auth.getUsername() || 'Account' }}
-    </button>
-    <mat-menu #menu="matMenu">
-      <button mat-menu-item (click)="logout()" data-testid="nav-logout">
-        <span class="material-icons" style="margin-right:6px;">logout</span>
-        Logout
+    <!-- RIGHT ACTIONS -->
+    <div class="nav-actions">
+      <!-- Theme Toggle -->
+      <button class="nav-theme-btn" (click)="toggleTheme()" aria-label="Toggle theme">
+        <mat-icon *ngIf="isLightMode">dark_mode</mat-icon>
+        <mat-icon *ngIf="!isLightMode">light_mode</mat-icon>
       </button>
-    </mat-menu>
-  </ng-container>
 
-  <ng-template #guest>
-    <a mat-raised-button color="accent" routerLink="/login" data-testid="nav-login">Login</a>
-  </ng-template>
-</mat-toolbar>
+      <!-- Cart -->
+      <a routerLink="/cart" class="cart-btn" *ngIf="(auth.isLoggedIn$ | async)" data-testid="nav-cart">
+        <span class="material-icons">shopping_cart</span>
+        <span class="cart-label">Cart</span>
+        <span class="cart-badge" *ngIf="cart.count > 0">{{ cart.count }}</span>
+      </a>
+
+      <!-- Account (logged in) -->
+      <ng-container *ngIf="(auth.isLoggedIn$ | async); else guestBtns">
+        <button class="account-btn" [matMenuTriggerFor]="accountMenu" data-testid="nav-account-menu">
+          <div class="avatar">{{ (auth.getUsername() || 'U').charAt(0).toUpperCase() }}</div>
+          <span class="account-name">{{ auth.getUsername() || 'Account' }}</span>
+          <span class="material-icons chevron">expand_more</span>
+        </button>
+        <mat-menu #accountMenu="matMenu" class="aw-menu">
+          <div class="menu-header">
+            <div class="menu-avatar">{{ (auth.getUsername() || 'U').charAt(0).toUpperCase() }}</div>
+            <div>
+              <div class="menu-username">{{ auth.getUsername() }}</div>
+              <div class="menu-role">{{ auth.isAdmin() ? 'Administrator' : 'Member' }}</div>
+            </div>
+          </div>
+          <div class="menu-divider"></div>
+          <button mat-menu-item routerLink="/orders" class="menu-item">
+            <span class="material-icons">receipt_long</span>
+            My Orders
+          </button>
+          <button mat-menu-item (click)="logout()" class="menu-item menu-item-danger" data-testid="nav-logout">
+            <span class="material-icons">logout</span>
+            Sign Out
+          </button>
+        </mat-menu>
+      </ng-container>
+
+      <!-- Guest -->
+      <ng-template #guestBtns>
+        <a routerLink="/login" class="btn-login" data-testid="nav-login">
+          <span class="material-icons">login</span>
+          Sign In
+        </a>
+      </ng-template>
+
+      <!-- Mobile hamburger -->
+      <button class="hamburger" (click)="toggleMenu()" [class.open]="menuOpen" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu Overlay -->
+  <div class="mobile-overlay" *ngIf="menuOpen" (click)="menuOpen=false"></div>
+  
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" [class.open]="menuOpen">
+    <a class="mobile-nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="menuOpen=false">
+      <span class="material-icons">home</span> Home
+    </a>
+    <a class="mobile-nav-link" routerLink="/products" routerLinkActive="active" (click)="menuOpen=false">
+      <span class="material-icons">pedal_bike</span> Products
+    </a>
+    <a class="mobile-nav-link" routerLink="/orders" routerLinkActive="active" (click)="menuOpen=false" *ngIf="(auth.isLoggedIn$ | async)">
+      <span class="material-icons">receipt_long</span> My Orders
+    </a>
+    <a class="mobile-nav-link" routerLink="/cart" routerLinkActive="active" (click)="menuOpen=false" *ngIf="(auth.isLoggedIn$ | async)">
+      <span class="material-icons">shopping_cart</span> Cart
+      <span class="mobile-badge" *ngIf="cart.count > 0">{{ cart.count }}</span>
+    </a>
+    <a class="mobile-nav-link" routerLink="/admin" routerLinkActive="active" (click)="menuOpen=false" *ngIf="auth.isAdmin()">
+      <span class="material-icons">admin_panel_settings</span> Admin
+    </a>
+    <a class="mobile-nav-link" routerLink="/dashboard" routerLinkActive="active" (click)="menuOpen=false" *ngIf="auth.isAdmin()">
+      <span class="material-icons">insights</span> Dashboard
+    </a>
+    <div class="mobile-divider"></div>
+    <ng-container *ngIf="(auth.isLoggedIn$ | async); else mobileGuest">
+      <button class="mobile-nav-link mobile-logout" (click)="logout(); menuOpen=false">
+        <span class="material-icons">logout</span> Sign Out
+      </button>
+    </ng-container>
+    <ng-template #mobileGuest>
+      <a class="mobile-nav-link mobile-login" routerLink="/login" (click)="menuOpen=false">
+        <span class="material-icons">login</span> Sign In
+      </a>
+    </ng-template>
+  </div>
+</nav>

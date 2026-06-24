@@ -69,6 +69,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
   loading = false;
   error = '';
+  activeTab = 0;
 
   // ====== MAT TABLE DATASOURCES ======
   catsDs = new MatTableDataSource<Category>([]);
@@ -142,6 +143,13 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     this.reloadAll();
   }
 
+  getErrorMessage(e: any): string {
+    if (typeof e?.error === 'string') return e.error;
+    if (e?.error?.title) return e.error.title;
+    if (e?.error?.message) return e.error.message;
+    return e?.message ?? 'Failed';
+  }
+
   ngAfterViewInit(): void {
     // attach once view is ready
     this.catsDs.paginator = this.catsPaginator;
@@ -182,7 +190,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
         this.loading = false;
       })
       .catch(err => {
-        this.error = err?.error ?? err?.message ?? 'Failed';
+        this.error = this.getErrorMessage(err);
         this.loading = false;
       });
   }
@@ -236,7 +244,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
       if (!v?.name) return;
       this.catalog.createCategory(v.name).subscribe({
         next: () => this.reloadAll(),
-        error: e => (this.error = e?.error ?? e?.message ?? 'Failed')
+        error: e => (this.error = this.getErrorMessage(e))
       });
     });
   }
@@ -251,7 +259,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
       if (!v?.name) return;
       this.catalog.updateCategory(c.id, v.name).subscribe({
         next: () => this.reloadAll(),
-        error: e => (this.error = e?.error ?? e?.message ?? 'Failed')
+        error: e => (this.error = this.getErrorMessage(e))
       });
     });
   }
@@ -266,7 +274,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
       if (!ok) return;
       this.catalog.deleteCategory(c.id).subscribe({
         next: () => this.reloadAll(),
-        error: e => (this.error = e?.error ?? e?.message ?? 'Failed')
+        error: e => (this.error = this.getErrorMessage(e))
       });
     });
   }
@@ -282,7 +290,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
       if (!v?.name || !v?.categoryId) return;
       this.catalog.createSubCategory(v.name, v.categoryId).subscribe({
         next: () => this.reloadAll(),
-        error: e => (this.error = e?.error ?? e?.message ?? 'Failed')
+        error: e => (this.error = this.getErrorMessage(e))
       });
     });
   }
@@ -297,7 +305,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
       if (!v?.name || !v?.categoryId) return;
       this.catalog.updateSubCategory(s.id, v.name, v.categoryId).subscribe({
         next: () => this.reloadAll(),
-        error: e => (this.error = e?.error ?? e?.message ?? 'Failed')
+        error: e => (this.error = this.getErrorMessage(e))
       });
     });
   }
@@ -312,7 +320,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
       if (!ok) return;
       this.catalog.deleteSubCategory(s.id).subscribe({
         next: () => this.reloadAll(),
-        error: e => (this.error = e?.error ?? e?.message ?? 'Failed')
+        error: e => (this.error = this.getErrorMessage(e))
       });
     });
   }
@@ -343,7 +351,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
             this.reloadAll();
           }
         },
-        error: e => (this.error = e?.error ?? e?.message ?? 'Failed')
+        error: e => (this.error = this.getErrorMessage(e))
       });
     });
   }
@@ -372,7 +380,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
             this.reloadAll();
           }
         },
-        error: e => (this.error = e?.error ?? e?.message ?? 'Failed')
+        error: e => (this.error = this.getErrorMessage(e))
       });
     });
   }
@@ -387,7 +395,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
       if (!ok) return;
       this.catalog.deleteProduct(p.id).subscribe({
         next: () => this.reloadAll(),
-        error: e => (this.error = e?.error ?? e?.message ?? 'Failed')
+        error: e => (this.error = this.getErrorMessage(e))
       });
     });
   }
@@ -396,7 +404,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
   changeStatus(o: Order, statusId: number) {
     this.ordersSvc.updateStatus(o.id, statusId).subscribe({
       next: () => this.reloadAll(),
-      error: e => (this.error = e?.error ?? e?.message ?? 'Failed')
+      error: e => (this.error = this.getErrorMessage(e))
     });
   }
 
@@ -406,6 +414,18 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
   statusIcon(id: number) {
     return this.statuses.find(s => s.id === id)?.icon ?? 'help';
+  }
+
+  orderBadgeClass(id: number): string {
+    switch (id) {
+      case 0: return 'order-badge badge-pending';
+      case 1: return 'order-badge badge-paid';
+      case 2: return 'order-badge badge-processing';
+      case 3: return 'order-badge badge-shipped';
+      case 4: return 'order-badge badge-delivered';
+      case 5: return 'order-badge badge-cancelled';
+      default: return 'order-badge';
+    }
   }
 
   statusChipStyle(id: number) {

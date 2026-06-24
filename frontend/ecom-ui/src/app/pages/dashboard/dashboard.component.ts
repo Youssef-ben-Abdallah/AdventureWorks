@@ -82,8 +82,8 @@ export class DashboardComponent implements OnInit {
   detailPageSize = 50;
 
   form = new FormGroup({
-    from: new FormControl<Date | null>(null),
-    to: new FormControl<Date | null>(null),
+    from: new FormControl<string | Date | null>(null),
+    to: new FormControl<string | Date | null>(null),
     territoryId: new FormControl<string | null>(null),
     territoryGroup: new FormControl<string | null>(null),
     salesPersonId: new FormControl<string | null>(null),
@@ -97,20 +97,40 @@ export class DashboardComponent implements OnInit {
   detailColumns = ['orderDate', 'salesOrderId', 'customer', 'product', 'category', 'territory', 'salesPerson', 'qty', 'lineTotal'];
 
   // ---- chart helpers (keep templates clean) ----
+  private bdLabelsMemo = new Map<any, string[]>();
   bdLabels(data: BreakdownItem[] | null | undefined, n = 12): string[] {
-    return (data ?? []).slice(0, n).map(x => x.label);
+    if (!data) return [];
+    if (this.bdLabelsMemo.has(data)) return this.bdLabelsMemo.get(data)!;
+    const res = data.slice(0, n).map(x => x.label);
+    this.bdLabelsMemo.set(data, res);
+    return res;
   }
 
+  private bdValuesMemo = new Map<any, number[]>();
   bdValues(data: BreakdownItem[] | null | undefined, n = 12): number[] {
-    return (data ?? []).slice(0, n).map(x => x.value);
+    if (!data) return [];
+    if (this.bdValuesMemo.has(data)) return this.bdValuesMemo.get(data)!;
+    const res = data.slice(0, n).map(x => x.value);
+    this.bdValuesMemo.set(data, res);
+    return res;
   }
 
+  private spLabelsMemo = new Map<any, string[]>();
   spLabels(data: SeriesPoint[] | null | undefined, n = 60): string[] {
-    return (data ?? []).slice(0, n).map(x => x.x);
+    if (!data) return [];
+    if (this.spLabelsMemo.has(data)) return this.spLabelsMemo.get(data)!;
+    const res = data.slice(0, n).map(x => x.x);
+    this.spLabelsMemo.set(data, res);
+    return res;
   }
 
+  private spValuesMemo = new Map<any, number[]>();
   spValues(data: SeriesPoint[] | null | undefined, n = 60): number[] {
-    return (data ?? []).slice(0, n).map(x => x.y);
+    if (!data) return [];
+    if (this.spValuesMemo.has(data)) return this.spValuesMemo.get(data)!;
+    const res = data.slice(0, n).map(x => x.y);
+    this.spValuesMemo.set(data, res);
+    return res;
   }
 
   constructor(private dash: DashboardService) {}
@@ -121,16 +141,18 @@ export class DashboardComponent implements OnInit {
     // Default range: dataset window (matches the sample DW dates)
     const from = new Date(2011, 0, 1);   // 01-01-2011
     const to   = new Date(2014, 11, 30); // 30-12-2014
-    from.setHours(0, 0, 0, 0);
-    to.setHours(0, 0, 0, 0);
-    this.form.patchValue({ from, to });
+    
+    const fStr = `${from.getFullYear()}-${String(from.getMonth()+1).padStart(2,'0')}-01`;
+    const tStr = `${to.getFullYear()}-${String(to.getMonth()+1).padStart(2,'0')}-30`;
+    
+    this.form.patchValue({ from: fStr, to: tStr });
   }
 
   private toQuery(): DashboardQuery {
     const v = this.form.value;
     return {
-      from: v.from,
-      to: v.to,
+      from: v.from ? new Date(v.from) : null,
+      to: v.to ? new Date(v.to) : null,
       territoryId: v.territoryId,
       territoryGroup: v.territoryGroup,
       salesPersonId: v.salesPersonId,
@@ -151,6 +173,10 @@ export class DashboardComponent implements OnInit {
     this.shipping = null;
     this.details = null;
     this.detailPage = 1;
+    this.bdLabelsMemo.clear();
+    this.bdValuesMemo.clear();
+    this.spLabelsMemo.clear();
+    this.spValuesMemo.clear();
     this.loadActive();
   }
 

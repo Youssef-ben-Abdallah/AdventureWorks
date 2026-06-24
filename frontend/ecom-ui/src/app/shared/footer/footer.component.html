@@ -1,33 +1,79 @@
 <footer class="aw-footer">
-  <mat-toolbar class="aw-footer-bar" color="primary">
-    <div class="aw-footer-wrap">
-      <!-- Left -->
-      <div class="brand">
-        <mat-icon class="brand-icon">pedal_bike</mat-icon>
-        <div class="brand-text">
-          <div class="brand-name">AdventureWorks Bike Store</div>
-          <div class="brand-sub small">
-            Demo commerce + analytics UI inspired by AdventureWorks sample data.
+  <div class="footer-glow-line"></div>
+  <div class="footer-inner">
+    <div class="footer-grid">
+
+      <!-- Brand column -->
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-icon">
+            <span class="material-icons">directions_bike</span>
           </div>
+          <div class="footer-logo-text">
+            <div class="footer-brand-name">AdventureWorks</div>
+            <div class="footer-brand-sub">Bike Store</div>
+          </div>
+        </div>
+        <p class="footer-desc">
+          A demo commerce + analytics UI built on the AdventureWorks2019 SQL Server dataset. 
+          Featuring real product catalog, customer, and sales data.
+        </p>
+        <div class="footer-tech-badges">
+          <span class="tech-badge">Angular 17</span>
+          <span class="tech-badge">ASP.NET Core</span>
+          <span class="tech-badge">SQL Server</span>
         </div>
       </div>
 
-      <!-- Middle links -->
-      <div class="links">
-        <a mat-button routerLink="/products">
-          <mat-icon>shopping_bag</mat-icon>
-          Products
-        </a>
-        <a mat-button routerLink="/orders">
-          <mat-icon>receipt_long</mat-icon>
-          Orders
-        </a>
+      <!-- Quick links -->
+      <div class="footer-col">
+        <h4 class="footer-col-title">Shop</h4>
+        <ul class="footer-links">
+          <li><a routerLink="/products" class="footer-link">All Products</a></li>
+          <li><a routerLink="/products" class="footer-link">Bikes</a></li>
+          <li><a routerLink="/products" class="footer-link">Components</a></li>
+          <li><a routerLink="/products" class="footer-link">Accessories</a></li>
+        </ul>
       </div>
 
-      <!-- Right -->
-      <div class="meta">
-        <div class="small line1">© {{ year }} AdventureWorks UI </div>
+      <!-- Account -->
+      <div class="footer-col">
+        <h4 class="footer-col-title">Account</h4>
+        <ul class="footer-links">
+          <li><a routerLink="/login" class="footer-link">Sign In</a></li>
+          <li><a routerLink="/orders" class="footer-link">My Orders</a></li>
+          <li><a routerLink="/cart" class="footer-link">Cart</a></li>
+        </ul>
+      </div>
+
+      <!-- Data info -->
+      <div class="footer-col">
+        <h4 class="footer-col-title">Data</h4>
+        <ul class="footer-links">
+          <li><a routerLink="/dashboard" class="footer-link">Analytics</a></li>
+          <li><a routerLink="/admin" class="footer-link">Admin Panel</a></li>
+          <li><a href="https://github.com/microsoft/sql-server-samples" class="footer-link" target="_blank" rel="noopener">AdventureWorks DB ↗</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-copy">
+        <span>© {{ year }} AdventureWorks Bike Store</span>
+        <span class="footer-dot">·</span>
+        <span>Demo project</span>
+      </div>
+      <div class="footer-stats">
+        <span class="footer-stat-item">
+          <span class="material-icons" style="font-size:14px;">verified</span>
+          AW2019 Dataset
+        </span>
+        <span class="footer-stat-item">
+          <span class="material-icons" style="font-size:14px;">security</span>
+          JWT Auth
+        </span>
       </div>
     </div>
-  </mat-toolbar>
+  </div>
 </footer>

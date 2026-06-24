@@ -1,14 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { OrdersService } from '../../core/services/orders.service';
 import { Order } from '../../core/models';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-my-orders',
   standalone: true,
-  imports: [CommonModule, MatChipsModule, MatIconModule],
+  imports: [CommonModule, RouterLink, MatIconModule],
   templateUrl: './my-orders.component.html',
   styleUrls: ['./my-orders.component.css']
 })
@@ -31,7 +31,7 @@ export class MyOrdersComponent implements OnInit {
     return ['Pending','Paid','Processing','Shipped','Delivered','Cancelled'][id] ?? 'Unknown';
   }
 
-  statusIcon(id: number) {
+  statusIcon(id: number): string {
     switch (id) {
       case 0: return 'schedule';
       case 1: return 'paid';
@@ -43,15 +43,15 @@ export class MyOrdersComponent implements OnInit {
     }
   }
 
-  statusChipStyle(id: number) {
+  statusClass(id: number): string {
     switch (id) {
-      case 0: return { '--mdc-chip-elevated-container-color': '#fff3cd', '--mdc-chip-label-text-color': '#856404', '--mdc-chip-with-icon-icon-color': '#856404' };
-      case 1: return { '--mdc-chip-elevated-container-color': '#d1ecf1', '--mdc-chip-label-text-color': '#0c5460', '--mdc-chip-with-icon-icon-color': '#0c5460' };
-      case 2: return { '--mdc-chip-elevated-container-color': '#e2e3ff', '--mdc-chip-label-text-color': '#3f51b5', '--mdc-chip-with-icon-icon-color': '#3f51b5' };
-      case 3: return { '--mdc-chip-elevated-container-color': '#d4edda', '--mdc-chip-label-text-color': '#155724', '--mdc-chip-with-icon-icon-color': '#155724' };
-      case 4: return { '--mdc-chip-elevated-container-color': '#c3f7d0', '--mdc-chip-label-text-color': '#0f5132', '--mdc-chip-with-icon-icon-color': '#0f5132' };
-      case 5: return { '--mdc-chip-elevated-container-color': '#f8d7da', '--mdc-chip-label-text-color': '#721c24', '--mdc-chip-with-icon-icon-color': '#721c24' };
-      default: return { '--mdc-chip-elevated-container-color': '#e2e3e5', '--mdc-chip-label-text-color': '#383d41', '--mdc-chip-with-icon-icon-color': '#383d41' };
+      case 0: return 'status-pending';
+      case 1: return 'status-paid';
+      case 2: return 'status-processing';
+      case 3: return 'status-shipped';
+      case 4: return 'status-delivered';
+      case 5: return 'status-cancelled';
+      default: return 'status-unknown';
     }
   }
 }

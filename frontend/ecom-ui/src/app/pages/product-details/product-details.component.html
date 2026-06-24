@@ -1,38 +1,130 @@
-<div *ngIf="loading">Loading...</div>
-<div *ngIf="error" class="error">{{ error }}</div>
+<div class="pd-page">
+  <!-- Back breadcrumb -->
+  <div class="pd-breadcrumb">
+    <a class="breadcrumb-link" routerLink="/products">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Products
+    </a>
+  </div>
 
-<mat-card *ngIf="product as p">
-  <mat-card-header>
-    <mat-card-title>{{ p.name }}</mat-card-title>
-    <mat-card-subtitle>{{ p.categoryName }} / {{ p.subCategoryName }}</mat-card-subtitle>
-  </mat-card-header>
-
-  <img mat-card-image [src]="imgUrl(p)" [alt]="p.name" style="max-height:360px;object-fit:cover;" />
-
-  <mat-card-content>
-    <p *ngIf="p.description">{{ p.description }}</p>
-    <p class="small">SKU: {{ p.sku }}</p>
-    <p><b>{{ p.price | number:'1.2-2' }}</b> TND</p>
-    <p class="small">Stock: {{ p.stockQty }}</p>
-
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px;">
-      <mat-form-field appearance="outline" style="width:140px;">
-        <mat-label>Qty</mat-label>
-        <input matInput type="number" [(ngModel)]="qty" min="1" [max]="p.stockQty" data-testid="details-qty" />
-      </mat-form-field>
-
-      <button mat-raised-button color="primary" (click)="addToCart(p , qty)" [disabled]="p.stockQty<=0" data-testid="details-add-to-cart">
-        <mat-icon>add_shopping_cart</mat-icon>
-        Add to cart
-      </button>
-      <a mat-stroked-button routerLink="/cart" data-testid="details-go-cart">
-        <mat-icon>shopping_cart</mat-icon>
-        Go to cart
-      </a>
+  <!-- Loading skeleton -->
+  <div class="pd-skeleton" *ngIf="loading">
+    <div class="pd-skeleton-img skeleton"></div>
+    <div class="pd-skeleton-body">
+      <div class="skeleton" style="height:14px;width:35%;margin-bottom:12px;border-radius:4px;"></div>
+      <div class="skeleton" style="height:28px;width:80%;margin-bottom:20px;border-radius:6px;"></div>
+      <div class="skeleton" style="height:12px;width:100%;margin-bottom:8px;border-radius:4px;"></div>
+      <div class="skeleton" style="height:12px;width:75%;margin-bottom:8px;border-radius:4px;"></div>
+      <div class="skeleton" style="height:12px;width:55%;margin-bottom:24px;border-radius:4px;"></div>
+      <div class="skeleton" style="height:48px;width:220px;border-radius:10px;"></div>
     </div>
-  </mat-card-content>
+  </div>
 
-  <mat-card-actions>
-    <a mat-button routerLink="/products">Back to products</a>
-  </mat-card-actions>
-</mat-card>
+  <!-- Error -->
+  <div class="pd-error" *ngIf="error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+    <a class="btn-secondary-glass" routerLink="/products">Browse Products</a>
+  </div>
+
+  <!-- Product -->
+  <div class="pd-layout" *ngIf="product && !loading">
+    <!-- Image panel -->
+    <div class="pd-image-panel gradient-border" style="width:100%; min-height:400px; display:flex; align-items:center; justify-content:center;">
+      <div class="pd-img-wrap" style="width:100%; height:100%; position:relative;">
+        <div class="product-placeholder" style="border-radius:15px;">{{ product.name }}</div>
+        <div class="pd-img-overlay"></div>
+      </div>
+      <!-- Stock badge -->
+      <div class="pd-stock-badge" [class.in-stock]="product.stockQty > 0" [class.out-stock]="product.stockQty <= 0">
+        <mat-icon>{{ product.stockQty > 0 ? 'check_circle' : 'cancel' }}</mat-icon>
+        {{ product.stockQty > 0 ? 'In Stock (' + product.stockQty + ')' : 'Out of Stock' }}
+      </div>
+    </div>
+
+    <!-- Details panel -->
+    <div class="pd-details">
+      <!-- Breadcrumb category -->
+      <div class="pd-category-path">
+        <span class="category-tag">{{ product.categoryName }}</span>
+        <mat-icon class="pd-path-sep">chevron_right</mat-icon>
+        <span class="category-tag" style="color:#818cf8;">{{ product.subCategoryName }}</span>
+      </div>
+
+      <h1 class="pd-title">{{ product.name }}</h1>
+
+      <div class="pd-sku-row">
+        <span class="pd-sku-label">SKU</span>
+        <code class="pd-sku">{{ product.sku }}</code>
+      </div>
+
+      <p class="pd-description" *ngIf="product.description">{{ product.description }}</p>
+
+      <!-- Price -->
+      <div class="pd-price-block">
+        <div class="pd-price">
+          <span class="pd-price-curr">$</span>{{ product.price | number:'1.2-2' }}
+        </div>
+        <div class="pd-price-label">per unit</div>
+      </div>
+
+      <!-- Divider -->
+      <div class="neon-divider" style="margin:1.5rem 0;"></div>
+
+      <!-- Quantity + actions -->
+      <div class="pd-actions">
+        <div class="pd-qty-group">
+          <label class="pd-qty-label">Quantity</label>
+          <div class="pd-qty-wrap">
+            <button class="qty-btn" (click)="qty = qty > 1 ? qty - 1 : 1">
+              <mat-icon>remove</mat-icon>
+            </button>
+            <input
+              class="pd-qty-input"
+              type="number"
+              [(ngModel)]="qty"
+              min="1"
+              [max]="product.stockQty"
+              data-testid="details-qty"
+            />
+            <button class="qty-btn" (click)="qty = qty < product.stockQty ? qty + 1 : qty">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="pd-btn-row">
+          <button
+            class="btn-primary-glow pd-add-btn"
+            (click)="addToCart(product, qty)"
+            [disabled]="product.stockQty <= 0"
+            data-testid="details-add-to-cart"
+          >
+            <mat-icon>add_shopping_cart</mat-icon>
+            Add to Cart
+          </button>
+          <a class="btn-secondary-glass pd-add-btn" routerLink="/cart" data-testid="details-go-cart">
+            <mat-icon>shopping_cart</mat-icon>
+            Go to Cart
+          </a>
+        </div>
+      </div>
+
+      <!-- Meta info chips -->
+      <div class="pd-meta-chips">
+        <div class="pd-meta-chip">
+          <mat-icon>local_shipping</mat-icon>
+          Fast Shipping
+        </div>
+        <div class="pd-meta-chip">
+          <mat-icon>verified</mat-icon>
+          Genuine Product
+        </div>
+        <div class="pd-meta-chip">
+          <mat-icon>replay</mat-icon>
+          Easy Returns
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

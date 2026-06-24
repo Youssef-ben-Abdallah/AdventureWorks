@@ -32,21 +32,21 @@ export type SimpleNameDialogData = {
     <h2 mat-dialog-title>{{ data.title }}</h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <div mat-dialog-content>
-        <mat-form-field appearance="outline" style="width:100%;">
-          <mat-label>{{ data.nameLabel }}</mat-label>
-          <input matInput formControlName="name" />
-        </mat-form-field>
+        <div class="form-field">
+          <label class="field-label">{{ data.nameLabel }}</label>
+          <input class="aw-input" formControlName="name" />
+        </div>
 
-        <mat-form-field *ngIf="data.categories?.length" appearance="outline" style="width:100%;margin-top:10px;">
-          <mat-label>Category</mat-label>
-          <mat-select formControlName="categoryId">
-            <mat-option *ngFor="let c of data.categories" [value]="c.id">{{ c.name }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <div class="form-field" *ngIf="data.categories?.length" style="margin-top:10px;">
+          <label class="field-label">Category</label>
+          <select class="aw-select" formControlName="categoryId">
+            <option *ngFor="let c of data.categories" [value]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
       </div>
-      <div mat-dialog-actions align="end">
-        <button mat-button type="button" (click)="ref.close()">Cancel</button>
-        <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary-glass" (click)="ref.close()">Cancel</button>
+        <button type="submit" class="btn-primary-glow" [disabled]="form.invalid">Save</button>
       </div>
     </form>
   `

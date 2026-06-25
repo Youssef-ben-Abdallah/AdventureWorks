@@ -708,7 +708,7 @@ def qa_settings(pytestconfig) -> dict:
 
     return {
         'api_base_url': _clean(pytestconfig.getini('api_base_url'), 'https://localhost:57240').rstrip('/'),
-        'ui_base_url': _clean(pytestconfig.getini('ui_base_url'), 'http://localhost:4200').rstrip('/'),
+        'ui_base_url': _clean(pytestconfig.getini('ui_base_url'), 'http://localhost:5173').rstrip('/'),
         'admin_username': _clean(pytestconfig.getini('admin_username'), 'admin'),
         'admin_password': _clean(pytestconfig.getini('admin_password'), 'Admin123!'),
         'browser': _clean(browser_value, 'chrome').lower(),
@@ -766,7 +766,7 @@ def require_ui(api_available, ui_available):
     if not api_available:
         pytest.skip('Backend API is not reachable. UI scenarios depend on it.')
     if not ui_available:
-        pytest.skip('Angular UI is not reachable. Start the frontend and rerun with --run-ui.')
+        pytest.skip('React UI is not reachable. Start the Vite dev server (npm run dev) and rerun with --run-ui.')
 
 
 @pytest.fixture()

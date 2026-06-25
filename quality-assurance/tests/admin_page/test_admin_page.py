@@ -147,7 +147,7 @@ def test_delete_referenced_product_returns_conflict(require_api, api_session, ap
 
     products = admin_api.get('/api/products', timeout=20)
     products.raise_for_status()
-    target = next(p for p in products.json() if p['stockQty'] > 0)
+    target = next(p for p in products.json() if p['stockQty'] > 0 and str(p.get('sku', '')).startswith('BK-'))
     created = user_api.post('/api/orders', json={'items': [{'productId': target['id'], 'qty': 1}]}, timeout=20)
     created.raise_for_status()
 

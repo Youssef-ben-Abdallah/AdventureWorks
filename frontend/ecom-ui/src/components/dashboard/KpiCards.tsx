@@ -21,7 +21,7 @@ export const KpiCards = ({ kpis }: { kpis: Kpi[] | null }) => {
   if (!kpis || !kpis.length) return null;
 
   return (
-    <div className="kpi-grid">
+    <div data-testid="dashboard-kpis" className="kpi-grid">
       {kpis.map((k, i) => {
         const icons = ['bar_chart', 'shopping_cart', 'inventory_2', 'account_balance_wallet', 'local_shipping', 'leaderboard', 'people', 'groups'];
         const icon = icons[i % icons.length];

@@ -1,0 +1,1 @@
+from .cube_insights_page import CubeInsightsPage

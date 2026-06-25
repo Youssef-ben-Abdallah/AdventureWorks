@@ -83,6 +83,42 @@ def test_products_response_under_two_seconds(require_api, api_session, api_base_
     assert elapsed < 2.0
 
 
+@pytest.mark.api
+@pytest.mark.unit_level
+def test_categories_list_is_public_and_non_empty(require_api, api_session, api_base_url):
+    api = ApiClient(api_session, api_base_url)
+    response = api.get('/api/categories', timeout=20)
+    assert response.status_code == 200
+    body = response.json()
+    assert isinstance(body, list)
+    assert len(body) > 0
+
+
+@pytest.mark.api
+@pytest.mark.unit_level
+def test_subcategories_list_is_public_and_non_empty(require_api, api_session, api_base_url):
+    api = ApiClient(api_session, api_base_url)
+    response = api.get('/api/subcategories', timeout=20)
+    assert response.status_code == 200
+    body = response.json()
+    assert isinstance(body, list)
+    assert len(body) > 0
+
+
+@pytest.mark.api
+@pytest.mark.unit_level
+def test_product_dto_shape_matches_react_model(require_api, api_session, api_base_url):
+    """Verify all fields the React Product type expects are present."""
+    api = ApiClient(api_session, api_base_url)
+    products = api.get('/api/products', timeout=20)
+    products.raise_for_status()
+    first = products.json()[0]
+    # React Product type fields (from types/models.ts)
+    for field in ['id', 'sku', 'name', 'price', 'stockQty', 'categoryId', 'subCategoryId',
+                  'categoryName', 'subCategoryName']:
+        assert field in first, f'Product DTO missing React-required field: {field}'
+
+
 @pytest.mark.ui
 @pytest.mark.system
 @pytest.mark.skipif(not PRODUCTS_PAGE_AVAILABLE, reason='Selenium/page dependencies are not available for products UI tests.')

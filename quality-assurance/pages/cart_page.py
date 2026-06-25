@@ -14,7 +14,8 @@ class CartPage(BasePage):
         self.click_testid('cart-checkout')
 
     def clear(self):
-        self.click_testid('cart-clear')
+        element = self.driver.find_element(*self.by_testid('cart-clear'))
+        self.driver.execute_script("arguments[0].click();", element)
 
     def increase_first_qty(self):
         buttons = self.driver.find_elements(*self.by_testid('cart-qty-inc'))

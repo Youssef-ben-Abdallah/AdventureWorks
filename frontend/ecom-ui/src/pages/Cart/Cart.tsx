@@ -51,7 +51,7 @@ export const Cart = () => {
             <h1 className="cart-title">Cart</h1>
             <p className="cart-subtitle">Review your items and checkout.</p>
           </div>
-          <button className="btn-danger" onClick={clear} disabled={items.length === 0}>
+          <button data-testid="cart-clear" className="btn-danger" onClick={clear} disabled={items.length === 0}>
             <span className="material-icons" style={{ fontSize: '16px', marginRight: '4px', verticalAlign: 'middle' }}>delete_sweep</span>
             <span style={{ verticalAlign: 'middle' }}>Clear</span>
           </button>
@@ -74,24 +74,25 @@ export const Cart = () => {
           <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px' }}>
             {items.map((i: CartItem) => {
               return (
-                <div key={i.product.id} className="item cart-item">
+                <div key={i.product.id} data-testid="cart-item" className="item cart-item">
                   <div className="info">
                     <div className="name">{i.product.name}</div>
                     <div className="small text-muted">{i.product.categoryName} / {i.product.subCategoryName}</div>
                     <div className="price text-glow-cyan">${i.product.price.toFixed(2)}</div>
                   </div>
                   <div className="qty">
-                    <button className="qty-btn" onClick={() => setQty(i.product.id, i.qty - 1)} disabled={i.qty <= 1}>
+                    <button data-testid="cart-qty-dec" className="qty-btn" onClick={() => setQty(i.product.id, i.qty - 1)} disabled={i.qty <= 1}>
                       <span className="material-icons">remove</span>
                     </button>
-                    <input 
-                      className="aw-input qty-input" 
-                      type="number" 
-                      value={i.qty} 
-                      onChange={(e) => setQty(i.product.id, Number(e.target.value))} 
-                      min="1" 
+                    <input
+                      data-testid="cart-qty-input"
+                      className="aw-input qty-input"
+                      type="number"
+                      value={i.qty}
+                      onChange={(e) => setQty(i.product.id, Number(e.target.value))}
+                      min="1"
                     />
-                    <button className="qty-btn" onClick={() => setQty(i.product.id, i.qty + 1)}>
+                    <button data-testid="cart-qty-inc" className="qty-btn" onClick={() => setQty(i.product.id, i.qty + 1)}>
                       <span className="material-icons">add</span>
                     </button>
                   </div>
@@ -111,10 +112,11 @@ export const Cart = () => {
               <span>Total</span><b className="text-glow-cyan">${total.toFixed(2)}</b>
             </div>
             <div style={{ margin: '1.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}></div>
-            <button 
-              className="btn-primary-glow" 
-              style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }} 
-              onClick={handleCheckout} 
+            <button
+              data-testid="cart-checkout"
+              className="btn-primary-glow"
+              style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+              onClick={handleCheckout}
               disabled={loading}
             >
               <span className="material-icons">shopping_bag</span>

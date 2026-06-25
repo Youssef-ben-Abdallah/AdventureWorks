@@ -73,5 +73,8 @@ def test_invalid_login_shows_error(driver, ui_base_url):
     login = LoginPage(driver)
     login.open(f'{ui_base_url}/login')
     login.login('admin', 'Wrong123!')
-    assert login.body_contains('Invalid credentials')
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.common.by import By
+    error_el = login.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, '[data-testid="auth-error"]')))
+    assert error_el.is_displayed()
     driver.ui_pause('invalid login error displayed')

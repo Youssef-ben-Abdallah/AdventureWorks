@@ -70,27 +70,27 @@ export const Navbar = () => {
               <span className="material-icons nav-link-icon">home</span>
               <span>Home</span>
             </NavLink>
-            <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
+            <NavLink data-testid="nav-products" to="/products" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
               <span className="material-icons nav-link-icon">pedal_bike</span>
               <span>Products</span>
             </NavLink>
             {isLoggedIn && (
-              <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
+              <NavLink data-testid="nav-orders" to="/orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
                 <span className="material-icons nav-link-icon">receipt_long</span>
                 <span>My Orders</span>
               </NavLink>
             )}
             {isAdmin && (
               <>
-                <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
+                <NavLink data-testid="nav-admin" to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
                   <span className="material-icons nav-link-icon">admin_panel_settings</span>
                   <span>Admin</span>
                 </NavLink>
-                <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
+                <NavLink data-testid="nav-dashboard" to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
                   <span className="material-icons nav-link-icon">insights</span>
                   <span>Dashboard</span>
                 </NavLink>
-                <NavLink to="/cube-insights" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
+                <NavLink data-testid="nav-cube-insights" to="/cube-insights" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
                   <span className="material-icons nav-link-icon">auto_awesome</span>
                   <span>Reseller Insights</span>
                 </NavLink>
@@ -101,13 +101,13 @@ export const Navbar = () => {
           {/* RIGHT ACTIONS */}
           <div className="nav-actions">
             {/* Theme Toggle */}
-            <button className="nav-theme-btn" onClick={toggleTheme} aria-label="Toggle theme">
+            <button data-testid="nav-theme-btn" className="nav-theme-btn" onClick={toggleTheme} aria-label="Toggle theme">
               {isLightMode ? <span className="material-icons">dark_mode</span> : <span className="material-icons">light_mode</span>}
             </button>
 
             {/* Cart */}
             {isLoggedIn && (
-              <Link to="/cart" className="cart-btn">
+              <Link data-testid="nav-cart" to="/cart" className="cart-btn">
                 <span className="material-icons">shopping_cart</span>
                 <span className="cart-label">Cart</span>
                 {count > 0 && <span className="cart-badge">{count}</span>}
@@ -117,7 +117,7 @@ export const Navbar = () => {
             {/* Account (logged in) */}
             {isLoggedIn ? (
               <div className="relative" ref={accountMenuRef}>
-                <button className="account-btn" onClick={() => setAccountMenuOpen(!accountMenuOpen)}>
+                <button data-testid="nav-account-menu" className="account-btn" onClick={() => setAccountMenuOpen(!accountMenuOpen)}>
                   <div className="avatar">{(username || 'U').charAt(0).toUpperCase()}</div>
                   <span className="account-name">{username || 'Account'}</span>
                   <span className="material-icons chevron">expand_more</span>
@@ -134,7 +134,7 @@ export const Navbar = () => {
                         <span className="material-icons mr-2 text-sm">receipt_long</span>
                         My Orders
                       </Link>
-                      <button onClick={() => { logout(); setAccountMenuOpen(false); navigate('/'); }} className="flex w-full items-center px-4 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors text-left">
+                      <button data-testid="nav-logout" onClick={() => { logout(); setAccountMenuOpen(false); navigate('/'); }} className="flex w-full items-center px-4 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors text-left">
                         <span className="material-icons mr-2 text-sm">logout</span>
                         Sign Out
                       </button>
@@ -143,7 +143,7 @@ export const Navbar = () => {
                 )}
               </div>
             ) : (
-              <Link to="/login" className="btn-login">
+              <Link data-testid="nav-login" to="/login" className="btn-login">
                 <span className="material-icons">login</span>
                 Sign In
               </Link>

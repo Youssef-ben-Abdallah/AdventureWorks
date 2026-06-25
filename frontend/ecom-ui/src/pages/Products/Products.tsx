@@ -267,7 +267,7 @@ export const Products = () => {
                   {pagedProducts.map(p => {
                     const imgUrl = CatalogService.imgUrl(p.imageFileName);
                     return (
-                      <div key={p.id} className={`aw-product-card ${p.stockQty <= 0 ? 'out-of-stock' : ''}`}>
+                      <div key={p.id} data-testid="product-card" className={`aw-product-card ${p.stockQty <= 0 ? 'out-of-stock' : ''}`}>
                         <div className="product-img-wrap">
                           {imgUrl ? (
                             <img src={imgUrl} alt={p.name} />
@@ -279,10 +279,11 @@ export const Products = () => {
                             <span className="aw-badge-mini">{p.subCategoryName}</span>
                           </div>
                           {p.stockQty <= 0 && <div className="out-of-stock-banner">OUT OF STOCK</div>}
-                          <button 
-                            className="quick-add-btn" 
-                            onClick={() => addToCart(p)} 
-                            title={p.stockQty <= 0 ? 'Out of stock' : 'Quick add'} 
+                          <button
+                            data-testid="product-add-to-cart"
+                            className="quick-add-btn"
+                            onClick={() => addToCart(p)}
+                            title={p.stockQty <= 0 ? 'Out of stock' : 'Quick add'}
                             disabled={p.stockQty <= 0}
                           >
                             <span className="material-icons">add_shopping_cart</span>
@@ -306,7 +307,7 @@ export const Products = () => {
                               <span className="price-curr">$</span>{p.price.toFixed(2)}
                             </div>
                             <div className="product-btns">
-                              <Link className="btn-ghost-sm" to={`/products/${p.id}`}>
+                              <Link data-testid="product-details-link" className="btn-ghost-sm" to={`/products/${p.id}`}>
                                 <span className="material-icons">visibility</span>
                               </Link>
                               <button 
@@ -331,7 +332,7 @@ export const Products = () => {
                     Showing <strong>{startItem}–{endItem}</strong> of <strong>{filteredTotal}</strong>
                   </div>
                   <div className="page-actions">
-                    <button className="page-btn" onClick={prevPage} disabled={page <= 1}>
+                    <button data-testid="products-prev-page" className="page-btn" onClick={prevPage} disabled={page <= 1}>
                       <span className="material-icons">chevron_left</span>
                     </button>
                     <div className="page-numbers">
@@ -341,7 +342,7 @@ export const Products = () => {
                         </button>
                       ))}
                     </div>
-                    <button className="page-btn" onClick={nextPage} disabled={page >= totalPages}>
+                    <button data-testid="products-next-page" className="page-btn" onClick={nextPage} disabled={page >= totalPages}>
                       <span className="material-icons">chevron_right</span>
                     </button>
                   </div>

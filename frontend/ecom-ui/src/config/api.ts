@@ -24,7 +24,10 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      window.dispatchEvent(new Event('session-expired'));
+      const url = error.config?.url || '';
+      if (!url.toLowerCase().includes('/auth/login')) {
+        window.dispatchEvent(new Event('session-expired'));
+      }
     }
     return Promise.reject(error);
   }

@@ -123,7 +123,7 @@ export const MyOrders = () => {
       {!loading && !error && orders.length > 0 && (
         <div className="orders-content aw-page-content">
           {orders.map(o => (
-            <div key={o.id} className="order-card gradient-border">
+            <div key={o.id} data-testid="order-card" className="order-card gradient-border">
               {/* Order header */}
               <div className="order-head">
                 <div className="order-id-block">

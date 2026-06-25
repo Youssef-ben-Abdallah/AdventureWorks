@@ -187,8 +187,9 @@ export const AdminDashboard = () => {
         <div className="admin-tabs">
           {['Categories', 'Sub-categories', 'Products', 'Orders'].map((name, i) => {
             const icons = ['category', 'account_tree', 'pedal_bike', 'receipt_long'];
+            const testIds = ['admin-tab-categories', 'admin-tab-subcategories', 'admin-tab-products', 'admin-tab-orders'];
             return (
-              <button key={i} className={`admin-tab ${activeTab === i ? 'active' : ''}`} onClick={() => setActiveTab(i)}>
+              <button key={i} data-testid={testIds[i]} className={`admin-tab ${activeTab === i ? 'active' : ''}`} onClick={() => setActiveTab(i)}>
                 <span className="material-icons">{icons[i]}</span>
                 {name}
               </button>
@@ -200,7 +201,7 @@ export const AdminDashboard = () => {
         <div className={`admin-section ${activeTab === 0 ? 'visible' : ''}`}>
           <div className="admin-card">
             <div className="admin-card-head">
-              <h3 className="admin-card-title"><span className="material-icons">category</span> Categories</h3>
+              <h3 data-testid="admin-categories-title" className="admin-card-title"><span className="material-icons">category</span> Categories</h3>
               <button className="btn-primary-glow" onClick={handleNewCategory}><span className="material-icons">add</span> New</button>
             </div>
             <div className="admin-filters">
@@ -232,7 +233,7 @@ export const AdminDashboard = () => {
         <div className={`admin-section ${activeTab === 1 ? 'visible' : ''}`}>
           <div className="admin-card">
             <div className="admin-card-head">
-              <h3 className="admin-card-title"><span className="material-icons">account_tree</span> Sub-categories</h3>
+              <h3 data-testid="admin-subcategories-title" className="admin-card-title"><span className="material-icons">account_tree</span> Sub-categories</h3>
               <button className="btn-primary-glow" onClick={handleNewSubCategory}><span className="material-icons">add</span> New</button>
             </div>
             <div className="admin-filters">
@@ -265,7 +266,7 @@ export const AdminDashboard = () => {
         <div className={`admin-section ${activeTab === 2 ? 'visible' : ''}`}>
           <div className="admin-card">
             <div className="admin-card-head">
-              <h3 className="admin-card-title"><span className="material-icons">pedal_bike</span> Products</h3>
+              <h3 data-testid="admin-products-title" className="admin-card-title"><span className="material-icons">pedal_bike</span> Products</h3>
               <button className="btn-primary-glow" onClick={handleNewProduct}><span className="material-icons">add</span> New Product</button>
             </div>
             <div className="admin-filters">

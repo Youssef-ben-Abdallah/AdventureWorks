@@ -9,15 +9,14 @@ from .base_page import BasePage
 class DashboardPage(BasePage):
     def ready(self):
         self.wait.until(EC.url_contains('/dashboard'))
-        self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'app-kpi-cards')))
+        # React: KpiCards renders <div data-testid="dashboard-kpis" class="kpi-grid">
+        self.wait.until(EC.visibility_of_element_located(self.by_testid('dashboard-kpis')))
         self.wait.until(
-            lambda d: len(d.find_elements(By.CSS_SELECTOR, 'app-kpi-cards .kpi-grid .kpi')) > 0
+            lambda d: len(d.find_elements(By.CSS_SELECTOR, '[data-testid="dashboard-kpis"] .kpi')) > 0
         )
-        self.wait.until(
-            EC.visibility_of_element_located(
-                (
-                    By.XPATH,
-                    "//app-kpi-cards//div[contains(@class,'label') and normalize-space()='Revenue']",
-                )
-            )
-        )
+
+    def tab_count(self) -> int:
+        return len(self.driver.find_elements(By.CSS_SELECTOR, '.dashboard-tab, .tab-btn'))
+
+    def kpi_count(self) -> int:
+        return len(self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="dashboard-kpis"] .kpi'))

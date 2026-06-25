@@ -7,7 +7,7 @@ from typing import Iterable
 
 REPO_MARKERS = (
     'backend/Ecom.Api/Program.cs',
-    'frontend/ecom-ui/src/app',
+    'frontend/ecom-ui/src/App.tsx',
 )
 
 KNOWN_FILE_PATTERNS = {
@@ -15,13 +15,15 @@ KNOWN_FILE_PATTERNS = {
     'categories_controller': ['backend/Ecom.Api/Controllers/CategoriesController.cs', '*/CategoriesController.cs', 'CategoriesController.cs'],
     'subcategories_controller': ['backend/Ecom.Api/Controllers/SubCategoriesController.cs', '*/SubCategoriesController.cs', 'SubCategoriesController.cs'],
     'products_controller': ['backend/Ecom.Api/Controllers/ProductsController.cs', '*/ProductsController.cs', 'ProductsController.cs'],
-    'cart_service': ['frontend/ecom-ui/src/app/core/services/cart.service.ts', '*/cart.service.ts', 'cart.service.ts'],
+    # React migration: cart logic moved from cart.service.ts to CartContext.tsx
+    'cart_service': ['frontend/ecom-ui/src/context/CartContext.tsx', '*/CartContext.tsx', 'CartContext.tsx'],
     'program': ['backend/Ecom.Api/Program.cs', '*/Program.cs', 'Program.cs'],
     'appsettings': ['backend/Ecom.Api/appsettings.json', '*/appsettings.json', 'appsettings.json'],
-    'login_html': ['frontend/ecom-ui/src/app/pages/login/login.component.html', '*/login.component.html', 'login.component.html'],
-    'navbar_html': ['frontend/ecom-ui/src/app/shared/navbar/navbar.component.html', '*/navbar.component.html', 'navbar.component.html'],
-    'products_html': ['frontend/ecom-ui/src/app/pages/products/products.component.html', '*/products.component.html', 'products.component.html'],
-    'cart_html': ['frontend/ecom-ui/src/app/pages/cart/cart.component.html', '*/cart.component.html', 'cart.component.html'],
+    # React migration: HTML templates replaced by TSX components
+    'login_html': ['frontend/ecom-ui/src/pages/Login/Login.tsx', '*/Login/Login.tsx', 'Login.tsx'],
+    'navbar_html': ['frontend/ecom-ui/src/components/layout/Navbar.tsx', '*/layout/Navbar.tsx', 'Navbar.tsx'],
+    'products_html': ['frontend/ecom-ui/src/pages/Products/Products.tsx', '*/Products/Products.tsx', 'Products.tsx'],
+    'cart_html': ['frontend/ecom-ui/src/pages/Cart/Cart.tsx', '*/Cart/Cart.tsx', 'Cart.tsx'],
 }
 
 SELECTOR_ATTRS = ('data-testid', 'data-test', 'data-cy', 'data-qa')
@@ -58,10 +60,10 @@ def is_source_root(path: Path) -> bool:
     for marker in REPO_MARKERS:
         if (path / marker).exists():
             return True
-    # relaxed discovery: one backend marker and one frontend marker anywhere under this root
+    # relaxed discovery: one backend marker and one frontend React marker under this root
     has_program = any(path.rglob('Program.cs'))
-    has_app_html = any(path.rglob('*.component.html'))
-    return has_program and has_app_html
+    has_app_tsx = any(path.rglob('App.tsx'))
+    return has_program and has_app_tsx
 
 
 def discover_source_root(seed: Path) -> Path:
@@ -139,9 +141,11 @@ def selector_attr_present(text: str) -> bool:
 
 def img_tag_is_accessible(tag: str) -> bool:
     lowered = tag.lower()
-    if 'alt=' in lowered or '[alt]=' in lowered:
+    # HTML/Angular binding: alt="..." or [alt]="..."
+    # JSX/TSX expression binding: alt={...}
+    if 'alt=' in lowered or '[alt]=' in lowered or 'alt={' in lowered:
         return True
-    if 'aria-hidden="true"' in lowered or "aria-hidden='true'" in lowered:
+    if 'aria-hidden="true"' in lowered or "aria-hidden='true'" in lowered or 'aria-hidden={true}' in lowered:
         return True
     if 'role="presentation"' in lowered or "role='presentation'" in lowered:
         return True
@@ -149,22 +153,28 @@ def img_tag_is_accessible(tag: str) -> bool:
 
 
 def find_app_root(source_root: Path) -> Path | None:
-    for candidate in [source_root / 'frontend/ecom-ui/src/app', *source_root.rglob('src/app')]:
+    # React app: source is under frontend/ecom-ui/src/
+    for candidate in [
+        source_root / 'frontend/ecom-ui/src',
+        *[p.parent for p in source_root.rglob('App.tsx') if p.is_file()],
+    ]:
         if candidate.exists() and candidate.is_dir():
             return candidate
     return None
 
 
 def find_html_files(source_root: Path) -> list[Path]:
+    # React migration: scan .tsx component files instead of Angular .html templates
     app_root = find_app_root(source_root)
     if app_root is None:
         return []
-    return list(app_root.rglob('*.html'))
+    return list(app_root.rglob('*.tsx'))
 
 
 def missing_accessible_images(html_files: Iterable[Path], source_root: Path) -> list[str]:
     missing = []
-    img_pattern = re.compile(r'<img[^>]*>', re.IGNORECASE)
+    # Matches both HTML (<img ...>) and JSX/TSX (<img ... />) self-closing forms
+    img_pattern = re.compile(r'<img\s[^>]*/?>|<img\s[^>]*>', re.IGNORECASE)
     for html in html_files:
         txt = html.read_text(encoding='utf-8')
         for tag in img_pattern.findall(txt):
@@ -181,15 +191,15 @@ def run_static_audit(source_root: Path) -> dict:
     source_root = discover_source_root(source_root)
     warnings = []
     fixed = []
-    coverage = {'cs': 0, 'ts': 0, 'html': 0}
+    coverage = {'cs': 0, 'ts': 0, 'tsx': 0}
 
     for path in source_root.rglob('*'):
         if path.suffix == '.cs':
             coverage['cs'] += 1
         elif path.suffix == '.ts':
             coverage['ts'] += 1
-        elif path.suffix == '.html':
-            coverage['html'] += 1
+        elif path.suffix == '.tsx':
+            coverage['tsx'] += 1
 
     try:
         program = read_known_file(source_root, 'program')
@@ -301,7 +311,7 @@ def write_reports(source_root: Path, output_dir: Path) -> dict:
         '## Coverage scanned',
         f"- C# files: {report['coverage']['cs']}",
         f"- TypeScript files: {report['coverage']['ts']}",
-        f"- HTML files: {report['coverage']['html']}",
+        f"- TSX (React) files: {report['coverage']['tsx']}",
         '',
         '## Corrected or confirmed improvements',
     ]

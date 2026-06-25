@@ -102,11 +102,11 @@ export const Login = () => {
       <div className="login-form-panel glass-strong">
         {/* Mode tabs */}
         <div className="mode-tabs">
-          <button className={`mode-tab ${mode === 'login' ? 'active' : ''}`} onClick={() => { setMode('login'); setError(''); }}>
+          <button data-testid="mode-login" className={`mode-tab ${mode === 'login' ? 'active' : ''}`} onClick={() => { setMode('login'); setError(''); }}>
             <span className="material-icons">login</span>
             Sign In
           </button>
-          <button className={`mode-tab ${mode === 'register' ? 'active' : ''}`} onClick={() => { setMode('register'); setError(''); }}>
+          <button data-testid="mode-register" className={`mode-tab ${mode === 'register' ? 'active' : ''}`} onClick={() => { setMode('register'); setError(''); }}>
             <span className="material-icons">person_add</span>
             Create Account
           </button>
@@ -125,6 +125,7 @@ export const Login = () => {
               Username
             </label>
             <input
+              data-testid="login-username"
               className="aw-input"
               value={username}
               onChange={e => setUsername(e.target.value)}
@@ -147,6 +148,7 @@ export const Login = () => {
                 Email
               </label>
               <input
+                data-testid="register-email"
                 className="aw-input"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -164,6 +166,7 @@ export const Login = () => {
             </label>
             <div className="password-wrap">
               <input
+                data-testid="login-password"
                 className="aw-input"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
@@ -186,7 +189,7 @@ export const Login = () => {
 
           {/* Error message */}
           {error && (
-            <div className="form-error">
+            <div data-testid="auth-error" className="form-error">
               <span className="material-icons">error_outline</span>
               {error}
             </div>
@@ -194,6 +197,7 @@ export const Login = () => {
 
           {/* Submit */}
           <button
+            data-testid="auth-submit"
             type="submit"
             className="btn-submit"
             disabled={loading || isInvalid}

@@ -528,26 +528,22 @@ public class DashboardService : IDashboardService
             .ThenByDescending(x => x.SalesOrderDetailID)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Join(_db.Customers.AsNoTracking(), s => s.CustomerID, c => c.CustomerID, (s, c) => new { s, c })
-            .Join(_db.Products.AsNoTracking(), x => x.s.ProductID, p => p.ProductID, (x, p) => new { x.s, x.c, p })
-            .Join(_db.Territories.AsNoTracking(), x => x.s.TerritoryID, t => t.TerritoryID, (x, t) => new { x.s, x.c, x.p, t })
-            .Join(_db.SalesPeople.AsNoTracking(), x => x.s.SalesPersonID, sp => sp.BusinessEntityID, (x, sp) => new { x.s, x.c, x.p, x.t, sp })
-            .Join(_db.ShipMethods.AsNoTracking(), x => x.s.ShipMethodID, sm => sm.ShipMethodID, (x, sm) => new DetailRowDto(
-                x.s.SalesOrderDetailID,
-                x.s.SalesOrderID,
-                x.s.OrderDate,
-                x.s.ShipDate,
-                ((x.c.FirstName ?? "") + " " + (x.c.LastName ?? "")).Trim(),
-                x.p.Name,
-                x.p.CategoryName,
-                x.t.Name,
-                x.t.CountryRegionCode,
-                ((x.sp.FirstName ?? "") + " " + (x.sp.LastName ?? "")).Trim(),
-                sm.Name,
-                x.s.OrderQty,
-                x.s.UnitPrice,
-                x.s.UnitPriceDiscount,
-                x.s.LineTotal
+            .Select(x => new DetailRowDto(
+                x.SalesOrderDetailID,
+                x.SalesOrderID,
+                x.OrderDate,
+                x.ShipDate,
+                ((x.Customer != null ? x.Customer.FirstName ?? "" : "") + " " + (x.Customer != null ? x.Customer.LastName ?? "" : "")).Trim(),
+                x.Product != null ? x.Product.Name : null,
+                x.Product != null ? x.Product.CategoryName : null,
+                x.Territory != null ? x.Territory.Name : null,
+                x.Territory != null ? x.Territory.CountryRegionCode : null,
+                x.SalesPerson != null ? ((x.SalesPerson.FirstName ?? "") + " " + (x.SalesPerson.LastName ?? "")).Trim() : "",
+                x.ShipMethod != null ? x.ShipMethod.Name : null,
+                x.OrderQty,
+                x.UnitPrice,
+                x.UnitPriceDiscount,
+                x.LineTotal
             ))
             .ToListAsync(ct);
 

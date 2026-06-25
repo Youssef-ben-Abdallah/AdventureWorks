@@ -35,7 +35,7 @@ Set the execution values directly in `pytest.ini`:
 
 ```ini
 api_base_url = https://localhost:57240
-ui_base_url = http://localhost:4200
+ui_base_url = http://localhost:5173
 admin_username = admin
 admin_password = Admin123!
 browser = chrome
@@ -82,7 +82,7 @@ Generated files per run:
 
 ## Notes
 - API suites expect the backend to be running locally.
-- UI suites expect both backend and Angular frontend to be running locally.
+- UI suites expect both backend and React frontend to be running locally.
 - Self-signed development certificates are tolerated by the test client and browser options.
 - The old `.env` runtime configuration approach was removed; shared test settings now live in `pytest.ini`.
 - Negative UI scenarios are marked with `@pytest.mark.negative` so evidence is collected even when they pass.

@@ -139,24 +139,6 @@ The API serves product images from:
 
 Create that folder locally or adjust the path in configuration.
 
-## GitHub publication checklist
-
-Before pushing to GitHub:
-
-1. Create a new empty repository on GitHub.
-2. Extract this cleaned project.
-3. Run:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin <your-repository-url>
-   git push -u origin main
-   ```
-4. Update the repository description and add screenshots if desired.
-5. Add collaborators if both authors will maintain the repo.
-
 ## Documentation index
 
 - [`AUTHORS.md`](AUTHORS.md)
@@ -169,7 +151,3 @@ Before pushing to GitHub:
 - [`frontend/ecom-ui/README.md`](frontend/ecom-ui/README.md)
 - [`AW_Sales_DW_ETL/README.md`](AW_Sales_DW_ETL/README.md)
 - [`quality-assurance/README.md`](quality-assurance/README.md)
-
-## Important note
-
-This package is prepared for **GitHub repository publication**. It is not a production deployment bundle. Before deploying the application to a real server, review secrets management, CORS, hosting configuration, environment variables, and database provisioning.

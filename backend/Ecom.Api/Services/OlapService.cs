@@ -1,4 +1,5 @@
 using Microsoft.AnalysisServices.AdomdClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
 namespace Ecom.Api.Services;
@@ -6,18 +7,61 @@ namespace Ecom.Api.Services;
 public class OlapService : IOlapService
 {
     private readonly string _connectionString;
+    private readonly string? _dwConnectionString;
+    private Dictionary<string, string>? _employeeNames;
+    private Dictionary<string, string>? _promotionNames;
+    private Dictionary<string, string>? _currencyNames;
 
     public OlapService(IConfiguration configuration)
     {
-        _connectionString = configuration.GetConnectionString("SsasConnection") 
+        _connectionString = configuration.GetConnectionString("SsasConnection")
             ?? throw new ArgumentNullException("SsasConnection not found");
+        _dwConnectionString = configuration.GetConnectionString("DwSourceConnection");
     }
 
     private async Task<AdomdConnection> GetConnectionAsync()
     {
         var conn = new AdomdConnection(_connectionString);
-        await Task.Run(() => conn.Open()); // AdomdClient doesn't have true async Open
+        await Task.Run(() => conn.Open());
         return conn;
+    }
+
+    private async Task<Dictionary<string, string>> GetLookupAsync(string sql)
+    {
+        if (string.IsNullOrEmpty(_dwConnectionString)) return new();
+        var dict = new Dictionary<string, string>();
+        await using var conn = new SqlConnection(_dwConnectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            var key = reader[0]?.ToString();
+            var name = reader[1]?.ToString();
+            if (key != null && name != null) dict[key] = name;
+        }
+        return dict;
+    }
+
+    private async Task<string> ResolveEmployeeAsync(string? key)
+    {
+        if (string.IsNullOrEmpty(key)) return "";
+        _employeeNames ??= await GetLookupAsync("SELECT CAST(EmployeeKey AS VARCHAR), FirstName + ' ' + LastName FROM DimEmployee");
+        return _employeeNames.GetValueOrDefault(key, $"Employee {key}");
+    }
+
+    private async Task<string> ResolvePromotionAsync(string? key)
+    {
+        if (string.IsNullOrEmpty(key)) return "";
+        _promotionNames ??= await GetLookupAsync("SELECT CAST(PromotionKey AS VARCHAR), EnglishPromotionName FROM DimPromotion");
+        return _promotionNames.GetValueOrDefault(key, $"Promotion {key}");
+    }
+
+    private async Task<string> ResolveCurrencyAsync(string? key)
+    {
+        if (string.IsNullOrEmpty(key)) return "";
+        _currencyNames ??= await GetLookupAsync("SELECT CAST(CurrencyKey AS VARCHAR), CurrencyAlternateKey + ' - ' + CurrencyName FROM DimCurrency");
+        return _currencyNames.GetValueOrDefault(key, $"Currency {key}");
     }
 
     public async Task<object> GetFiltersAsync()
@@ -619,7 +663,7 @@ public class OlapService : IOlapService
             if (string.IsNullOrEmpty(emp)) continue;
             results.Add(new
             {
-                Employee = $"Employee {emp}",
+                Employee = await ResolveEmployeeAsync(emp),
                 Sales = reader[1] == DBNull.Value ? 0 : reader[1],
                 Profit = reader[2] == DBNull.Value ? 0 : reader[2]
             });
@@ -695,7 +739,7 @@ public class OlapService : IOlapService
             if (string.IsNullOrEmpty(emp)) continue;
             results.Add(new
             {
-                Employee = $"Employee {emp}",
+                Employee = await ResolveEmployeeAsync(emp),
                 Aov = reader[1] == DBNull.Value ? 0 : reader[1],
                 OrderCount = reader[2] == DBNull.Value ? 0 : reader[2]
             });
@@ -759,9 +803,11 @@ public class OlapService : IOlapService
         var results = new List<object>();
         while (reader.Read())
         {
+            var key = reader[0]?.ToString();
+            if (string.IsNullOrEmpty(key)) continue;
             results.Add(new
             {
-                Promotion = reader[0]?.ToString(),
+                Promotion = await ResolvePromotionAsync(key),
                 Sales = reader[1] == DBNull.Value ? 0 : reader[1],
                 Discount = reader[2] == DBNull.Value ? 0 : reader[2]
             });
@@ -827,9 +873,11 @@ public class OlapService : IOlapService
         var results = new List<object>();
         while (reader.Read())
         {
+            var key = reader[0]?.ToString();
+            if (string.IsNullOrEmpty(key)) continue;
             results.Add(new
             {
-                Currency = reader[0]?.ToString(),
+                Currency = await ResolveCurrencyAsync(key),
                 Sales = reader[1] == DBNull.Value ? 0 : reader[1]
             });
         }

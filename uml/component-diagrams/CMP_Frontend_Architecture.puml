@@ -1,0 +1,146 @@
+@startuml CMP_Frontend_Architecture
+!theme cerulean-outline
+title Frontend Architecture - AdventureWorks Sales BI Platform
+caption React 19 + TypeScript 6 + Vite 8
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 40
+
+' ── Routing ───────────────────────────────────────────────
+package "Routing\n[react-router-dom]" as ROUTING <<Rectangle>> #FCE4EC {
+    component "[BrowserRouter]\nNested Routes" as Router #F8BBD0
+    note right of Router
+        Route tree:
+        / -> Layout (Outlet)
+          /          -> Home
+          /products  -> Products
+          /products/:id -> ProductDetails
+          /login     -> Login
+          /cart      -> Cart
+          /my-orders -> MyOrders
+          /dashboard -> Dashboard
+          /cube-insights -> CubeInsights
+          /admin     -> AdminDashboard
+    end note
+}
+
+' ── Context Providers ─────────────────────────────────────
+package "Context Providers\n[React Context API]" as CTX <<Rectangle>> #E8EAF6 {
+    component "[ThemeProvider]\nThemeContext" as ThemeProv #C5CAE9
+    component "[AuthProvider]\nAuthContext\n(JWT token, user state)" as AuthProv #C5CAE9
+    component "[CartProvider]\nCartContext\n(cart items, quantities)" as CartProv #C5CAE9
+
+    note bottom of CTX
+        Wrapping order in main.tsx:
+        BrowserRouter
+          > ThemeProvider
+            > AuthProvider
+              > CartProvider
+                > <Routes>
+    end note
+}
+
+' ── Layout Components ─────────────────────────────────────
+package "Layout Components" as LAYOUT <<Rectangle>> #E0F2F1 {
+    component "[Layout]\n<Navbar />\n<Outlet />\n<Footer />" as LayoutComp #B2DFDB
+    component "[Navbar]\nNavigation + Theme Toggle\n+ Auth Status" as Navbar #B2DFDB
+    component "[Footer]" as Footer #B2DFDB
+}
+
+' ── Pages ─────────────────────────────────────────────────
+package "Pages" as PAGES <<Rectangle>> #E3F2FD {
+    component "[Home]\nLanding page" as HomePage #BBDEFB
+    component "[Products]\nProduct listing\n+ search/filter" as ProductsPage #BBDEFB
+    component "[ProductDetails]\nSingle product view\n+ add to cart" as ProductDetailPage #BBDEFB
+    component "[Login]\nSign in / Register" as LoginPage #BBDEFB
+    component "[Cart]\nShopping cart\n+ checkout" as CartPage #BBDEFB
+    component "[MyOrders]\nOrder history\n+ status tracking" as MyOrdersPage #BBDEFB
+    component "[Dashboard]\nSales analytics\n(DW queries)" as DashboardPage #BBDEFB
+    component "[CubeInsights]\nOLAP analytics\n(SSAS MDX)" as CubeInsightsPage #BBDEFB
+    component "[AdminDashboard]\nAdmin analytics\n+ management" as AdminPage #BBDEFB
+}
+
+' ── Dashboard Components ──────────────────────────────────
+package "Dashboard Components" as DASHCOMP <<Rectangle>> #F1F8E9 {
+    component "[ChartCard]\nRecharts wrapper\n(Bar, Pie, Line)" as ChartCard #DCEDC8
+    component "[KpiCards]\nMetric display cards" as KpiCards #DCEDC8
+    component "[NotesPanel]\nAnnotations panel" as NotesPanel #DCEDC8
+}
+
+' ── Services ──────────────────────────────────────────────
+package "API Services\n[Axios-based]" as SERVICES <<Rectangle>> #FFF3E0 {
+    component "[AuthService]\nauth.ts\nlogin, register, logout" as AuthSvc #FFE0B2
+    component "[CatalogService]\ncatalog.ts\nproducts, categories" as CatSvc #FFE0B2
+    component "[OrdersService]\norders.ts\ncreate, list orders" as OrdSvc #FFE0B2
+    component "[DashboardService]\ndashboard.ts\nDW analytics data" as DashSvc #FFE0B2
+    component "[CubeInsightsService]\ncubeInsights.ts\nSSAS OLAP data" as CubeSvc #FFE0B2
+}
+
+' ── Config ────────────────────────────────────────────────
+package "Config" as CONFIG <<Rectangle>> #F3E5F5 {
+    component "[apiClient]\napi.ts\nAxios instance\nbaseURL: localhost:57241\nJWT interceptor" as ApiClient #E1BEE7
+}
+
+' ── Types ─────────────────────────────────────────────────
+package "Types" as TYPES <<Rectangle>> #ECEFF1 {
+    component "[models.ts]\nTypeScript interfaces\n& type definitions" as Models #CFD8DC
+}
+
+' ── External ──────────────────────────────────────────────
+cloud "ASP.NET Core API\nlocalhost:57241" as Backend #FFCDD2
+
+' ── Data Flow Arrows ──────────────────────────────────────
+
+' Router -> Layout
+Router --> LayoutComp : renders
+LayoutComp --> Navbar : contains
+LayoutComp --> Footer : contains
+LayoutComp --> PAGES : Outlet renders
+
+' Context -> Pages
+ThemeProv ..> AuthProv : wraps
+AuthProv ..> CartProv : wraps
+CartProv ..> Router : wraps
+
+AuthProv ..> Navbar : useAuth()
+CartProv ..> Navbar : useCart()
+ThemeProv ..> Navbar : useTheme()
+
+' Pages -> Dashboard Components
+DashboardPage --> ChartCard : uses
+DashboardPage --> KpiCards : uses
+DashboardPage --> NotesPanel : uses
+CubeInsightsPage --> ChartCard : uses
+CubeInsightsPage --> KpiCards : uses
+AdminPage --> ChartCard : uses
+AdminPage --> KpiCards : uses
+
+' Pages -> Services
+LoginPage --> AuthSvc : uses
+ProductsPage --> CatSvc : uses
+ProductDetailPage --> CatSvc : uses
+CartPage --> OrdSvc : uses
+MyOrdersPage --> OrdSvc : uses
+DashboardPage --> DashSvc : uses
+CubeInsightsPage --> CubeSvc : uses
+AdminPage --> DashSvc : uses
+
+' Context -> Services
+AuthProv --> AuthSvc : uses
+
+' Services -> Config
+AuthSvc --> ApiClient : uses
+CatSvc --> ApiClient : uses
+OrdSvc --> ApiClient : uses
+DashSvc --> ApiClient : uses
+CubeSvc --> ApiClient : uses
+
+' Services -> Types
+SERVICES ..> Models : imports types
+
+' Config -> External
+ApiClient --> Backend : HTTP (JSON)\nAuthorization: Bearer
+
+@enduml

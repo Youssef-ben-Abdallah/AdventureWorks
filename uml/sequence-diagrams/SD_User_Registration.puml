@@ -1,0 +1,67 @@
+@startuml SD_User_Registration
+!theme cerulean-outline
+
+title User Registration Flow\nAdventureWorks Sales BI Platform
+
+actor       "User"               as User
+participant "Browser / React\n(Login Page)"  as React    #LightBlue
+participant "Axios\napiClient"               as Axios    #LightCyan
+participant "AuthController\n[AllowAnonymous]"  as Controller #LightGreen
+participant "UserManager\nSignInManager"        as Service    #LightYellow
+participant "JwtTokenService"                   as JWT        #Gold
+participant "OltpDbContext\n(SQL Server)"        as DB         #LightPink
+
+== User Opens Registration Form ==
+
+User -> React : Clicks **"Create Account"** tab
+React -> React : setMode("register")\nShow email field
+
+== User Submits Registration ==
+
+User -> React : Fills Username, Email, Password\nClicks **"Create Account"**
+React -> React : Validate: username >= 3 chars,\npassword >= 6 chars
+
+alt Validation fails (client-side)
+    React --> User : Show field-level error messages
+else Validation passes
+    React -> Axios : AuthService.register(\n  { username, email, password })
+    Axios -> Controller : **POST /api/auth/register**\nBody: RegisterDto { Username, Email, Password }
+
+    Controller -> Service : new AppUser { UserName, Email,\n  EmailConfirmed = true }
+    Controller -> Service : UserManager.CreateAsync(user, password)
+
+    alt CreateAsync fails (duplicate email/username, weak password)
+        Service --> Controller : IdentityResult { Succeeded = false, Errors[] }
+        Controller --> Axios : **400 Bad Request**\n[ "error descriptions..." ]
+        Axios --> React : catch(err)
+        React --> User : Display error message\n(e.g. "Username already taken")
+    else CreateAsync succeeds
+        Service --> Controller : IdentityResult { Succeeded = true }
+        Controller -> Service : UserManager.AddToRoleAsync(user, **"User"**)
+        Service -> DB : INSERT INTO AspNetUserRoles
+        DB --> Service : OK
+        Service --> Controller : OK
+
+        Controller -> JWT : CreateTokenAsync(user)
+        JWT -> Service : UserManager.GetRolesAsync(user)
+        Service -> DB : SELECT roles for user
+        DB --> Service : ["User"]
+        Service --> JWT : roles = ["User"]
+        JWT -> JWT : Build claims:\n  - ClaimTypes.NameIdentifier = userId\n  - ClaimTypes.Name = username\n  - sub, email, uid, uname\n  - ClaimTypes.Role = "User"
+        JWT -> JWT : Sign with SymmetricSecurityKey\n(HmacSha256, Jwt:Key)
+        JWT -> JWT : Set expiry:\nDateTime.UtcNow + ExpiresMinutes
+        JWT --> Controller : (token, expiresAtUtc, ["User"])
+
+        Controller --> Axios : **200 OK**\nAuthResponseDto {\n  token, expiresAtUtc,\n  username, email,\n  roles: ["User"]\n}
+
+        Axios --> React : response.data
+        React -> React : const adminStatus =\n  data.roles.includes("Admin") // false
+        React -> React : AuthContext.login(\n  token, false, username)
+        React -> React : localStorage.setItem("token", token)\nlocalStorage.setItem("role", "User")\nlocalStorage.setItem("username", username)
+        React -> React : Update AuthContext state:\n  isLoggedIn = true\n  isAdmin = false\n  username = data.username
+        React -> React : navigate(returnUrl || "/")
+        React --> User : Redirect to Home page
+    end
+end
+
+@enduml

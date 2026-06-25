@@ -1,0 +1,98 @@
+@startuml ST_Authentication_State
+!theme cerulean-outline
+title User Authentication State (React Frontend)
+footer AdventureWorks Sales BI Platform
+
+skinparam state {
+  BackgroundColor<<anonymous>> #FFCDD2
+  BorderColor<<anonymous>> #C62828
+  BackgroundColor<<authenticating>> #FFF9C4
+  BorderColor<<authenticating>> #F9A825
+  BackgroundColor<<authenticated>> #C8E6C9
+  BorderColor<<authenticated>> #388E3C
+  BackgroundColor<<expired>> #FFE0B2
+  BorderColor<<expired>> #E65100
+  BackgroundColor<<user>> #BBDEFB
+  BorderColor<<user>> #1565C0
+  BackgroundColor<<admin>> #E1BEE7
+  BorderColor<<admin>> #6A1B9A
+}
+
+[*] --> Anonymous : App loads,\ncheck localStorage
+
+state "Anonymous" as Anonymous <<anonymous>> {
+  Anonymous : No token in localStorage
+  Anonymous : Can browse Products (public)
+  Anonymous : Can access Login / Register
+  Anonymous : Cannot access Cart checkout,
+  Anonymous : Dashboard, Admin, or Orders
+}
+
+state "Authenticating" as Authenticating <<authenticating>> {
+  Authenticating : Login or Register form submitted
+  Authenticating : POST /api/auth/login
+  Authenticating : or POST /api/auth/register
+  Authenticating : Awaiting server response
+}
+
+state "Authenticated" as Authenticated <<authenticated>> {
+  Authenticated : JWT stored in localStorage
+  Authenticated : Axios interceptor attaches
+  Authenticated : Authorization: Bearer <token>
+
+  state "User Role" as UserRole <<user>> {
+    UserRole : roles = ["User"]
+    UserRole : Can browse, add to cart
+    UserRole : Can checkout orders
+    UserRole : Can view My Orders
+  }
+
+  state "Admin Role" as AdminRole <<admin>> {
+    AdminRole : roles = ["Admin"]
+    AdminRole : All User capabilities
+    AdminRole : + Admin Dashboard (CRUD)
+    AdminRole : + Analytics Dashboard
+    AdminRole : + Cube Insights
+    AdminRole : + Manage orders (status)
+    AdminRole : + Upload product images
+  }
+
+  [*] --> UserRole : [role === "User"]
+  [*] --> AdminRole : [role === "Admin"]
+}
+
+state "Token Expired" as TokenExpired <<expired>> {
+  TokenExpired : JWT ExpiresAtUtc exceeded
+  TokenExpired : Server returns 401 Unauthorized
+  TokenExpired : on any authenticated API call
+}
+
+Anonymous --> Authenticating : [User submits login\nor register form]
+
+Authenticating --> Authenticated : [Server returns 200 OK]\nAuthResponseDto received\nStore token + user in localStorage
+Authenticating --> Anonymous : [Server returns 401/400]\nLogin failed or\nregistration errors shown
+
+Authenticated --> Anonymous : [User clicks Logout]\nClear localStorage\n(token, user info)\nRedirect to /login
+
+Authenticated --> TokenExpired : [JWT lifetime exceeded]\nExpiresAtUtc < now
+
+TokenExpired --> Anonymous : [API returns 401]\nAxios interceptor detects\nunauthorized response\nClear localStorage\nRedirect to /login
+
+note right of Authenticated
+  The JWT contains claims:
+  - uid (NameIdentifier)
+  - username
+  - email
+  - roles[] ("User" or "Admin")
+
+  Token is created by
+  JwtTokenService.CreateTokenAsync()
+end note
+
+note left of Anonymous
+  On app startup, React checks
+  if localStorage has a valid token.
+  If not present or expired,
+  state begins as Anonymous.
+end note
+@enduml

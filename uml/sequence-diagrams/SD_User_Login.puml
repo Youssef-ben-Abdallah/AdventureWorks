@@ -1,0 +1,87 @@
+@startuml SD_User_Login
+!theme cerulean-outline
+
+title User Login Flow\nAdventureWorks Sales BI Platform
+
+actor       "User"               as User
+participant "Browser / React\n(Login Page)"  as React    #LightBlue
+participant "Axios\napiClient"               as Axios    #LightCyan
+participant "AuthController\n[AllowAnonymous]"  as Controller #LightGreen
+participant "UserManager\nSignInManager"        as Service    #LightYellow
+participant "JwtTokenService"                   as JWT        #Gold
+participant "OltpDbContext\n(SQL Server)"        as DB         #LightPink
+
+== User Opens Login Form ==
+
+User -> React : Navigates to /login\n(mode defaults to "login")
+
+== User Submits Login ==
+
+User -> React : Fills Username, Password\nClicks **"Sign In"**
+React -> React : Validate: username >= 3 chars,\npassword >= 6 chars
+
+alt Client-side validation fails
+    React --> User : Show field errors:\n"Username must be at least 3 characters"\n"Password must be at least 6 characters"
+else Validation passes
+    React -> React : setLoading(true), setError("")
+
+    React -> Axios : AuthService.login(\n  { username, password })
+    Axios -> Controller : **POST /api/auth/login**\nBody: LoginDto { Username, Password }
+
+    Controller -> Service : UserManager.FindByNameAsync(username)
+    Service -> DB : SELECT * FROM AspNetUsers\nWHERE NormalizedUserName = @name
+    DB --> Service : AppUser | null
+
+    alt User not found
+        Service --> Controller : null
+        Controller --> Axios : **401 Unauthorized**\n"Invalid credentials"
+        Axios --> React : catch(err)\nerr.response.status = 401
+        React -> React : setError("Invalid credentials")
+        React --> User : Display error banner:\n"Invalid credentials"
+    else User found
+        Controller -> Service : SignInManager.CheckPasswordSignInAsync(\n  user, password, lockoutOnFailure: false)
+        Service -> DB : Verify password hash
+        DB --> Service : match result
+
+        alt Password incorrect
+            Service --> Controller : SignInResult { Succeeded = false }
+            Controller --> Axios : **401 Unauthorized**\n"Invalid credentials"
+            Axios --> React : catch(err)
+            React -> React : setError("Invalid credentials")
+            React --> User : Display error banner:\n"Invalid credentials"
+        else Password correct
+            Service --> Controller : SignInResult { Succeeded = true }
+
+            Controller -> JWT : CreateTokenAsync(user)
+            JWT -> Service : UserManager.GetRolesAsync(user)
+            Service -> DB : SELECT r.Name\nFROM AspNetUserRoles ur\nJOIN AspNetRoles r ...
+            DB --> Service : roles (e.g. ["Admin"])
+            Service --> JWT : roles
+
+            JWT -> JWT : Build claims:\n  NameIdentifier = userId\n  Name = username\n  sub, email, uid, uname\n  Role = each role
+            JWT -> JWT : Sign JWT (HmacSha256)\nSet expiry (ExpiresMinutes)
+            JWT --> Controller : (token, expiresAtUtc, roles)
+
+            Controller --> Axios : **200 OK**\nAuthResponseDto {\n  token, expiresAtUtc,\n  username, email,\n  roles: ["Admin"]\n}
+
+            Axios --> React : response.data
+
+            React -> React : const adminStatus =\n  data.roles.includes("Admin") // true
+            React -> React : AuthContext.login(\n  token, true, username)
+
+            group localStorage persistence
+                React -> React : localStorage.setItem("token", token)
+                React -> React : localStorage.setItem("role", "Admin")
+                React -> React : localStorage.setItem("username", username)
+            end
+
+            React -> React : Update AuthContext:\n  isLoggedIn = true\n  isAdmin = true\n  username = data.username
+
+            React -> React : const returnUrl =\n  URLSearchParams.get("returnUrl") || "/"
+            React -> React : navigate(returnUrl)
+            React --> User : Redirect to returnUrl\nor Home page
+        end
+    end
+end
+
+@enduml

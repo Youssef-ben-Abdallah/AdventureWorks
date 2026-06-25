@@ -1,0 +1,110 @@
+@startuml ERD_DW_Star_Schema
+!theme cerulean-outline
+
+title AdventureWorksDW_Sales\nData Warehouse Star Schema ERD
+
+skinparam linetype ortho
+
+' ─────────────────────────────────────────────
+'  Fact table (center of star)
+' ─────────────────────────────────────────────
+package "Fact" <<Rectangle>> #FFEDD5 {
+
+    entity "vSalesFact" as SalesFact {
+        * **SalesOrderDetailID** : int <<PK>>
+        --
+        SalesOrderID : int <<not null>>
+        OrderDate : datetime2 <<not null>>
+        DueDate : datetime2 <<not null>>
+        ShipDate : datetime2 <<nullable>>
+        OnlineOrderFlag : bit <<not null>>
+        OrderQty : smallint <<not null>>
+        UnitPrice : money <<not null>>
+        UnitPriceDiscount : money <<not null>>
+        LineTotal : money <<not null>>
+        Freight : money <<not null>>
+        TaxAmt : money <<not null>>
+        --
+        CustomerID : int <<FK, not null>>
+        ProductID : int <<FK, not null>>
+        CurrencyRateID : int <<FK, nullable>>
+        SalesPersonID : int <<FK, nullable>>
+        ShipMethodID : int <<FK, not null>>
+        TerritoryID : int <<FK, not null>>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Dimension tables
+' ─────────────────────────────────────────────
+package "Dimensions" <<Rectangle>> #E0F2FE {
+
+    entity "vCustomerDim" as CustomerDim {
+        * **CustomerID** : int <<PK>>
+        --
+        FirstName : nvarchar(50)
+        LastName : nvarchar(50)
+        MiddleName : nvarchar(50) <<nullable>>
+        PersonType : nchar(2)
+    }
+
+    entity "vProductDim" as ProductDim {
+        * **ProductID** : int <<PK>>
+        --
+        Name : nvarchar(50) <<not null>>
+        ProductNumber : nvarchar(25) <<not null>>
+        Color : nvarchar(15) <<nullable>>
+        StandardCost : money <<not null>>
+        ListPrice : money <<not null>>
+        SubCategoryName : nvarchar(50) <<nullable>>
+        CategoryName : nvarchar(50) <<nullable>>
+    }
+
+    entity "vTerritoryDim" as TerritoryDim {
+        * **TerritoryID** : int <<PK>>
+        --
+        Name : nvarchar(50) <<not null>>
+        CountryRegionCode : nvarchar(3) <<not null>>
+        "Group" : nvarchar(50) <<not null>>
+    }
+
+    entity "vCurrencyDim" as CurrencyDim {
+        * **CurrencyID** : int <<PK>>
+        --
+        CurrencyCode : nchar(3) <<not null>>
+        AverageRate : money <<not null>>
+        EndOfDayRate : money <<not null>>
+        Name : nvarchar(50) <<not null>>
+    }
+
+    entity "vSalesPersonDim" as SalesPersonDim {
+        * **BusinessEntityID** : int <<PK>>
+        --
+        SalesQuota : money <<nullable>>
+        Bonus : money <<not null>>
+        CommissionPct : smallmoney <<not null>>
+        TerritoryID : int <<nullable>>
+        FirstName : nvarchar(50) <<not null>>
+        LastName : nvarchar(50) <<not null>>
+    }
+
+    entity "vShipMethodDim" as ShipMethodDim {
+        * **ShipMethodID** : int <<PK>>
+        --
+        Name : nvarchar(50) <<not null>>
+        ShipBase : money <<not null>>
+        ShipRate : money <<not null>>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Star schema relationships (FK from Fact to Dimensions)
+' ─────────────────────────────────────────────
+CustomerDim ||--o{ SalesFact : "CustomerID"
+ProductDim ||--o{ SalesFact : "ProductID"
+TerritoryDim ||--o{ SalesFact : "TerritoryID"
+CurrencyDim |o--o{ SalesFact : "CurrencyRateID\n(nullable)"
+SalesPersonDim |o--o{ SalesFact : "SalesPersonID\n(nullable)"
+ShipMethodDim ||--o{ SalesFact : "ShipMethodID"
+
+@enduml

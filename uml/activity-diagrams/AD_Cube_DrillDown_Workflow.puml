@@ -1,0 +1,189 @@
+@startuml AD_Cube_DrillDown_Workflow
+!theme cerulean-outline
+title Cube Insights Drill-Down Workflow
+footer AdventureWorks Sales BI Platform
+
+|#e8f0fe|User (Browser)|
+|#e8f4e8|React Frontend|
+|#fff3e0|ASP.NET Core Backend (OlapService)|
+|#fce4ec|SSAS Cube (MDX)|
+
+|User (Browser)|
+start
+:Navigate to **/cube-insights**\n(Cube Insights page);
+
+|React Frontend|
+:useEffect triggers\n**loadFilters()**;
+
+:GET /api/cubeinsights/filters;
+
+|ASP.NET Core Backend (OlapService)|
+:Execute MDX to fetch\navailable Years and Territories\nfrom [Order Date] and\n[Sales Territory] dimensions;
+
+|React Frontend|
+:Populate Year and Territory\ndropdown filters;
+
+|User (Browser)|
+:Select **Year** filter\n(e.g. "2013")\nand **Territory** filter\n(e.g. "North America");
+
+|React Frontend|
+:All drill states reset to null\n(drillCategory, drillMonth,\ndrillSubcategory, etc.);
+
+:useEffect triggers **loadData()**;
+
+:=== Overview Tab (7 Parallel API Calls) ===;
+
+fork
+  :getKpis(params);
+fork again
+  :getProfitAnalysis(params);
+fork again
+  :getSalesTrend(params);
+fork again
+  :getTopProducts(params);
+fork again
+  :getTerritorySales(params);
+fork again
+  :getFreightAnalysis(params);
+fork again
+  :getTargetStatus(params);
+end fork
+
+:All calls via\n**Promise.allSettled()**\n-- partial failures tolerated;
+
+|ASP.NET Core Backend (OlapService)|
+:OlapService executes MDX queries\nagainst SSAS cube\n[Adventure Works DW2019];
+
+|SSAS Cube (MDX)|
+:Return KPIs:\nGross Profit Margin, AOV,\nDiscount Ratio, Effective Tax Rate;
+
+:Return charts:\nSales & Profit Trend (monthly),\nProfitability by Category,\nTop 10 Subcategories,\nTerritory Sales, Freight,\nTarget Status;
+
+|React Frontend|
+:Render 4 KPI cards\n+ 4 charts on Overview tab;
+
+note right
+  Charts are interactive:
+  clicking a data point
+  triggers drill-down.
+end note
+
+|User (Browser)|
+:=== Trend Drill-Down ===\nClick a **month** on the\nSales & Profit Trend chart;
+
+|React Frontend|
+:handleTrendClick()\nsets **drillMonth** = clicked month\n(e.g. "2013-06");
+
+:Reload with trendParams\n{ ...params, month: "2013-06" };
+
+|ASP.NET Core Backend (OlapService)|
+:MDX uses FILTER on\n[Order Date].[Date].MEMBERS\nfor the selected month;
+
+:Return **daily** sales data\ninstead of monthly;
+
+|React Frontend|
+:Chart title changes to\n"Daily Sales & Profit (2013-06)";
+
+:Show "Roll up" button;
+
+|User (Browser)|
+:Click **"Roll up"** button;
+
+|React Frontend|
+:setDrillMonth(null);
+:Reloads with monthly view;
+
+|User (Browser)|
+:=== Category Drill-Down ===\n(Category -> Subcategory)\nClick a **category** on the\nProfitability by Category chart;
+
+|React Frontend|
+:handleCategoryClick()\nsets **drillCategory** = clicked\n(e.g. "Bikes");
+
+:Reload with profitParams\n{ ...params, category: "Bikes" };
+
+|ASP.NET Core Backend (OlapService)|
+:MDX drills into subcategories\nunder the selected category;
+
+:Return profitability data\nfor subcategories\n(e.g. Mountain Bikes, Road Bikes);
+
+|React Frontend|
+:Chart title changes to\n"Profitability (Bikes)"\nwith Roll up button;
+
+|User (Browser)|
+:=== Product Drill-Down ===\n(Subcategory -> Product)\nClick a **subcategory** on the\nTop Products chart;
+
+|React Frontend|
+:handleProductClick()\nsets **drillSubcategory** = clicked\n(e.g. "Mountain Bikes");
+
+:Reload with productParams\n{ ...params, subcategory:\n"Mountain Bikes" };
+
+|ASP.NET Core Backend (OlapService)|
+:MDX drills into individual\nproducts within subcategory;
+
+:Return Top 10 Products\nwith Sales and Profit;
+
+|React Frontend|
+:Chart title changes to\n"Top 10 Products (Mountain Bikes)"\nwith Roll up button;
+
+|User (Browser)|
+:=== Territory Drill-Down ===\n(Group -> Country -> Region)\nClick a **territory group** on\nthe map (e.g. "North America");
+
+|React Frontend|
+:handleMapClick()\nsets **drillTerritoryGroup**\n= "North America";
+
+:Reload with territoryParams\n{ ...params, territoryGroup:\n"North America" };
+
+|ASP.NET Core Backend (OlapService)|
+:MDX drills from Groups\nto Countries within\nNorth America;
+
+|React Frontend|
+:Map re-centers, shows\ncountry-level bubbles\n(US, Canada)\nwith Roll up button;
+
+|User (Browser)|
+:Click a **country**\n(e.g. "United States");
+
+|React Frontend|
+:handleMapClick()\nsets **drillTerritoryCountry**\n= "United States";
+
+:Reload with territoryParams\n{ ...params,\n  territoryGroup: "North America",\n  territoryCountry: "United States" };
+
+|ASP.NET Core Backend (OlapService)|
+:MDX drills from Country\nto Regions within US\n(Southwest, Northwest, etc.);
+
+|React Frontend|
+:Map re-centers, shows\nregion-level bubbles;
+
+:Title: "Regions in United States"\nwith Roll up button;
+
+|User (Browser)|
+:Click "Roll up" to go back\nto Country or Group level;
+
+|React Frontend|
+:If drillTerritoryCountry set:\nclear it (go to country level)\nElse: clear drillTerritoryGroup\n(go to global level);
+
+note right
+  All drill patterns follow
+  the same approach:
+  1. Click sets drill state
+  2. useEffect triggers loadData()
+  3. Backend applies filters
+  4. "Roll up" clears drill state
+end note
+
+:=== Additional Tab Drill-Downs ===;
+
+note left
+  **Tab 1 - Product Insights:**
+  - Cost: Category -> Subcategory -> Product
+  - Discount: Category -> Subcategory
+
+  **Tab 4 - Promotions:**
+  - Discount Trend: Monthly -> Daily
+
+  **Tab 5 - Fulfillment:**
+  - Shipping Volume: Monthly -> Daily
+  - Freight: Group -> Country -> Region
+end note
+
+stop
+@enduml

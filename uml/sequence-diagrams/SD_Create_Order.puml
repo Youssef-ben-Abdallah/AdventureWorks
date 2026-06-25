@@ -1,0 +1,114 @@
+@startuml SD_Create_Order
+!theme cerulean-outline
+
+title Create Order Flow\nAdventureWorks Sales BI Platform
+
+actor       "User"               as User
+participant "Browser / React\n(Cart Page)"     as React      #LightBlue
+participant "Axios\napiClient"                  as Axios      #LightCyan
+participant "OrdersController\n[Authorize]"     as Controller  #LightGreen
+participant "ProductRepository"                 as ProdRepo    #LightYellow
+participant "OrderRepository"                   as OrderRepo   #LightYellow
+participant "OltpDbContext\n(SQL Server\nAdventureWorks2019)" as DB #LightPink
+
+== User Reviews Cart & Clicks Checkout ==
+
+User -> React : Reviews cart items\n(from CartContext)
+React --> User : Display items, quantities,\nunit prices, total
+
+User -> React : Clicks **"Checkout"** button
+React -> React : Build payload from cart:\n{\n  items: [{ productId, qty }, ...],\n  customerID: 1,\n  billToAddressID: 1,\n  shipToAddressID: 1,\n  shipMethodID: 1\n}
+
+React -> Axios : OrdersService.createOrder(payload)
+Axios -> Axios : Interceptor adds header:\nAuthorization: Bearer {token}
+Axios -> Controller : **POST /api/orders**\nBody: CreateOrderDto
+
+== JWT Authentication ==
+
+Controller -> Controller : [Authorize] middleware\nvalidates JWT token
+Controller -> Controller : Extract UserId from\nClaimTypes.NameIdentifier
+
+alt No valid token / expired
+    Controller --> Axios : **401 Unauthorized**
+    Axios --> React : catch(err)
+    React --> User : Redirect to /login
+else Token valid
+    Controller -> Controller : userId = User.FindFirstValue(\n  ClaimTypes.NameIdentifier)
+
+    alt Empty items list
+        Controller --> Axios : **400 Bad Request**\n"Order must contain at least 1 item"
+        Axios --> React : Show error
+    else Items provided
+
+        == Validate Each Item & Build Order ==
+
+        loop For each item in dto.Items
+            Controller -> ProdRepo : GetByIdAsync(item.ProductId)
+            ProdRepo -> DB : SELECT Product\nWHERE Id = @productId\nINCLUDE Category, SubCategory
+            DB --> ProdRepo : Product | null
+
+            alt Product not found
+                ProdRepo --> Controller : null
+                Controller --> Axios : **400 Bad Request**\n"Product {id} not found"
+                Axios --> React : Show error
+            else Product found
+                ProdRepo --> Controller : Product
+
+                alt Insufficient stock (stockQty < qty)
+                    Controller --> Axios : **400 Bad Request**\n"Not enough stock for {name}"
+                    Axios --> React : Show error
+                else Stock available
+                    Controller -> Controller : Deduct stock:\np.StockQty -= item.Qty
+                    Controller -> Controller : Create OrderItem:\n{ ProductId, Qty,\n  UnitPrice = product.Price }
+                end
+            end
+        end
+
+        == Persist Order ==
+
+        Controller -> Controller : Build Order entity:\n{\n  UserId, Status = Pending,\n  Items = orderItems[],\n  Total = sum(LineTotal),\n  CustomerID, BillToAddressID,\n  ShipToAddressID, ShipMethodID\n}
+
+        Controller -> OrderRepo : AddAsync(order)
+        OrderRepo -> DB : _db.Orders.Add(order)\n_db.SaveChangesAsync()
+
+        note over DB
+          SQL Server triggers fire:
+          - uSalesOrderHeader (UPDATE trigger)
+          - iduSalesOrderDetail (INSERT/DELETE/UPDATE trigger)
+          These sync order data to
+          AdventureWorks OLTP tables.
+        end note
+
+        DB --> OrderRepo : Order (with generated Id)
+        OrderRepo --> Controller : created order
+
+        == Update Product Stock ==
+
+        loop For each touched product
+            Controller -> ProdRepo : UpdateAsync(product)
+            ProdRepo -> DB : UPDATE Products\nSET StockQty = @newQty\nWHERE Id = @id
+            DB --> ProdRepo : OK
+        end
+
+        == Return Created Order ==
+
+        Controller -> OrderRepo : GetByIdAsync(created.Id)
+        OrderRepo -> DB : SELECT Order\nINCLUDE Items.Product, User
+        DB --> OrderRepo : Order with navigation props
+        OrderRepo --> Controller : fetched order
+
+        Controller -> Controller : Map to OrderDto:\n{ Id, CreatedAtUtc, Status,\n  UserId, Username, Total,\n  Items: [{ ProductName,\n    Qty, UnitPrice, LineTotal }] }
+
+        Controller --> Axios : **201 Created**\nOrderDto
+        Axios --> React : response.data
+
+        == Client-Side Cleanup ==
+
+        React -> React : CartContext.clear()
+        React -> React : localStorage.setItem(\n  "ecom_cart_v1", "[]")
+        React -> React : navigate("/orders")\nor navigate("/orders/mine")
+        React --> User : Redirect to My Orders page\nOrder confirmed
+    end
+end
+
+@enduml

@@ -1,0 +1,118 @@
+@startuml CD_Domain_Entities
+!theme cerulean-outline
+
+title AdventureWorks Sales BI Platform\nDomain Entities (OLTP)
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ─────────────────────────────────────────────
+'  Identity base
+' ─────────────────────────────────────────────
+package "Microsoft.AspNetCore.Identity" <<Framework>> #EEF2FF {
+    abstract class IdentityUser {
+        + Id : string
+        + UserName : string
+        + Email : string
+        + PasswordHash : string
+        + PhoneNumber : string
+        + EmailConfirmed : bool
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Domain entities
+' ─────────────────────────────────────────────
+package "Ecom.Api.Entities" <<Rectangle>> #F0F9FF {
+
+    class AppUser <<Entity>> {
+        __inherits IdentityUser__
+    }
+
+    enum OrderStatus <<Enumeration>> {
+        Pending = 1
+        InProcess = 2
+        Approved = 3
+        Rejected = 4
+        Shipped = 5
+        Cancelled = 6
+    }
+
+    class Category <<Entity>> {
+        + Id : int
+        + Name : string
+        + SubCategories : ICollection<SubCategory>
+    }
+
+    class SubCategory <<Entity>> {
+        + Id : int
+        + Name : string
+        + CategoryId : int
+        + Category : Category
+        + Products : ICollection<Product>
+    }
+
+    class Product <<Entity>> {
+        + Id : int
+        + Sku : string
+        + Name : string
+        + ProductNumber : string
+        + Color : string
+        + Price : decimal
+        + Size : string
+        + Weight : decimal?
+        + CategoryId : int
+        + Category : Category
+        + SubCategoryId : int
+        + SubCategory : SubCategory
+        + ModelId : int?
+        + ModelName : string
+        + Description : string
+        + ImageFileName : string
+        + StockQty : int
+    }
+
+    class Order <<Entity>> {
+        + Id : int
+        + CreatedAtUtc : DateTime
+        + Total : decimal
+        + UserId : string
+        + Status : OrderStatus
+        + Items : ICollection<OrderItem>
+        __column mapping__
+        Id -> SalesOrderID
+        CreatedAtUtc -> OrderDate
+        Total -> SubTotal
+        UserId -> Comment
+    }
+
+    class OrderItem <<Entity>> {
+        + Id : int
+        + OrderId : int
+        + ProductId : int
+        + Qty : int
+        + UnitPrice : decimal
+        + LineTotal : decimal
+        + Product : Product
+        + Order : Order
+        __column mapping__
+        Id -> SalesOrderDetailID
+        OrderId -> SalesOrderID
+        Qty -> OrderQty
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Relationships
+' ─────────────────────────────────────────────
+IdentityUser <|-- AppUser : extends
+
+Category "1" *-- "0..*" SubCategory : contains >
+SubCategory "1" *-- "0..*" Product : contains >
+Product "1" <-- "0..*" OrderItem : references >
+Order "1" *-- "1..*" OrderItem : contains >
+Order --> OrderStatus : uses >
+Order "0..*" --> "1" AppUser : placed by >
+Category "1" <-- "0..*" Product : belongs to >
+
+@enduml

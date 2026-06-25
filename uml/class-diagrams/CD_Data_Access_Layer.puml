@@ -1,0 +1,128 @@
+@startuml CD_Data_Access_Layer
+!theme cerulean-outline
+
+title AdventureWorks Sales BI Platform\nData Access Layer
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ─────────────────────────────────────────────
+'  Framework base classes
+' ─────────────────────────────────────────────
+package "Microsoft.EntityFrameworkCore" <<Framework>> #EEF2FF {
+    abstract class DbContext <<Framework>> {
+        + SaveChangesAsync() : Task<int>
+        # OnModelCreating(builder: ModelBuilder) : void
+        # OnConfiguring(options: DbContextOptionsBuilder) : void
+    }
+}
+
+package "Microsoft.AspNetCore.Identity.EntityFrameworkCore" <<Framework>> #EEF2FF {
+    abstract class "IdentityDbContext<TUser>" as IdentityDbContext <<Framework>> {
+        + Users : DbSet<TUser>
+        + Roles : DbSet<IdentityRole>
+        + UserRoles : DbSet<IdentityUserRole>
+        + UserClaims : DbSet<IdentityUserClaim>
+    }
+}
+
+DbContext <|-- IdentityDbContext : extends
+
+' ─────────────────────────────────────────────
+'  OLTP Context
+' ─────────────────────────────────────────────
+package "Ecom.Api.Data" <<Rectangle>> #F0FDF4 {
+
+    class OltpDbContext <<DbContext>> {
+        + Categories : DbSet<Category>
+        + SubCategories : DbSet<SubCategory>
+        + Products : DbSet<Product>
+        + Orders : DbSet<Order>
+        + OrderItems : DbSet<OrderItem>
+        __OnModelCreating configurations__
+        .. Order -> Sales.SalesOrderHeader ..
+        Order.Id -> SalesOrderID (PK)
+        Order.CreatedAtUtc -> OrderDate
+        Order.Total -> SubTotal
+        Order.UserId -> Comment
+        .. OrderItem -> Sales.SalesOrderDetail ..
+        OrderItem.Id -> SalesOrderDetailID (PK)
+        OrderItem.OrderId -> SalesOrderID (FK)
+        OrderItem.Qty -> OrderQty
+        .. Relationships ..
+        Category 1:N SubCategory
+        SubCategory 1:N Product
+        Order 1:N OrderItem
+        OrderItem N:1 Product
+    }
+
+    ' ─────────────────────────────────────────
+    '  Analytics Context
+    ' ─────────────────────────────────────────
+    class AnalyticsDbContext <<DbContext>> {
+        + Sales : DbSet<SalesFact>
+        + Customers : DbSet<CustomerDim>
+        + Products : DbSet<ProductDim>
+        + Currencies : DbSet<CurrencyDim>
+        + SalesPeople : DbSet<SalesPersonDim>
+        + ShipMethods : DbSet<ShipMethodDim>
+        + Territories : DbSet<TerritoryDim>
+        __OnModelCreating configurations__
+        .. SalesFact ..
+        Table: vSalesFact
+        PK: SalesOrderDetailID
+        .. Dimensions (read-only views) ..
+        CustomerDim -> vCustomerDim
+        ProductDim -> vProductDim
+        TerritoryDim -> vTerritoryDim
+        CurrencyDim -> vCurrencyDim
+        SalesPersonDim -> vSalesPersonDim
+        ShipMethodDim -> vShipMethodDim
+        .. All entities: .HasNoKey() / read-only ..
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Entity references
+' ─────────────────────────────────────────────
+package "OLTP Entities" <<Rectangle>> #FFFBEB {
+    class Category <<Entity>>
+    class SubCategory <<Entity>>
+    class Product <<Entity>>
+    class Order <<Entity>>
+    class OrderItem <<Entity>>
+    class AppUser <<Entity>>
+}
+
+package "Analytics Entities" <<Rectangle>> #FFF7ED {
+    class SalesFact <<Fact>>
+    class CustomerDim <<Dimension>>
+    class ProductDim <<Dimension>>
+    class TerritoryDim <<Dimension>>
+    class CurrencyDim <<Dimension>>
+    class SalesPersonDim <<Dimension>>
+    class ShipMethodDim <<Dimension>>
+}
+
+' ─────────────────────────────────────────────
+'  Relationships
+' ─────────────────────────────────────────────
+IdentityDbContext <|-- OltpDbContext : extends\n(TUser = AppUser)
+DbContext <|-- AnalyticsDbContext : extends
+
+OltpDbContext --> Category : manages >
+OltpDbContext --> SubCategory : manages >
+OltpDbContext --> Product : manages >
+OltpDbContext --> Order : manages >
+OltpDbContext --> OrderItem : manages >
+OltpDbContext --> AppUser : manages >
+
+AnalyticsDbContext --> SalesFact : reads >
+AnalyticsDbContext --> CustomerDim : reads >
+AnalyticsDbContext --> ProductDim : reads >
+AnalyticsDbContext --> TerritoryDim : reads >
+AnalyticsDbContext --> CurrencyDim : reads >
+AnalyticsDbContext --> SalesPersonDim : reads >
+AnalyticsDbContext --> ShipMethodDim : reads >
+
+@enduml

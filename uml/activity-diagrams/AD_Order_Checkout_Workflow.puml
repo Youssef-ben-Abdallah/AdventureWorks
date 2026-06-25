@@ -1,0 +1,138 @@
+@startuml AD_Order_Checkout_Workflow
+!theme cerulean-outline
+title Order Checkout Workflow
+footer AdventureWorks Sales BI Platform
+
+|#e8f0fe|User (Browser)|
+|#e8f4e8|React Frontend (CartContext)|
+|#fff3e0|ASP.NET Core Backend|
+|#fce4ec|Database (EF Core)|
+
+|User (Browser)|
+start
+:Browse **Products** page;
+
+:Select a product\nand click "Add to Cart";
+
+|React Frontend (CartContext)|
+:CartContext.add(product, qty)\nchecks existing items\nand caps at stockQty;
+
+:Cart item stored in\n**localStorage** ('ecom_cart_v1')\nvia useEffect;
+
+:Navbar badge updates\nwith cart count;
+
+|User (Browser)|
+:Navigate to **Cart** page;
+
+|React Frontend (CartContext)|
+if (items.length === 0?) then (yes)
+  :Show "Your cart is empty"\nwith link to Products;
+  stop
+else (no)
+  :Render cart items\nwith qty controls;
+endif
+
+|User (Browser)|
+:Adjust quantities\n(+/- buttons or input)\nor remove items;
+
+|React Frontend (CartContext)|
+:CartContext.setQty(productId, qty)\nfilters out items where qty <= 0;
+
+|User (Browser)|
+:Review Order Summary\n(item count + total)\nand click **Checkout**;
+
+|React Frontend (CartContext)|
+:Check auth token\nin localStorage;
+
+if (JWT token exists?) then (no)
+  :Redirect to **/login**\n(Axios 401 interceptor);
+  stop
+else (yes)
+  :Proceed with checkout;
+endif
+
+:Build CreateOrderDto payload\n{ items: [{ productId, qty }],\n  customerID: 1,\n  billToAddressID: 1,\n  shipToAddressID: 1,\n  shipMethodID: 1 };
+
+:POST /api/orders\nwith Authorization: Bearer <JWT>;
+
+|ASP.NET Core Backend|
+:OrdersController.Create()\nextracts userId from JWT claims;
+
+if (userId is empty?) then (yes)
+  :Return **401 Unauthorized**;
+  |React Frontend (CartContext)|
+  :Show error message;
+  stop
+else (no)
+endif
+
+if (dto.Items.Count === 0?) then (yes)
+  :Return **400 BadRequest**\n"Order must contain at\nleast 1 item";
+  |React Frontend (CartContext)|
+  :Show error, preserve cart;
+  stop
+else (no)
+endif
+
+:Loop through each item;
+
+repeat
+  :Fetch product by ID;
+  if (Product not found?) then (yes)
+    :Return **400 BadRequest**\n"Product {id} not found";
+    |React Frontend (CartContext)|
+    :Show error, preserve cart;
+    stop
+  else (no)
+  endif
+
+  if (Qty <= 0?) then (yes)
+    :Return **400 BadRequest**\n"Qty must be > 0";
+    |React Frontend (CartContext)|
+    :Show error, preserve cart;
+    stop
+  else (no)
+  endif
+
+  if (product.StockQty < qty?) then (yes)
+    :Return **400 BadRequest**\n"Not enough stock for {name}";
+    |React Frontend (CartContext)|
+    :Show error, preserve cart;
+    stop
+  else (no)
+    :Deduct stock:\nproduct.StockQty -= qty;
+    :Create OrderItem\n{ ProductId, Qty, UnitPrice };
+  endif
+repeat while (more items?) is (yes)
+
+:Create **Order** entity\n{ UserId, Status = **Pending (0)**,\n  Items, Total,\n  CustomerID, BillToAddressID,\n  ShipToAddressID, ShipMethodID };
+
+|Database (EF Core)|
+:repo.AddAsync(order)\ninserts Order + OrderItems;
+
+if (DB error / constraint\nviolation?) then (yes)
+  :Throw DbUpdateException;
+  |ASP.NET Core Backend|
+  :Return **500** error;
+  |React Frontend (CartContext)|
+  :Show "Checkout failed"\nerror, cart items preserved;
+  stop
+else (no)
+  :SaveChanges succeeds;
+endif
+
+:Update stock for each\ntouched product;
+
+|ASP.NET Core Backend|
+:Return **201 Created**\nwith OrderDto;
+
+|React Frontend (CartContext)|
+:Call CartContext.clear()\nsets items = []\nclears localStorage;
+
+:navigate('/orders')\nredirect to **My Orders** page;
+
+|User (Browser)|
+:View order in My Orders\nwith Status = "Pending";
+
+stop
+@enduml

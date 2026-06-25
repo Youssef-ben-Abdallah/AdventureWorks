@@ -1,0 +1,101 @@
+@startuml CD_Analytics_Entities
+!theme cerulean-outline
+
+title AdventureWorks Sales BI Platform\nAnalytics / Data Warehouse Entities (Star Schema)
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ─────────────────────────────────────────────
+'  Fact table
+' ─────────────────────────────────────────────
+package "Ecom.Api.Entities.Analytics" <<Rectangle>> #FFF7ED {
+
+    class SalesFact <<Fact>> #FFEDD5 {
+        + SalesOrderDetailID : int <<PK>>
+        + SalesOrderID : int
+        + OrderDate : DateTime
+        + DueDate : DateTime
+        + ShipDate : DateTime?
+        + OnlineOrderFlag : bool
+        + OrderQty : short
+        + UnitPrice : decimal
+        + UnitPriceDiscount : decimal
+        + LineTotal : decimal
+        + Freight : decimal
+        + TaxAmt : decimal
+        __ foreign keys __
+        + CustomerID : int <<FK>>
+        + ProductID : int <<FK>>
+        + CurrencyRateID : int? <<FK>>
+        + SalesPersonID : int? <<FK>>
+        + ShipMethodID : int <<FK>>
+        + TerritoryID : int <<FK>>
+    }
+
+    ' ─────────────────────────────────────────
+    '  Dimension tables
+    ' ─────────────────────────────────────────
+    class CustomerDim <<Dimension>> #E0F2FE {
+        + CustomerID : int <<PK>>
+        + FirstName : string
+        + LastName : string
+        + MiddleName : string
+        + PersonType : string
+    }
+
+    class ProductDim <<Dimension>> #E0F2FE {
+        + ProductID : int <<PK>>
+        + Name : string
+        + ProductNumber : string
+        + Color : string
+        + StandardCost : decimal
+        + ListPrice : decimal
+        + SubCategoryName : string
+        + CategoryName : string
+    }
+
+    class TerritoryDim <<Dimension>> #E0F2FE {
+        + TerritoryID : int <<PK>>
+        + Name : string
+        + CountryRegionCode : string
+        + Group : string
+    }
+
+    class CurrencyDim <<Dimension>> #E0F2FE {
+        + CurrencyID : int <<PK>>
+        + CurrencyCode : string
+        + AverageRate : decimal
+        + EndOfDayRate : decimal
+        + Name : string
+    }
+
+    class SalesPersonDim <<Dimension>> #E0F2FE {
+        + BusinessEntityID : int <<PK>>
+        + SalesQuota : decimal?
+        + Bonus : decimal
+        + CommissionPct : decimal
+        + TerritoryID : int
+        + FirstName : string
+        + LastName : string
+    }
+
+    class ShipMethodDim <<Dimension>> #E0F2FE {
+        + ShipMethodID : int <<PK>>
+        + Name : string
+        + ShipBase : decimal
+        + ShipRate : decimal
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Star schema relationships (Fact -> Dimensions)
+' ─────────────────────────────────────────────
+SalesFact "0..*" --> "1" CustomerDim : CustomerID >
+SalesFact "0..*" --> "1" ProductDim : ProductID >
+SalesFact "0..*" --> "1" TerritoryDim : TerritoryID >
+SalesFact "0..*" --> "0..1" CurrencyDim : CurrencyRateID >
+SalesFact "0..*" --> "0..1" SalesPersonDim : SalesPersonID >
+SalesFact "0..*" --> "1" ShipMethodDim : ShipMethodID >
+
+@enduml

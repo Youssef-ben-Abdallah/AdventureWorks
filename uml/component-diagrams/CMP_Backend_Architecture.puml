@@ -1,0 +1,114 @@
+@startuml CMP_Backend_Architecture
+!theme cerulean-outline
+title Backend Layered Architecture - AdventureWorks Sales BI Platform
+caption ASP.NET Core .NET 9 API
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 50
+
+' ── API Layer ──────────────────────────────────────────────
+package "API Layer\n[ASP.NET Core Controllers]" as API <<Rectangle>> #E3F2FD {
+    component "[AuthController]\n<<RestController>>\n/api/auth" as AuthCtrl #BBDEFB
+    component "[CategoriesController]\n<<RestController>>\n/api/categories\n{Authorize}" as CatCtrl #BBDEFB
+    component "[SubCategoriesController]\n<<RestController>>\n/api/subcategories\n{Authorize}" as SubCatCtrl #BBDEFB
+    component "[ProductsController]\n<<RestController>>\n/api/products" as ProdCtrl #BBDEFB
+    component "[OrdersController]\n<<RestController>>\n/api/orders\n{Authorize}" as OrdCtrl #BBDEFB
+    component "[DashboardController]\n<<RestController>>\n/api/dashboard\n{Authorize(Admin)}" as DashCtrl #BBDEFB
+    component "[CubeInsightsController]\n<<RestController>>\n/api/cubeinsights\n{Authorize}" as CubeCtrl #BBDEFB
+
+    note right of AuthCtrl
+        JWT Bearer Authentication
+        ASP.NET Identity
+    end note
+}
+
+' ── Service Layer ─────────────────────────────────────────
+package "Service Layer" as SVC <<Rectangle>> #E8F5E9 {
+    interface "IJwtTokenService" as IJwt
+    component "[JwtTokenService]" as JwtSvc #C8E6C9
+    IJwt -- JwtSvc
+
+    interface "IDashboardService" as IDash
+    component "[DashboardService]\nServices/Dashboard/" as DashSvc #C8E6C9
+    IDash -- DashSvc
+
+    interface "IOlapService" as IOlap
+    component "[OlapService]\nADOMD.NET" as OlapSvc #C8E6C9
+    IOlap -- OlapSvc
+}
+
+' ── Repository Layer ──────────────────────────────────────
+package "Repository Layer" as REPO <<Rectangle>> #FFF3E0 {
+    interface "ICategoryRepository" as ICatRepo
+    component "[CategoryRepository]" as CatRepo #FFE0B2
+    ICatRepo -- CatRepo
+
+    interface "ISubCategoryRepository" as ISubCatRepo
+    component "[SubCategoryRepository]" as SubCatRepo #FFE0B2
+    ISubCatRepo -- SubCatRepo
+
+    interface "IProductRepository" as IProdRepo
+    component "[ProductRepository]" as ProdRepo #FFE0B2
+    IProdRepo -- ProdRepo
+
+    interface "IOrderRepository" as IOrdRepo
+    component "[OrderRepository]" as OrdRepo #FFE0B2
+    IOrdRepo -- OrdRepo
+}
+
+' ── Data Layer ────────────────────────────────────────────
+package "Data Layer\n[Entity Framework Core]" as DATA <<Rectangle>> #F3E5F5 {
+    component "[OltpDbContext]\nAdventureWorks2019" as OltpCtx #E1BEE7
+    component "[AnalyticsDbContext]\nAdventureWorksDW_Sales" as DwCtx #E1BEE7
+    component "[DbSeeder]" as Seeder #E1BEE7
+}
+
+' ── External Systems ──────────────────────────────────────
+package "External Systems" as EXT <<Rectangle>> #FFEBEE {
+    database "SQL Server\nAdventureWorks2019\n<<OLTP>>" as OLTP #EF9A9A
+    database "SQL Server\nAdventureWorksDW_Sales\n<<Data Warehouse>>" as DW #EF9A9A
+    database "SSAS\nCubeAW2019\n<<Multidimensional>>" as SSAS #EF9A9A
+    storage "File System\nC:\\images\\product\n<<Static Files>>" as FS #EF9A9A
+}
+
+' ── Dependency Injection Arrows ───────────────────────────
+
+' Controllers -> Services (DI)
+AuthCtrl ..> IJwt : <<inject>>
+DashCtrl ..> IDash : <<inject>>
+CubeCtrl ..> IOlap : <<inject>>
+
+' Controllers -> Repositories (DI)
+CatCtrl ..> ICatRepo : <<inject>>
+SubCatCtrl ..> ISubCatRepo : <<inject>>
+ProdCtrl ..> IProdRepo : <<inject>>
+OrdCtrl ..> IOrdRepo : <<inject>>
+
+' Services -> Data Layer
+DashSvc --> DwCtx : uses
+OlapSvc --> SSAS : XMLA/ADOMD.NET
+
+' Repositories -> Data Layer
+CatRepo --> OltpCtx : uses
+SubCatRepo --> OltpCtx : uses
+ProdRepo --> OltpCtx : uses
+OrdRepo --> OltpCtx : uses
+
+' Data Layer -> External
+OltpCtx --> OLTP : TDS
+DwCtx --> DW : TDS
+Seeder --> OltpCtx : seeds
+
+' Static files
+ProdCtrl ..> FS : serves images
+
+note bottom of EXT
+    All database connections use
+    Entity Framework Core with
+    connection strings from
+    appsettings.json
+end note
+
+@enduml

@@ -1,0 +1,106 @@
+@startuml AD_Image_Upload_Workflow
+!theme cerulean-outline
+title Product Image Upload Workflow
+footer AdventureWorks Sales BI Platform
+
+|#e8f0fe|Admin (Browser)|
+|#e8f4e8|React Frontend|
+|#fff3e0|ASP.NET Core Backend|
+|#fce4ec|File System / Database|
+
+|Admin (Browser)|
+start
+:Navigate to **Admin Dashboard**;
+
+:Select **Products** tab;
+
+|React Frontend|
+:Load all products via\nGET /api/products;
+
+:Render product list with\nimage upload controls;
+
+|Admin (Browser)|
+:Click **upload image** button\nfor a specific product;
+
+:Select image file from\nlocal file system;
+
+|React Frontend|
+:Create **FormData** object\nwith IFormFile (multipart/form-data);
+
+:POST /api/products/{id}/image\nContent-Type: multipart/form-data\nAuthorization: Bearer <JWT>;
+
+|ASP.NET Core Backend|
+:ProductsController.UploadImage()\nreceives id and IFormFile;
+
+if (file is null or empty?) then (yes)
+  :Return **400 BadRequest**\n"File is required.";
+  |React Frontend|
+  :Show error message;
+  stop
+else (no)
+endif
+
+:Fetch product by ID\nfrom repository;
+
+if (Product not found?) then (yes)
+  :Return **404 NotFound**;
+  |React Frontend|
+  :Show error message;
+  stop
+else (no)
+endif
+
+:Read Images:ProductsPath\nfrom configuration\n(default: C:\\images\\product);
+
+:Ensure directory exists\n(Directory.CreateDirectory);
+
+if (Product has existing\nImageFileName?) then (yes)
+  :Build old file path\nand delete old image file\nfrom disk (if exists);
+else (no)
+endif
+
+:Extract file extension\n(e.g. .png, .jpg);
+
+:Validate file extension;
+
+if (Extension in\n{.png, .jpg, .jpeg, .gif}?) then (no)
+  :Return **400 BadRequest**\n"Invalid file type.";
+  |React Frontend|
+  :Show "Invalid file type" error;
+  stop
+else (yes)
+endif
+
+:Generate unique filename:\n**product-{id}-{GUID}{ext}**\n(e.g. product-42-a1b2c3d4.png);
+
+:Build full path:\nC:\\images\\product\\{filename};
+
+|File System / Database|
+:Create file on disk\nand copy uploaded stream\n(file.CopyToAsync);
+
+:Update product.ImageFileName\n= generated filename;
+
+:repo.UpdateAsync(product)\npersists to database;
+
+|ASP.NET Core Backend|
+:Fetch updated product;
+
+:Return **200 OK**\nwith updated ProductDto\n(includes new ImageFileName);
+
+|React Frontend|
+:Receive updated ProductDto;
+
+:Refresh product image via\nstatic file serving:\n**/images/product/{filename}**;
+
+note right
+  Static file middleware
+  serves images from
+  C:\images\product\
+  mapped to /images/product/
+end note
+
+|Admin (Browser)|
+:New product image\ndisplayed in the UI;
+
+stop
+@enduml

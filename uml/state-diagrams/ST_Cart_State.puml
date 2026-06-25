@@ -1,0 +1,102 @@
+@startuml ST_Cart_State
+!theme cerulean-outline
+title Shopping Cart State (CartContext)
+footer AdventureWorks Sales BI Platform
+
+skinparam state {
+  BackgroundColor<<empty>> #FFCDD2
+  BorderColor<<empty>> #C62828
+  BackgroundColor<<hasitems>> #C8E6C9
+  BorderColor<<hasitems>> #388E3C
+  BackgroundColor<<checkingout>> #BBDEFB
+  BorderColor<<checkingout>> #1565C0
+}
+
+[*] --> Empty : App initializes\nCartProvider reads\nlocalStorage('ecom_cart_v1')
+
+state "Empty" as Empty <<empty>> {
+  Empty : items = []
+  Empty : count = 0
+  Empty : total = 0
+  Empty : localStorage: "[]"
+  Empty : UI shows "Your cart is empty"
+  Empty : with link to Products
+}
+
+state "HasItems" as HasItems <<hasitems>> {
+  HasItems : items.length > 0
+  HasItems : count = sum of qty
+  HasItems : total = sum of (qty * price)
+  HasItems : Navbar badge shows count
+  HasItems : localStorage synced via useEffect
+
+  state "Item Operations" as ItemOps {
+    state "Add Product" as AddProd
+    state "Update Quantity" as UpdateQty
+    state "Remove Item" as RemoveItem
+
+    AddProd : add(product, qty)
+    AddProd : If product exists: increment qty
+    AddProd : If new: append to items
+    AddProd : Caps at product.stockQty
+
+    UpdateQty : setQty(productId, qty)
+    UpdateQty : Clamps to [0, stockQty]
+    UpdateQty : If qty <= 0: auto-removes item
+
+    RemoveItem : remove(productId)
+    RemoveItem : Filters out item from array
+  }
+}
+
+state "CheckingOut" as CheckingOut <<checkingout>> {
+  CheckingOut : Checkout button clicked
+  CheckingOut : loading = true
+  CheckingOut : POST /api/orders in progress
+  CheckingOut : Checkout button disabled
+}
+
+Empty --> HasItems : [add(product, qty)]\nFirst product added\nto empty cart
+
+HasItems --> HasItems : [add(product, qty)]\nAdd new product or\nincrement existing qty
+
+HasItems --> HasItems : [setQty(productId, qty)]\nAdjust quantity\n(+/- buttons or input)\n[result qty > 0]
+
+HasItems --> HasItems : [remove(productId)]\nRemove specific item\n[other items remain]
+
+HasItems --> Empty : [remove(productId)]\nRemove last remaining item\n[items.length becomes 0]
+
+HasItems --> Empty : [clear()]\nClear all button clicked\nitems = []\nlocalStorage cleared
+
+HasItems --> CheckingOut : [handleCheckout()]\n[items.length > 0]\nBuild CreateOrderDto\nPOST /api/orders
+
+CheckingOut --> Empty : [Order created successfully]\nclear() called\nnavigateate('/orders')\nCart fully emptied
+
+CheckingOut --> HasItems : [Checkout failed]\nAPI error (401, 400, 500)\nError message displayed\nCart items preserved\nloading = false
+
+note right of Empty
+  On app startup, CartProvider
+  reads localStorage('ecom_cart_v1')
+  and parses JSON. Invalid entries
+  are filtered out (must have
+  product with numeric id).
+end note
+
+note bottom of HasItems
+  Every items[] change triggers
+  useEffect that persists to
+  localStorage('ecom_cart_v1').
+
+  Cart state survives page
+  refreshes and browser restarts.
+end note
+
+note right of CheckingOut
+  Checkout payload:
+  { items: [{ productId, qty }],
+    customerID: 1,
+    billToAddressID: 1,
+    shipToAddressID: 1,
+    shipMethodID: 1 }
+end note
+@enduml

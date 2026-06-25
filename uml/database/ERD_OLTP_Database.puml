@@ -1,0 +1,134 @@
+@startuml ERD_OLTP_Database
+!theme cerulean-outline
+
+title AdventureWorks Sales BI Platform\nOLTP Database ERD
+
+skinparam linetype ortho
+
+' ─────────────────────────────────────────────
+'  ASP.NET Identity tables
+' ─────────────────────────────────────────────
+package "dbo (ASP.NET Identity)" <<Rectangle>> #EEF2FF {
+
+    entity "AspNetUsers" as Users {
+        * **Id** : nvarchar(450) <<PK>>
+        --
+        UserName : nvarchar(256)
+        NormalizedUserName : nvarchar(256)
+        Email : nvarchar(256)
+        NormalizedEmail : nvarchar(256)
+        EmailConfirmed : bit
+        PasswordHash : nvarchar(max)
+        SecurityStamp : nvarchar(max)
+        ConcurrencyStamp : nvarchar(max)
+        PhoneNumber : nvarchar(max)
+        PhoneNumberConfirmed : bit
+        TwoFactorEnabled : bit
+        LockoutEnd : datetimeoffset
+        LockoutEnabled : bit
+        AccessFailedCount : int
+    }
+
+    entity "AspNetRoles" as Roles {
+        * **Id** : nvarchar(450) <<PK>>
+        --
+        Name : nvarchar(256)
+        NormalizedName : nvarchar(256)
+        ConcurrencyStamp : nvarchar(max)
+    }
+
+    entity "AspNetUserRoles" as UserRoles {
+        * **UserId** : nvarchar(450) <<PK, FK>>
+        * **RoleId** : nvarchar(450) <<PK, FK>>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Product catalog tables
+' ─────────────────────────────────────────────
+package "dbo (Catalog)" <<Rectangle>> #F0FDF4 {
+
+    entity "Categories" as Categories {
+        * **Id** : int <<PK, Identity>>
+        --
+        Name : nvarchar(100) <<not null>>
+    }
+
+    entity "SubCategories" as SubCategories {
+        * **Id** : int <<PK, Identity>>
+        --
+        Name : nvarchar(100) <<not null>>
+        CategoryId : int <<FK, not null>>
+    }
+
+    entity "Products" as Products {
+        * **Id** : int <<PK, Identity>>
+        --
+        Sku : nvarchar(50)
+        Name : nvarchar(200) <<not null>>
+        ProductNumber : nvarchar(50)
+        Color : nvarchar(30)
+        Price : decimal(18,2) <<not null>>
+        Size : nvarchar(10)
+        Weight : decimal(18,2) <<nullable>>
+        CategoryId : int <<FK, not null>>
+        SubCategoryId : int <<FK, not null>>
+        ModelId : int <<nullable>>
+        ModelName : nvarchar(100)
+        Description : nvarchar(max)
+        ImageFileName : nvarchar(255)
+        StockQty : int <<not null, default 0>>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Sales order tables (mapped to Sales schema)
+' ─────────────────────────────────────────────
+package "Sales" <<Rectangle>> #FFF7ED {
+
+    entity "SalesOrderHeader" as OrderHeader {
+        * **SalesOrderID** : int <<PK>>
+        --
+        OrderDate : datetime2 <<not null>>
+        SubTotal : decimal(18,2) <<not null>>
+        Comment : nvarchar(450) <<FK -> AspNetUsers.Id>>
+        Status : tinyint <<not null, default 1>>
+        ==
+        <i>Entity mapping:</i>
+        <i>Order.Id -> SalesOrderID</i>
+        <i>Order.CreatedAtUtc -> OrderDate</i>
+        <i>Order.Total -> SubTotal</i>
+        <i>Order.UserId -> Comment</i>
+    }
+
+    entity "SalesOrderDetail" as OrderDetail {
+        * **SalesOrderDetailID** : int <<PK>>
+        --
+        SalesOrderID : int <<FK, not null>>
+        ProductID : int <<FK, not null>>
+        OrderQty : smallint <<not null>>
+        UnitPrice : decimal(18,2) <<not null>>
+        LineTotal : decimal(38,6) <<not null>>
+        ==
+        <i>Entity mapping:</i>
+        <i>OrderItem.Id -> SalesOrderDetailID</i>
+        <i>OrderItem.OrderId -> SalesOrderID</i>
+        <i>OrderItem.Qty -> OrderQty</i>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Relationships
+' ─────────────────────────────────────────────
+Users ||--o{ UserRoles : UserId
+Roles ||--o{ UserRoles : RoleId
+
+Categories ||--o{ SubCategories : CategoryId
+SubCategories ||--o{ Products : SubCategoryId
+Categories ||--o{ Products : CategoryId
+
+Users ||--o{ OrderHeader : "Comment (UserId)"
+OrderHeader ||--|{ OrderDetail : SalesOrderID
+Products ||--o{ OrderDetail : ProductID
+
+@enduml

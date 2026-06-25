@@ -1,0 +1,131 @@
+@startuml DEP_Production_Architecture
+!theme cerulean-outline
+title Production Architecture (Hypothetical) - AdventureWorks Sales BI Platform
+caption Target deployment topology with security zones
+
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 50
+
+' ── External Zone ─────────────────────────────────────────
+cloud "Internet" as INTERNET #FFEBEE {
+    actor "Customer" as USER
+    actor "Admin" as ADMIN
+}
+
+' ── DMZ ───────────────────────────────────────────────────
+frame "DMZ\n<<Network Zone>>" as DMZ #E3F2FD {
+
+    node "Load Balancer\n<<nginx / Azure Front Door>>" as LB #BBDEFB {
+        portin "HTTPS :443" as P_LB
+        note right of LB
+            SSL/TLS termination
+            Rate limiting
+            Request routing
+        end note
+    }
+
+    node "CDN / Blob Storage\n<<Azure CDN / S3>>" as CDN #BBDEFB {
+        artifact "Product Images\n<<Static Assets>>" as CDN_IMG
+    }
+}
+
+' ── Application Zone ──────────────────────────────────────
+frame "Application Zone\n<<Network Zone>>" as APPZONE #E8F5E9 {
+
+    node "Static Hosting\n<<Azure Static Web Apps\n/ nginx>>" as STATIC #C8E6C9 {
+        artifact "React SPA\n<<npm run build>>\nVite production build\nminified + hashed assets" as SPA
+    }
+
+    node "Web Server 1\n<<Docker / IIS>>" as WEB1 #C8E6C9 {
+        artifact "Ecom.Api\n<<ASP.NET Core .NET 9>>\nKestrel" as API1
+        portin ":5000" as P_API1
+    }
+
+    node "Web Server 2\n<<Docker / IIS>>" as WEB2 #C8E6C9 {
+        artifact "Ecom.Api\n<<ASP.NET Core .NET 9>>\nKestrel" as API2
+        portin ":5000" as P_API2
+    }
+
+    note bottom of APPZONE
+        Horizontal scaling with
+        load-balanced API instances
+        Stateless JWT auth enables
+        any instance to handle requests
+    end note
+}
+
+' ── Data Zone ─────────────────────────────────────────────
+frame "Data Zone\n<<Network Zone>>" as DATAZONE #FFF3E0 {
+
+    node "Database Server\n<<SQL Server 2022>>" as DBSRV #FFE0B2 {
+        database "AdventureWorks2019\n<<OLTP>>" as OLTP
+        database "AdventureWorksDW_Sales\n<<Data Warehouse>>" as DW
+        database "AdventureWorksDW2019\n<<SSAS Source>>" as DW2019
+        portin "TDS :1433" as P_SQL
+    }
+
+    node "SSAS Server\n<<Analysis Services>>" as SSASSRV #E1BEE7 {
+        artifact "CubeAW2019\n<<Multidimensional>>" as CUBE
+        portin "XMLA :2383" as P_SSAS
+    }
+}
+
+' ── CI/CD Zone ────────────────────────────────────────────
+frame "CI/CD Pipeline\n<<GitHub Actions>>" as CICD #F3E5F5 {
+    node "GitHub Actions Runner\n<<.github/workflows/ci.yml>>" as GA #E1BEE7 {
+        artifact "Build & Test\ndotnet build + test\nnpm run build\nnpm test" as BUILD
+        artifact "Deploy\nDocker push\nor Azure deploy" as DEPLOY
+    }
+
+    node "SSIS Scheduler\n<<SQL Server Agent>>" as AGENT #E1BEE7 {
+        artifact "AW_Sales_DW_ETL\n<<Scheduled ETL>>\n01_Load_Dimension\n02_Load_FactSales" as ETL
+    }
+}
+
+' ── Connections ───────────────────────────────────────────
+
+' Users -> DMZ
+USER --> P_LB : "HTTPS\nTLS 1.3"
+ADMIN --> P_LB : "HTTPS\nTLS 1.3"
+
+' DMZ -> App Zone
+LB --> SPA : "HTTPS\nstatic assets"
+LB --> P_API1 : "HTTP\nreverse proxy"
+LB --> P_API2 : "HTTP\nreverse proxy\n(round-robin)"
+
+' App -> Data Zone
+API1 --> P_SQL : "TDS\nEF Core"
+API2 --> P_SQL : "TDS\nEF Core"
+API1 --> P_SSAS : "XMLA\nADOMD.NET"
+API2 --> P_SSAS : "XMLA\nADOMD.NET"
+
+' SPA -> CDN
+SPA ..> CDN_IMG : "HTTPS\nimage URLs"
+
+' SSAS -> DB
+CUBE --> DW2019 : "TDS\nCube processing"
+
+' ETL -> DB
+ETL --> OLTP : "TDS\nExtract"
+ETL --> DW : "TDS\nLoad"
+
+' CI/CD -> App Zone
+DEPLOY -[#9C27B0]-> WEB1 : "deploy"
+DEPLOY -[#9C27B0]-> WEB2 : "deploy"
+DEPLOY -[#9C27B0]-> STATIC : "deploy SPA"
+
+legend bottom right
+    |= Zone |= Access |
+    | DMZ | Public (HTTPS only) |
+    | Application | Internal (no direct public access) |
+    | Data | Restricted (app zone only) |
+    | CI/CD | Automated (GitHub Actions) |
+
+    |= Protocol |= Port |= Encryption |
+    | HTTPS | 443 | TLS 1.3 |
+    | TDS | 1433 | TLS (encrypted) |
+    | XMLA | 2383 | Encrypted |
+endlegend
+
+@enduml

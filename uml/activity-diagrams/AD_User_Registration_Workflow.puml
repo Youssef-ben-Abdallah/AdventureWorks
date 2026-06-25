@@ -1,0 +1,95 @@
+@startuml AD_User_Registration_Workflow
+!theme cerulean-outline
+title User Registration Workflow
+footer AdventureWorks Sales BI Platform
+
+|#e8f0fe|User (Browser)|
+|#e8f4e8|React Frontend|
+|#fff3e0|ASP.NET Core Backend|
+|#fce4ec|Identity / Database|
+
+|User (Browser)|
+start
+:Open Register page;
+
+:Enter **username**, **email**,\nand **password**;
+
+|React Frontend|
+:Validate input fields;
+
+if (Password length >= 6?) then (no)
+  :Show error:\n"Password must be at least\n6 characters";
+  |User (Browser)|
+  :Correct password;
+  |React Frontend|
+  :Re-validate;
+endif
+
+if (Password contains digit?) then (no)
+  :Show error:\n"Password requires a digit";
+  |User (Browser)|
+  :Correct password;
+  |React Frontend|
+  :Re-validate;
+endif
+
+if (Password contains uppercase?) then (no)
+  :Show error:\n"Password requires\nan uppercase letter";
+  |User (Browser)|
+  :Correct password;
+  |React Frontend|
+  :Re-validate;
+endif
+
+if (Password contains lowercase?) then (no)
+  :Show error:\n"Password requires\na lowercase letter";
+  |User (Browser)|
+  :Correct password;
+  |React Frontend|
+  :Re-validate;
+endif
+
+:All frontend validations pass;
+
+:POST /api/auth/register\n{ username, email, password }\n(RegisterDto);
+
+|ASP.NET Core Backend|
+:AuthController.Register()\nreceives RegisterDto;
+
+:Create AppUser\n{ UserName, Email,\n  EmailConfirmed = true };
+
+|Identity / Database|
+:UserManager.CreateAsync(user, password);
+
+if (Email already exists\nor Identity rules fail?) then (yes)
+  :Return IdentityResult.Errors;
+  |ASP.NET Core Backend|
+  :Return **400 BadRequest**\nwith error descriptions;
+  |React Frontend|
+  :Display server errors\n(e.g. "Duplicate email");
+  |User (Browser)|
+  :Review and correct input;
+  stop
+else (no)
+  :User created successfully;
+endif
+
+|ASP.NET Core Backend|
+:AddToRoleAsync(user, **"User"**);
+
+:JwtTokenService.CreateTokenAsync(user)\ngenerates JWT with claims\n(uid, username, email, roles);
+
+:Return **200 OK**\nAuthResponseDto {\n  Token, ExpiresAtUtc,\n  Username, Email, Roles };
+
+|React Frontend|
+:Receive AuthResponseDto;
+
+:Store **token** in localStorage\nStore user info (username,\nemail, roles);
+
+:Redirect to **Home** page;
+
+|User (Browser)|
+:User sees Home page\nas authenticated user;
+
+stop
+@enduml

@@ -1,0 +1,92 @@
+@startuml ST_Order_Lifecycle
+!theme cerulean-outline
+title Order Entity Lifecycle
+footer AdventureWorks Sales BI Platform -- OrderStatus Enum
+
+skinparam state {
+  BackgroundColor<<pending>> #FFF9C4
+  BorderColor<<pending>> #F9A825
+  BackgroundColor<<paid>> #C8E6C9
+  BorderColor<<paid>> #388E3C
+  BackgroundColor<<processing>> #BBDEFB
+  BorderColor<<processing>> #1565C0
+  BackgroundColor<<shipped>> #B3E5FC
+  BorderColor<<shipped>> #0277BD
+  BackgroundColor<<delivered>> #A5D6A7
+  BorderColor<<delivered>> #2E7D32
+  BackgroundColor<<cancelled>> #FFCDD2
+  BorderColor<<cancelled>> #C62828
+}
+
+[*] --> Pending : User completes checkout\nPOST /api/orders
+
+state "Pending" as Pending <<pending>> {
+  Pending : OrderStatus = 0
+  Pending : Order created with items
+  Pending : Stock deducted
+  Pending : Awaiting payment/review
+}
+
+state "Paid" as Paid <<paid>> {
+  Paid : OrderStatus = 1
+  Paid : Payment confirmed
+}
+
+state "Processing" as Processing <<processing>> {
+  Processing : OrderStatus = 2
+  Processing : Admin reviews order
+  Processing : Preparing for shipment
+}
+
+state "Shipped" as Shipped <<shipped>> {
+  Shipped : OrderStatus = 3
+  Shipped : Order dispatched
+  Shipped : Tracking available
+}
+
+state "Delivered" as Delivered <<delivered>> {
+  Delivered : OrderStatus = 4
+  Delivered : Customer received order
+  Delivered : Order complete
+}
+
+state "Cancelled" as Cancelled <<cancelled>> {
+  Cancelled : OrderStatus = 5
+  Cancelled : Order cancelled
+  Cancelled : Stock may be restored
+}
+
+Pending --> Paid : [Admin confirms payment]\nPATCH /api/orders/{id}/status\n{ status: 1 }
+Pending --> Processing : [Admin starts processing]\nPATCH status: 2
+Pending --> Cancelled : [User/Admin cancels]\nPATCH status: 5
+
+Paid --> Processing : [Admin starts processing]\nPATCH status: 2
+Paid --> Cancelled : [Admin cancels]\nPATCH status: 5
+
+Processing --> Shipped : [Order dispatched]\nPATCH status: 3
+Processing --> Cancelled : [Admin cancels]\nPATCH status: 5
+
+Shipped --> Delivered : [Delivery confirmed]\nPATCH status: 4
+
+Delivered --> [*]
+Cancelled --> [*]
+
+note right of Pending
+  The OrdersController.Create()
+  always sets initial status
+  to **Pending (0)**.
+
+  Only **Admin** role can
+  change status via
+  PATCH /api/orders/{id}/status
+  (UpdateOrderStatusDto).
+end note
+
+note bottom of Cancelled
+  Cancellation is allowed
+  from Pending, Paid,
+  or Processing states.
+  Once Shipped, order
+  cannot be cancelled.
+end note
+@enduml

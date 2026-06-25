@@ -1,0 +1,95 @@
+@startuml SD_Cube_Insights_Drill_Down
+!theme cerulean-outline
+
+title Cube Insights Drill-Down Flow\nAdventureWorks Sales BI Platform
+
+actor       "User"               as User
+participant "Browser / React\n(CubeInsights Page)" as React      #LightBlue
+participant "Axios\napiClient"                      as Axios      #LightCyan
+participant "CubeInsightsController"                as Controller  #LightGreen
+participant "OlapService"                           as Service     #LightYellow
+participant "SSAS Cube\n(ADOMD.NET\nAdventure Works DW2019)" as SSAS #LightPink
+
+== Initial Page Load: Monthly Trend ==
+
+User -> React : Navigates to CubeInsights page
+React -> React : Initialize state:\n  year = "2013"\n  drillMonth = null
+
+React -> Axios : CubeInsightsService.getSalesTrend(\n  { year: "2013" })
+Axios -> Controller : **GET /api/CubeInsights/sales-trend**\n?year=2013
+
+Controller -> Service : GetSalesTrendAsync(\n  year: "2013", territory: null,\n  month: null)
+
+Service -> Service : Build MDX query (monthly):\nSELECT\n  { [Measures].[Sales Amount],\n    [Measures].[Total Product Cost] }\n  ON COLUMNS,\nNON EMPTY\n  { [Order Date].[Month of Year]\n    .[Month of Year].MEMBERS }\n  ON ROWS\nFROM [Adventure Works DW2019]\nWHERE ( [Order Date].[Calendar Year]\n  .&[2013] )
+
+Service -> SSAS : AdomdConnection.Open()
+Service -> SSAS : AdomdCommand.ExecuteReader()
+SSAS --> Service : CellSet with monthly data\n(Month, Sales Amount, Product Cost)
+
+Service -> Service : Parse reader rows:\n[\n  { period: "January",\n    sales: 1234.56,\n    cost: 987.65 },\n  { period: "February", ... },\n  ...\n]
+
+Service --> Controller : result (monthly data)
+Controller --> Axios : **200 OK**\n{ data: [...], granularity: "monthly" }
+Axios --> React : trendData
+
+React -> React : Render line chart:\nTitle: "Monthly Sales & Profit (2013)"\nX-axis: months\nY-axis: Sales Amount, Product Cost
+React --> User : Monthly trend chart displayed\n(Jan - Dec)
+
+== Drill Down: User Clicks a Month ==
+
+User -> React : Clicks **"January"** bar/point\non the trend chart
+
+React -> React : setDrillMonth("January")
+React -> React : loadData() fires\n(useEffect on drillMonth change)
+
+React -> Axios : CubeInsightsService.getSalesTrend(\n  { year: "2013", month: "January" })
+Axios -> Controller : **GET /api/CubeInsights/sales-trend**\n?year=2013&month=January
+
+Controller -> Service : GetSalesTrendAsync(\n  year: "2013", territory: null,\n  month: "January")
+
+Service -> Service : Build MDX query (daily drill-down):\nSELECT\n  { [Measures].[Sales Amount],\n    [Measures].[Total Product Cost] }\n  ON COLUMNS,\nNON EMPTY\n  FILTER(\n    [Order Date].[Date].[Date].MEMBERS,\n    [Order Date].[Month of Year]\n      .CurrentMember.Member_Caption\n      = "January"\n  )\n  ON ROWS\nFROM [Adventure Works DW2019]\nWHERE ( [Order Date].[Calendar Year]\n  .&[2013] )
+
+note right of Service
+  The month parameter triggers
+  a FILTER on [Date].MEMBERS
+  matching the month caption,
+  returning daily-level data
+  instead of monthly.
+end note
+
+Service -> SSAS : AdomdCommand.ExecuteReader()
+SSAS --> Service : CellSet with daily data\nfor January 2013
+
+Service -> Service : Parse reader rows:\n[\n  { period: "2013-01-01",\n    sales: 45.67, cost: 32.10 },\n  { period: "2013-01-02", ... },\n  ...\n]
+
+Service --> Controller : result (daily data)
+Controller --> Axios : **200 OK**\n{ data: [...], granularity: "daily" }
+Axios --> React : dailyTrendData
+
+React -> React : Update chart:\nTitle: "Daily Sales & Profit (January 2013)"\nX-axis: dates within January\nShow **"Roll Up"** button
+
+React --> User : Daily drill-down chart displayed\nwith Roll Up button visible
+
+== Roll Up: Return to Monthly View ==
+
+User -> React : Clicks **"Roll Up"** button
+
+React -> React : setDrillMonth(null)
+React -> React : loadData() fires\n(useEffect on drillMonth change)
+
+React -> Axios : CubeInsightsService.getSalesTrend(\n  { year: "2013" })
+Axios -> Controller : **GET /api/CubeInsights/sales-trend**\n?year=2013
+note right of Controller : month param omitted\n=> monthly granularity
+
+Controller -> Service : GetSalesTrendAsync(\n  year: "2013", territory: null,\n  month: null)
+Service -> SSAS : Execute monthly MDX\n(same as initial load)
+SSAS --> Service : Monthly data
+Service --> Controller : result
+Controller --> Axios : **200 OK**
+Axios --> React : trendData
+
+React -> React : Restore chart:\nTitle: "Monthly Sales & Profit (2013)"\nHide Roll Up button
+
+React --> User : Monthly trend chart restored
+
+@enduml

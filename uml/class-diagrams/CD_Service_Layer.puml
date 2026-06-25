@@ -1,0 +1,133 @@
+@startuml CD_Service_Layer
+!theme cerulean-outline
+
+title AdventureWorks Sales BI Platform\nService Layer
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ─────────────────────────────────────────────
+'  External dependencies
+' ─────────────────────────────────────────────
+package "Infrastructure" <<Database>> #F0FDF4 {
+    class AnalyticsDbContext <<DbContext>> {
+        + Sales : DbSet<SalesFact>
+        + Customers : DbSet<CustomerDim>
+        + Products : DbSet<ProductDim>
+        + Currencies : DbSet<CurrencyDim>
+        + SalesPeople : DbSet<SalesPersonDim>
+        + ShipMethods : DbSet<ShipMethodDim>
+        + Territories : DbSet<TerritoryDim>
+    }
+}
+
+package "Microsoft.AspNetCore.Identity" <<Framework>> #EEF2FF {
+    class "UserManager<AppUser>" as UserManager <<Framework>> {
+        + FindByEmailAsync(email) : Task<AppUser?>
+        + CreateAsync(user, password) : Task<IdentityResult>
+        + CheckPasswordAsync(user, password) : Task<bool>
+        + GetRolesAsync(user) : Task<IList<string>>
+    }
+}
+
+package "ADOMD.NET" <<Framework>> #FEF3C7 {
+    class AdomdConnection <<External>> {
+        + ConnectionString : string
+        + Open() : void
+        + Close() : void
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Service interfaces
+' ─────────────────────────────────────────────
+package "Ecom.Api.Services" <<Rectangle>> #EFF6FF {
+
+    interface IJwtTokenService <<Interface>> {
+        + GenerateToken(user: AppUser, roles: IList<string>) : string
+    }
+
+    interface IDashboardService <<Interface>> {
+        + GetFiltersAsync() : Task<DashboardFilters>
+        + GetOverviewAsync(query) : Task<OverviewDto>
+        + GetProductsAsync(query) : Task<ProductsDto>
+        + GetCustomersAsync(query) : Task<CustomersDto>
+        + GetSalesTeamAsync(query) : Task<SalesTeamDto>
+        + GetShippingAsync(query) : Task<ShippingDto>
+        + GetDetailsAsync(query) : Task<DetailsDto>
+    }
+
+    interface IOlapService <<Interface>> {
+        + GetFiltersAsync() : Task<CubeFilters>
+        + GetKpisAsync(filters) : Task<KpiResult>
+        + GetProfitAnalysisAsync(filters) : Task<ProfitResult>
+        + GetSalesTrendAsync(filters) : Task<TrendResult>
+        + GetTopProductsAsync(filters) : Task<TopProductsResult>
+        + GetTerritorySalesAsync(filters) : Task<TerritorySalesResult>
+        + GetFreightAnalysisAsync(filters) : Task<FreightResult>
+        + GetTargetStatusAsync(filters) : Task<TargetStatusResult>
+        + GetProductCostAnalysisAsync(filters) : Task<CostResult>
+        + GetDiscountByProductAsync(filters) : Task<DiscountResult>
+        + GetOrderVolumeByProductAsync(filters) : Task<VolumeResult>
+        + GetPriceGapAnalysisAsync(filters) : Task<PriceGapResult>
+        + GetTerritoryDetailAsync(filters) : Task<TerritoryDetailResult>
+        + GetEmployeeKpisAsync(filters) : Task<EmployeeKpiResult>
+        + GetTopEmployeesAsync(filters) : Task<TopEmployeesResult>
+        + GetEmployeeSalesByTerritoryAsync(filters) : Task<EmpTerritoryResult>
+        + GetEmployeeAovAsync(filters) : Task<AovResult>
+        + GetPromotionKpisAsync(filters) : Task<PromoKpiResult>
+        + GetSalesByPromotionAsync(filters) : Task<PromoSalesResult>
+        + GetDiscountTrendAsync(filters) : Task<DiscountTrendResult>
+        + GetSalesByCurrencyAsync(filters) : Task<CurrencySalesResult>
+        + GetFulfillmentKpisAsync(filters) : Task<FulfillmentResult>
+        + GetShippingVolumeAsync(filters) : Task<ShipVolumeResult>
+        + GetFreightByTerritoryAsync(filters) : Task<FreightTerritoryResult>
+        + GetOrderShipLagAsync(filters) : Task<ShipLagResult>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Service implementations
+' ─────────────────────────────────────────────
+package "Ecom.Api.Services.Impl" <<Rectangle>> #F0F9FF {
+
+    class JwtTokenService <<Service>> {
+        - _configuration : IConfiguration
+        + GenerateToken(user: AppUser, roles: IList<string>) : string
+    }
+
+    class DashboardService <<Service>> {
+        - _context : AnalyticsDbContext
+        + GetFiltersAsync() : Task<DashboardFilters>
+        + GetOverviewAsync(query) : Task<OverviewDto>
+        + GetProductsAsync(query) : Task<ProductsDto>
+        + GetCustomersAsync(query) : Task<CustomersDto>
+        + GetSalesTeamAsync(query) : Task<SalesTeamDto>
+        + GetShippingAsync(query) : Task<ShippingDto>
+        + GetDetailsAsync(query) : Task<DetailsDto>
+    }
+
+    class OlapService <<Service>> {
+        - _connectionString : string
+        + {method} ExecuteMdxQuery(mdx) : DataTable
+        + GetFiltersAsync() : Task<CubeFilters>
+        + GetKpisAsync(filters) : Task<KpiResult>
+        + GetProfitAnalysisAsync(filters) : Task<ProfitResult>
+        + GetSalesTrendAsync(filters) : Task<TrendResult>
+        + GetTopProductsAsync(filters) : Task<TopProductsResult>
+        .. 20 more OLAP methods ..
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Relationships
+' ─────────────────────────────────────────────
+IJwtTokenService <|.. JwtTokenService : implements
+IDashboardService <|.. DashboardService : implements
+IOlapService <|.. OlapService : implements
+
+DashboardService --> AnalyticsDbContext : queries via EF Core >
+OlapService --> AdomdConnection : queries via ADOMD.NET >
+JwtTokenService --> UserManager : resolves roles >
+
+@enduml

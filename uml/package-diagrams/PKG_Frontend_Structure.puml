@@ -1,0 +1,120 @@
+@startuml PKG_Frontend_Structure
+!theme cerulean-outline
+title Frontend Package Structure - ecom-ui
+caption React 19 + TypeScript 6 + Vite 8
+
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 40
+
+package "ecom-ui/src" as ROOT #E3F2FD {
+
+    package "pages" as PAGES #BBDEFB {
+        class Home <<FunctionComponent>>
+        class Products <<FunctionComponent>>
+        class ProductDetails <<FunctionComponent>>
+        class Login <<FunctionComponent>>
+        class Cart <<FunctionComponent>>
+        class MyOrders <<FunctionComponent>>
+        class Dashboard <<FunctionComponent>>
+        class CubeInsights <<FunctionComponent>>
+        class AdminDashboard <<FunctionComponent>>
+    }
+
+    package "components" as COMP #C8E6C9 {
+        package "layout" as COMP_LAYOUT #A5D6A7 {
+            class Navbar <<FunctionComponent>>
+            class Footer <<FunctionComponent>>
+            class Layout <<FunctionComponent>>
+            note bottom of Layout
+                Uses <Outlet /> for
+                nested route rendering
+            end note
+        }
+
+        package "dashboard" as COMP_DASH #81C784 {
+            class ChartCard <<FunctionComponent>>
+            class KpiCards <<FunctionComponent>>
+            class NotesPanel <<FunctionComponent>>
+        }
+    }
+
+    package "context" as CTX #FFE0B2 {
+        class AuthContext <<ReactContext>>
+        class CartContext <<ReactContext>>
+        class ThemeContext <<ReactContext>>
+        note bottom of CTX
+            Provider wrapping order:
+            ThemeProvider > AuthProvider > CartProvider
+        end note
+    }
+
+    package "services" as SVC #E1BEE7 {
+        class "auth.ts" as AuthSvc <<module>>
+        class "catalog.ts" as CatSvc <<module>>
+        class "orders.ts" as OrdSvc <<module>>
+        class "dashboard.ts" as DashSvc <<module>>
+        class "cubeInsights.ts" as CubeSvc <<module>>
+    }
+
+    package "config" as CFG #FFCDD2 {
+        class "api.ts" as ApiConfig <<module>>
+        note bottom of ApiConfig
+            Axios instance
+            baseURL: localhost:57241
+            JWT Bearer interceptor
+        end note
+    }
+
+    package "types" as TYPES #B3E5FC {
+        class "models.ts" as Models <<TypeDefinitions>>
+        note bottom of Models
+            Shared TypeScript interfaces
+            for API response types
+        end note
+    }
+}
+
+' Entry point
+component "[main.tsx]\nReact entry point\nProvider wrapping\nBrowserRouter setup" as Main #FFF9C4
+
+' ── Import Dependencies ───────────────────────────────────
+
+' main.tsx -> Context & Routing
+Main --> CTX : wraps providers
+Main --> COMP_LAYOUT : renders Layout
+
+' Pages -> Components
+Dashboard --> COMP_DASH : imports
+CubeInsights --> COMP_DASH : imports
+AdminDashboard --> COMP_DASH : imports
+
+' Pages -> Services
+Login --> AuthSvc : imports
+Products --> CatSvc : imports
+ProductDetails --> CatSvc : imports
+Cart --> OrdSvc : imports
+MyOrders --> OrdSvc : imports
+Dashboard --> DashSvc : imports
+CubeInsights --> CubeSvc : imports
+AdminDashboard --> DashSvc : imports
+
+' Pages -> Context
+Login ..> AuthContext : useAuth()
+Cart ..> CartContext : useCart()
+Navbar ..> AuthContext : useAuth()
+Navbar ..> CartContext : useCart()
+Navbar ..> ThemeContext : useTheme()
+
+' Context -> Services
+AuthContext --> AuthSvc : delegates to
+
+' Services -> Config
+SVC --> ApiConfig : imports apiClient
+
+' Services & Pages -> Types
+SVC ..> Models : uses interfaces
+PAGES ..> Models : uses interfaces
+
+@enduml

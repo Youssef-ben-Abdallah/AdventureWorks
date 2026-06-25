@@ -1,0 +1,116 @@
+@startuml CD_Repository_Pattern
+!theme cerulean-outline
+
+title AdventureWorks Sales BI Platform\nRepository Pattern
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ─────────────────────────────────────────────
+'  DbContext
+' ─────────────────────────────────────────────
+package "Data Access" <<Database>> #F0FDF4 {
+    class OltpDbContext <<DbContext>> {
+        + Categories : DbSet<Category>
+        + SubCategories : DbSet<SubCategory>
+        + Products : DbSet<Product>
+        + Orders : DbSet<Order>
+        + OrderItems : DbSet<OrderItem>
+        # OnModelCreating(builder) : void
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Repository interfaces
+' ─────────────────────────────────────────────
+package "Ecom.Api.Repositories" <<Rectangle>> #EFF6FF {
+
+    interface ICategoryRepository <<Interface>> {
+        + GetAllAsync() : Task<IEnumerable<Category>>
+        + GetByIdAsync(id: int) : Task<Category?>
+        + CreateAsync(category: Category) : Task<Category>
+        + UpdateAsync(category: Category) : Task<Category>
+        + DeleteAsync(id: int) : Task<bool>
+    }
+
+    interface ISubCategoryRepository <<Interface>> {
+        + GetAllAsync() : Task<IEnumerable<SubCategory>>
+        + GetByIdAsync(id: int) : Task<SubCategory?>
+        + GetByCategoryIdAsync(categoryId: int) : Task<IEnumerable<SubCategory>>
+        + CreateAsync(subCategory: SubCategory) : Task<SubCategory>
+        + UpdateAsync(subCategory: SubCategory) : Task<SubCategory>
+        + DeleteAsync(id: int) : Task<bool>
+    }
+
+    interface IProductRepository <<Interface>> {
+        + GetAllAsync() : Task<IEnumerable<Product>>
+        + GetByIdAsync(id: int) : Task<Product?>
+        + GetPagedAsync(query) : Task<PagedResult<Product>>
+        + CreateAsync(product: Product) : Task<Product>
+        + UpdateAsync(product: Product) : Task<Product>
+        + DeleteAsync(id: int) : Task<bool>
+    }
+
+    interface IOrderRepository <<Interface>> {
+        + GetByUserIdAsync(userId: string) : Task<IEnumerable<Order>>
+        + GetByIdAsync(id: int) : Task<Order?>
+        + CreateAsync(order: Order) : Task<Order>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Repository implementations
+' ─────────────────────────────────────────────
+package "Ecom.Api.Repositories.Impl" <<Rectangle>> #F0F9FF {
+
+    class CategoryRepository <<Repository>> {
+        - _context : OltpDbContext
+        + GetAllAsync() : Task<IEnumerable<Category>>
+        + GetByIdAsync(id: int) : Task<Category?>
+        + CreateAsync(category: Category) : Task<Category>
+        + UpdateAsync(category: Category) : Task<Category>
+        + DeleteAsync(id: int) : Task<bool>
+    }
+
+    class SubCategoryRepository <<Repository>> {
+        - _context : OltpDbContext
+        + GetAllAsync() : Task<IEnumerable<SubCategory>>
+        + GetByIdAsync(id: int) : Task<SubCategory?>
+        + GetByCategoryIdAsync(categoryId: int) : Task<IEnumerable<SubCategory>>
+        + CreateAsync(subCategory: SubCategory) : Task<SubCategory>
+        + UpdateAsync(subCategory: SubCategory) : Task<SubCategory>
+        + DeleteAsync(id: int) : Task<bool>
+    }
+
+    class ProductRepository <<Repository>> {
+        - _context : OltpDbContext
+        + GetAllAsync() : Task<IEnumerable<Product>>
+        + GetByIdAsync(id: int) : Task<Product?>
+        + GetPagedAsync(query) : Task<PagedResult<Product>>
+        + CreateAsync(product: Product) : Task<Product>
+        + UpdateAsync(product: Product) : Task<Product>
+        + DeleteAsync(id: int) : Task<bool>
+    }
+
+    class OrderRepository <<Repository>> {
+        - _context : OltpDbContext
+        + GetByUserIdAsync(userId: string) : Task<IEnumerable<Order>>
+        + GetByIdAsync(id: int) : Task<Order?>
+        + CreateAsync(order: Order) : Task<Order>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Relationships
+' ─────────────────────────────────────────────
+ICategoryRepository <|.. CategoryRepository : implements
+ISubCategoryRepository <|.. SubCategoryRepository : implements
+IProductRepository <|.. ProductRepository : implements
+IOrderRepository <|.. OrderRepository : implements
+
+CategoryRepository --> OltpDbContext : depends on >
+SubCategoryRepository --> OltpDbContext : depends on >
+ProductRepository --> OltpDbContext : depends on >
+OrderRepository --> OltpDbContext : depends on >
+
+@enduml

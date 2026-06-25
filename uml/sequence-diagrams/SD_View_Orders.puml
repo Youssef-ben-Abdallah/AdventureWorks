@@ -1,0 +1,86 @@
+@startuml SD_View_Orders
+!theme cerulean-outline
+
+title View My Orders Flow\nAdventureWorks Sales BI Platform
+
+actor       "User"               as User
+participant "Browser / React\n(MyOrders Page)" as React      #LightBlue
+participant "Axios\napiClient"                  as Axios      #LightCyan
+participant "OrdersController\n[Authorize]"     as Controller  #LightGreen
+participant "OrderRepository"                   as Repo        #LightYellow
+participant "OltpDbContext\n(SQL Server\nAdventureWorks2019)" as DB #LightPink
+
+== Page Load ==
+
+User -> React : Navigates to /orders
+React -> React : useEffect triggers\ndata fetch on mount
+
+React -> Axios : OrdersService.myOrders()
+Axios -> Axios : Interceptor adds header:\nAuthorization: Bearer {token}\n(from localStorage)
+Axios -> Controller : **GET /api/orders/mine**
+
+== JWT Authentication & Authorization ==
+
+Controller -> Controller : [Authorize] middleware\nvalidates JWT token
+
+alt No token or token expired
+    Controller --> Axios : **401 Unauthorized**
+    Axios --> React : catch(err)\nerr.response.status = 401
+    React -> React : Redirect to\n/login?returnUrl=/orders
+    React --> User : Login page shown
+else Token valid
+    Controller -> Controller : Extract userId:\nUser.FindFirstValue(\n  ClaimTypes.NameIdentifier)
+
+    alt userId is null/empty
+        Controller --> Axios : **401 Unauthorized**
+        Axios --> React : Error state
+        React --> User : "Please log in" message
+    else userId extracted
+
+        == Query User's Orders ==
+
+        Controller -> Repo : GetMyOrdersAsync(userId)
+        Repo -> DB : SELECT * FROM Orders\n  WHERE UserId = @userId\n  INCLUDE Items\n    THEN INCLUDE Product\n  INCLUDE User\n  ORDER BY CreatedAtUtc DESC\n  AsNoTracking()
+        DB --> Repo : List<Order>
+        Repo --> Controller : List<Order>
+
+        Controller -> Controller : Map each Order to OrderDto:\nrows.Select(Map).ToList()
+
+        note right of Controller
+          OrderDto {
+            Id, CreatedAtUtc,
+            Status (Pending/Shipped/...),
+            UserId, Username, Total,
+            CustomerID, BillToAddressID,
+            ShipToAddressID, ShipMethodID,
+            Items: [{
+              Id, ProductId, ProductName,
+              Qty, UnitPrice, LineTotal
+            }]
+          }
+        end note
+
+        Controller --> Axios : **200 OK**\nOrderDto[]
+        Axios --> React : orders[]
+
+        == Render Orders ==
+
+        React -> React : setOrders(data)\nsetLoading(false)
+
+        alt No orders
+            React --> User : "No orders yet"\nempty state message
+        else Orders exist
+            React -> React : Render order list:\n- Order #{id}\n- Date: {createdAtUtc}\n- Status badge (Pending/Shipped/...)\n- Total: ${total}\n- Expandable item details
+
+            React --> User : Order list displayed\nwith status badges\nand item summaries
+
+            == User Expands Order Details ==
+
+            User -> React : Clicks on an order row\nto expand details
+            React -> React : Toggle expanded state\nShow order items:\n- Product name\n- Qty x UnitPrice\n- LineTotal
+            React --> User : Order items displayed\nwithin expanded row
+        end
+    end
+end
+
+@enduml

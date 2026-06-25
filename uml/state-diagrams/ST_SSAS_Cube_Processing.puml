@@ -1,0 +1,165 @@
+@startuml ST_SSAS_Cube_Processing
+!theme cerulean-outline
+title SSAS Cube Processing State (Adventure Works DW2019)
+footer AdventureWorks Sales BI Platform
+
+skinparam state {
+  BackgroundColor<<unprocessed>> #FFCDD2
+  BorderColor<<unprocessed>> #C62828
+  BackgroundColor<<procdim>> #FFF9C4
+  BorderColor<<procdim>> #F9A825
+  BackgroundColor<<dimready>> #BBDEFB
+  BorderColor<<dimready>> #1565C0
+  BackgroundColor<<procmg>> #FFE0B2
+  BorderColor<<procmg>> #E65100
+  BackgroundColor<<ready>> #C8E6C9
+  BorderColor<<ready>> #388E3C
+  BackgroundColor<<incremental>> #E1BEE7
+  BorderColor<<incremental>> #6A1B9A
+  BackgroundColor<<error>> #F8BBD0
+  BorderColor<<error>> #AD1457
+}
+
+[*] --> Unprocessed : Cube deployed\nor schema changed
+
+state "Unprocessed" as Unprocessed <<unprocessed>> {
+  Unprocessed : Cube has no data
+  Unprocessed : All dimensions empty
+  Unprocessed : Measure groups empty
+  Unprocessed : MDX queries return no results
+}
+
+state "Processing Dimensions" as ProcessingDimensions <<procdim>> {
+  ProcessingDimensions : Processing all 7 dimensions
+  ProcessingDimensions : in dependency order
+
+  state "Dim Date" as DimDate
+  state "Dim Product" as DimProduct
+  state "Dim Sales Territory" as DimTerritory
+  state "Dim Employee" as DimEmployee
+  state "Dim Promotion" as DimPromotion
+  state "Dim Currency" as DimCurrency
+  state "Dim Reseller" as DimReseller
+
+  DimDate : [Order Date].[Calendar Year]
+  DimDate : [Order Date].[Date]
+  DimProduct : [Product].[Category] hierarchy
+  DimProduct : Category -> Subcategory -> Product
+  DimTerritory : [Sales Territory].[Sales Territory]
+  DimTerritory : Group -> Country -> Region
+  DimEmployee : [Employee].[Employee]
+  DimPromotion : [Promotion].[Promotion]
+  DimCurrency : [Currency].[Currency]
+  DimReseller : [Reseller].[Reseller]
+}
+
+state "Dimensions Ready" as DimensionsReady <<dimready>> {
+  DimensionsReady : All 7 dimensions processed
+  DimensionsReady : Hierarchies populated:
+  DimensionsReady : - Date: Year/Month/Day
+  DimensionsReady : - Product: Cat/Sub/Product
+  DimensionsReady : - Territory: Group/Country/Region
+  DimensionsReady : Composite keys resolved
+  DimensionsReady : Awaiting measure group processing
+}
+
+state "Processing Measure Group" as ProcessingMeasureGroup <<procmg>> {
+  ProcessingMeasureGroup : Processing Fact Reseller Sales
+  ProcessingMeasureGroup : partition(s)
+  ProcessingMeasureGroup : Building aggregations
+  ProcessingMeasureGroup : Linking to dimension keys
+
+  state "Measures" as Measures {
+    Measures : Sales Amount
+    Measures : Total Product Cost
+    Measures : Tax Amount
+    Measures : Freight
+    Measures : Order Quantity
+    Measures : Extended Amount
+    Measures : Unit Price Discount Pct
+  }
+}
+
+state "Fully Processed" as FullyProcessed <<ready>> {
+  FullyProcessed : Cube ready for MDX queries
+  FullyProcessed : All KPIs available:
+  FullyProcessed : - Gross Profit Margin
+  FullyProcessed : - AOV, Discount Ratio
+  FullyProcessed : - Effective Tax Rate
+  FullyProcessed : Drill-down paths active:
+  FullyProcessed : - Monthly -> Daily
+  FullyProcessed : - Category -> Subcategory -> Product
+  FullyProcessed : - Group -> Country -> Region
+  FullyProcessed : OlapService can serve
+  FullyProcessed : CubeInsightsController endpoints
+}
+
+state "Incremental Update" as IncrementalUpdate <<incremental>> {
+  IncrementalUpdate : New data loaded via SSIS ETL
+  IncrementalUpdate : into DWH staging tables
+  IncrementalUpdate : Delta processing applies
+  IncrementalUpdate : new facts + dimension changes
+  IncrementalUpdate : without full reprocess
+}
+
+state "Processing Error" as ProcessingError <<error>> {
+  ProcessingError : Dimension or measure group
+  ProcessingError : processing failed
+  ProcessingError : Possible causes:
+  ProcessingError : - Data source unreachable
+  ProcessingError : - Key errors / duplicates
+  ProcessingError : - Memory exhaustion
+  ProcessingError : - Timeout
+}
+
+Unprocessed --> ProcessingDimensions : [Admin initiates\nProcess Full]
+
+ProcessingDimensions --> DimensionsReady : [All dimensions\nprocessed successfully]
+
+ProcessingDimensions --> ProcessingError : [Dimension processing\nfails (key error,\nconnection error)]
+
+DimensionsReady --> ProcessingMeasureGroup : [Process measure group\nFact Reseller Sales]
+
+ProcessingMeasureGroup --> FullyProcessed : [Measure group\nprocessed successfully\nAggregations built]
+
+ProcessingMeasureGroup --> ProcessingError : [Measure group fails\n(missing dimension key,\npartition error)]
+
+FullyProcessed --> IncrementalUpdate : [New data arrives\nvia SSIS ETL pipeline\nProcess Update triggered]
+
+IncrementalUpdate --> FullyProcessed : [Delta processed\nsuccessfully\nAggregations updated]
+
+IncrementalUpdate --> ProcessingError : [Incremental update\nfails]
+
+FullyProcessed --> Unprocessed : [Schema change detected]\nDimension attribute added/removed\nor measure group altered\nRequires full reprocess
+
+ProcessingError --> Unprocessed : [Admin resolves issue\nand resets for\nfull reprocess]
+
+ProcessingError --> ProcessingDimensions : [Admin retries\ndimension processing\nafter fixing data]
+
+ProcessingError --> ProcessingMeasureGroup : [Admin retries\nmeasure group processing\nafter fixing data]
+
+note right of FullyProcessed
+  When Fully Processed, the
+  OlapService connects via
+  AdomdConnection and executes
+  MDX queries against
+  **[Adventure Works DW2019]** cube.
+
+  Dimensions used:
+  - [Order Date]
+  - [Product]
+  - [Sales Territory]
+  - [Employee]
+  - [Promotion]
+  - [Currency]
+  - [Reseller]
+end note
+
+note bottom of IncrementalUpdate
+  SSIS ETL loads new data
+  into the Data Warehouse
+  (DWH2019). Incremental
+  processing updates only
+  changed partitions.
+end note
+@enduml

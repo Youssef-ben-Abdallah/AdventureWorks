@@ -63,8 +63,9 @@ export const MyOrders = () => {
   return (
     <div className="orders-page">
       {/* Page Header */}
-      <div className="orders-header">
-        <div>
+      <div className="aw-page-header with-inner">
+        <div className="aw-page-header-inner">
+          <div>
           <div className="aw-badge" style={{ marginBottom: '0.5rem' }}>
             <span className="material-icons" style={{ fontSize: '12px', height: '12px', width: '12px', lineHeight: '12px', verticalAlign: 'middle' }}>receipt_long</span>
             Order History
@@ -76,13 +77,14 @@ export const MyOrders = () => {
           <span className="material-icons">pedal_bike</span>
           Shop More
         </Link>
+        </div>
       </div>
 
       <div className="neon-divider"></div>
 
       {/* Loading skeleton */}
       {loading && (
-        <div className="orders-content">
+        <div className="orders-content aw-page-content">
           {[1, 2, 3].map(i => (
             <div key={i} className="order-skeleton">
               <div className="skeleton" style={{ height: '20px', width: '30%', marginBottom: '10px', borderRadius: '4px' }}></div>
@@ -95,7 +97,7 @@ export const MyOrders = () => {
 
       {/* Error */}
       {error && !loading && (
-        <div className="orders-empty">
+        <div className="orders-empty aw-page-content">
           <span className="material-icons">error_outline</span>
           <h3>Something went wrong</h3>
           <p>{error}</p>
@@ -104,7 +106,7 @@ export const MyOrders = () => {
 
       {/* Empty state */}
       {!loading && !error && orders.length === 0 && (
-        <div className="orders-empty">
+        <div className="orders-empty aw-page-content">
           <span className="material-icons">shopping_bag</span>
           <h3>No orders yet</h3>
           <p>Your order history will appear here once you make a purchase.</p>
@@ -117,7 +119,7 @@ export const MyOrders = () => {
 
       {/* Orders list */}
       {!loading && !error && orders.length > 0 && (
-        <div className="orders-content">
+        <div className="orders-content aw-page-content">
           {orders.map(o => (
             <div key={o.id} className="order-card gradient-border">
               {/* Order header */}

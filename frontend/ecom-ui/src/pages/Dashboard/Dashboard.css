@@ -68,9 +68,9 @@
 .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
 /* ===== Filters card ===== */
-.filters {
-  margin: 1.5rem clamp(1rem, 4vw, 3rem);
-  padding: 1.25rem !important;
+.filters.card {
+  margin: 0 0 2rem 0;
+  padding: 1.5rem !important;
   background: linear-gradient(145deg, rgba(30,41,59,0.6), rgba(15,23,42,0.85)) !important;
   border: 1px solid rgba(99,102,241,0.15) !important;
   border-radius: 16px !important;
@@ -189,6 +189,11 @@
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
   transition: border-color 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+.grid2 > .card {
+  margin: 0;
 }
 [data-theme="light"] .card {
   background: #ffffff !important;
@@ -206,7 +211,7 @@
 }
 [data-theme="light"] .title { color: #0f172a; }
 
-.tablewrap { overflow: auto; }
+.tablewrap { flex: 1; overflow: auto; }
 .right { text-align: right; }
 .busy {
   display: flex;
@@ -247,107 +252,85 @@ app-chartjs-card.chart-card { display: block; min-width: 0; }
   height: 100% !important;
 }
 
-/* ===== Material tab overrides — exactly matches cube-insights tab style ===== */
-
-/* Tab bar container */
-:host ::ng-deep .mat-mdc-tab-header {
-  border-bottom: 1px solid rgba(99,102,241,0.2) !important;
-  background: transparent !important;
-  margin-bottom: 0 !important;
-}
-:host ::ng-deep .mat-mdc-tab-label-container {
-  background: transparent !important;
-}
-/* Left-align tabs like cube-insights */
-:host ::ng-deep .mat-mdc-tab-list {
-  flex-grow: 0 !important;
-}
-
-/* Each tab button */
-:host ::ng-deep .mdc-tab {
-  min-width: 0 !important;
-  padding: 0 1.25rem !important;
-  height: 48px !important;
-  opacity: 1 !important;
-  transition: background 0.2s ease !important;
-}
-:host ::ng-deep .mdc-tab__content {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.45rem !important;
-}
-
-/* Inactive label + icon: muted gray */
-:host ::ng-deep .mdc-tab__text-label {
-  color: #94a3b8 !important;
-  font-family: 'Inter', 'Space Grotesk', sans-serif !important;
-  font-weight: 500 !important;
-  font-size: 0.95rem !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.45rem !important;
-  transition: color 0.2s !important;
-}
-/* Icon inside label */
-:host ::ng-deep .mdc-tab__text-label .tab-icon {
-  font-size: 18px !important;
-  color: #94a3b8 !important;
-  transition: color 0.2s !important;
-}
-
-/* Hover state */
-:host ::ng-deep .mdc-tab:not(.mdc-tab--active):hover .mdc-tab__text-label,
-:host ::ng-deep .mdc-tab:not(.mdc-tab--active):hover .mdc-tab__text-label .tab-icon {
-  color: #cbd5e1 !important;
-}
-
-/* Active tab: cyan label + icon like cube-insights */
-:host ::ng-deep .mdc-tab--active .mdc-tab__text-label {
-  color: #06b6d4 !important;
-  font-weight: 600 !important;
-}
-:host ::ng-deep .mdc-tab--active .mdc-tab__text-label .tab-icon {
-  color: #06b6d4 !important;
-}
-
-/* Glowing cyan underline — matches cube-insights */
-:host ::ng-deep .mdc-tab-indicator__content--underline {
-  border-color: #06b6d4 !important;
-  border-top-width: 2px !important;
-  box-shadow: 0 0 10px rgba(6,182,212,0.5), 0 0 20px rgba(6,182,212,0.15) !important;
-}
-
-/* ---- Light mode ---- */
-[data-theme="light"] :host ::ng-deep .mdc-tab__text-label {
-  color: #94a3b8 !important;
-}
-[data-theme="light"] :host ::ng-deep .mdc-tab__text-label .tab-icon {
-  color: #94a3b8 !important;
-}
-[data-theme="light"] :host ::ng-deep .mdc-tab:not(.mdc-tab--active):hover .mdc-tab__text-label,
-[data-theme="light"] :host ::ng-deep .mdc-tab:not(.mdc-tab--active):hover .mdc-tab__text-label .tab-icon {
-  color: #475569 !important;
-}
-[data-theme="light"] :host ::ng-deep .mdc-tab--active .mdc-tab__text-label {
-  color: #0891b2 !important;
-  font-weight: 600 !important;
-}
-[data-theme="light"] :host ::ng-deep .mdc-tab--active .mdc-tab__text-label .tab-icon {
-  color: #0891b2 !important;
-}
-[data-theme="light"] :host ::ng-deep .mdc-tab-indicator__content--underline {
-  border-color: #0891b2 !important;
-  box-shadow: 0 0 8px rgba(8,145,178,0.4) !important;
-}
-
-:host ::ng-deep .mat-mdc-tab-body-wrapper {
+/* ===== Tab layout ===== */
+.tabs-container {
   flex: 1;
-  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
-:host ::ng-deep .mat-mdc-tab-body-content {
+
+.tabs-header {
+  padding: 0;
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid rgba(99,102,241,0.12);
+}
+[data-theme="light"] .tabs-header {
+  border-bottom-color: rgba(99,102,241,0.15);
+}
+
+.tab-button {
+  background: transparent;
+  border: none;
+  min-width: 0;
+  padding: 0 1.25rem;
+  height: 48px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #94a3b8;
+  font-family: 'Inter', 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  border-top: 2px solid transparent; /* placeholder for active line */
+  border-bottom: 2px solid transparent;
+}
+[data-theme="light"] .tab-button {
+  color: #94a3b8;
+}
+
+.tab-button .tab-icon {
+  font-size: 18px;
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.tab-button:not(.active):hover {
+  color: #cbd5e1;
+}
+.tab-button:not(.active):hover .tab-icon {
+  color: #cbd5e1;
+}
+[data-theme="light"] .tab-button:not(.active):hover,
+[data-theme="light"] .tab-button:not(.active):hover .tab-icon {
+  color: #475569;
+}
+
+.tab-button.active {
+  color: #06b6d4;
+  font-weight: 600;
+  border-bottom: 2px solid #06b6d4;
+  box-shadow: 0 10px 10px -10px rgba(6,182,212,0.5), inset 0 -4px 10px -4px rgba(6,182,212,0.15);
+}
+.tab-button.active .tab-icon {
+  color: #06b6d4;
+}
+[data-theme="light"] .tab-button.active {
+  color: #0891b2;
+  border-bottom-color: #0891b2;
+  box-shadow: 0 10px 8px -8px rgba(8,145,178,0.4);
+}
+[data-theme="light"] .tab-button.active .tab-icon {
+  color: #0891b2;
+}
+
+.tab-content {
+  flex: 1;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 4rem;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-gutter: stable;
 }
 
 /* Material form fields */

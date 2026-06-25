@@ -137,8 +137,8 @@ export const Products = () => {
   return (
     <div className="products-page">
       {/* Page Header */}
-      <div className="products-header">
-        <div className="header-inner">
+      <div className="aw-page-header with-inner">
+        <div className="aw-page-header-inner">
           <div>
             <div className="aw-badge" style={{ marginBottom: '0.5rem' }}>
               <span className="material-icons" style={{ fontSize: '12px' }}>pedal_bike</span>
@@ -184,7 +184,7 @@ export const Products = () => {
 
       {/* Main content */}
       {!loading && !error && (
-        <div className="products-main">
+        <div className="products-main aw-page-content">
           {/* Sidebar Filters */}
           <aside className="filters-sidebar glass">
             <div className="filters-title">
@@ -267,7 +267,7 @@ export const Products = () => {
                   {pagedProducts.map(p => {
                     const imgUrl = CatalogService.imgUrl(p.imageFileName);
                     return (
-                      <div key={p.id} className="aw-product-card">
+                      <div key={p.id} className={`aw-product-card ${p.stockQty <= 0 ? 'out-of-stock' : ''}`}>
                         <div className="product-img-wrap">
                           {imgUrl ? (
                             <img src={imgUrl} alt={p.name} />
@@ -278,6 +278,7 @@ export const Products = () => {
                           <div className="product-badges-overlay">
                             <span className="aw-badge-mini">{p.subCategoryName}</span>
                           </div>
+                          {p.stockQty <= 0 && <div className="out-of-stock-banner">OUT OF STOCK</div>}
                           <button 
                             className="quick-add-btn" 
                             onClick={() => addToCart(p)} 

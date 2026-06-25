@@ -55,7 +55,7 @@
   <Attributes>
     <Attribute dwd:design-time-name="59f270e7-a13d-4484-8fdd-83c6fc3bf446">
       <ID>Product Key</ID>
-      <Name>Product Key</Name>
+      <Name>Product</Name>
       <Usage>Key</Usage>
       <KeyColumns>
         <KeyColumn dwd:design-time-name="1a0722ed-d0af-44f0-8877-86cec61d858c">
@@ -66,6 +66,14 @@
           </Source>
         </KeyColumn>
       </KeyColumns>
+      <NameColumn dwd:design-time-name="namecol-prod">
+        <DataType>WChar</DataType>
+        <DataSize>50</DataSize>
+        <Source xsi:type="ColumnBinding" dwd:design-time-name="namecolbind-prod">
+          <TableID>dbo_DimProduct</TableID>
+          <ColumnID>EnglishProductName</ColumnID>
+        </Source>
+      </NameColumn>
       <AttributeRelationships>
         <AttributeRelationship dwd:design-time-name="19b4fc8c-a1b8-41bb-967c-8bbe893298a3">
           <AttributeID>Product Subcategory Key</AttributeID>
@@ -78,7 +86,7 @@
     </Attribute>
     <Attribute dwd:design-time-name="52f7aa50-39a9-43d3-82da-e8c720054133">
       <ID>Product Subcategory Key</ID>
-      <Name>Product Subcategory Key</Name>
+      <Name>Subcategory</Name>
       <KeyColumns>
         <KeyColumn dwd:design-time-name="98022dfc-25ab-483d-8dc5-827ec1f947cc">
           <DataType>Integer</DataType>
@@ -89,6 +97,14 @@
           </Source>
         </KeyColumn>
       </KeyColumns>
+      <NameColumn dwd:design-time-name="namecol-subcat">
+        <DataType>WChar</DataType>
+        <DataSize>50</DataSize>
+        <Source xsi:type="ColumnBinding" dwd:design-time-name="namecolbind-subcat">
+          <TableID>dbo_DimProductSubcategory</TableID>
+          <ColumnID>EnglishProductSubcategoryName</ColumnID>
+        </Source>
+      </NameColumn>
       <AttributeRelationships>
         <AttributeRelationship dwd:design-time-name="7e3590c7-1041-4674-9abd-1abf7358c855">
           <AttributeID>Product Category Key</AttributeID>
@@ -101,7 +117,7 @@
     </Attribute>
     <Attribute dwd:design-time-name="1ae2187d-7411-4b84-958f-f4a7aa07d286">
       <ID>Product Category Key</ID>
-      <Name>Product Category Key</Name>
+      <Name>Category</Name>
       <KeyColumns>
         <KeyColumn dwd:design-time-name="b07be600-8624-4d7e-b53a-fbb7333aa155">
           <DataType>Integer</DataType>

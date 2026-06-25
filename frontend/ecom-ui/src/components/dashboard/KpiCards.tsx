@@ -22,17 +22,21 @@ export const KpiCards = ({ kpis }: { kpis: Kpi[] | null }) => {
 
   return (
     <div className="kpi-grid">
-      {kpis.map((k, i) => (
+      {kpis.map((k, i) => {
+        const icons = ['bar_chart', 'shopping_cart', 'inventory_2', 'account_balance_wallet', 'local_shipping', 'leaderboard', 'people', 'groups'];
+        const icon = icons[i % icons.length];
+        return (
         <div key={i} className="kpi">
-          <div className="kpi-icon">
-            <span className="material-icons">bar_chart</span>
+          <div className={`kpi-icon icon-${i % 6}`}>
+            <span className="material-icons">{icon}</span>
           </div>
           <div>
             <div className="label">{k.label}</div>
             <div className="value">{formatValue(k.value, k.unit)}</div>
           </div>
-        </div>
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 };

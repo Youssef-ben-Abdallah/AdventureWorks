@@ -31,7 +31,7 @@ export const DashboardService = {
     return response.data;
   },
   getSalesTeam: async (query: DashboardQuery) => {
-    const response = await apiClient.get('/api/dashboard/salesteam', { params: query });
+    const response = await apiClient.get('/api/dashboard/sales-team', { params: query });
     return response.data;
   },
   getShipping: async (query: DashboardQuery) => {

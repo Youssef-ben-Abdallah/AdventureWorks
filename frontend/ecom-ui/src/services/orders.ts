@@ -11,15 +11,15 @@ export const OrdersService = {
     return response.data;
   },
   myOrders: async (): Promise<Order[]> => {
-    const response = await apiClient.get<Order[]>('/api/orders/my-orders');
+    const response = await apiClient.get<Order[]>('/api/orders/mine');
     return response.data;
   },
   allOrders: async (): Promise<Order[]> => {
-    const response = await apiClient.get<Order[]>('/api/orders/all');
+    const response = await apiClient.get<Order[]>('/api/orders');
     return response.data;
   },
   updateStatus: async (id: number, statusId: number) => {
-    const response = await apiClient.put(`/api/orders/${id}/status`, { statusId });
+    const response = await apiClient.patch(`/api/orders/${id}/status`, { statusId });
     return response.data;
   }
 };

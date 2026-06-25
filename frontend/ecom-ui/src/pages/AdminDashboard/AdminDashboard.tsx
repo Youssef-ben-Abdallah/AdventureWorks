@@ -13,7 +13,18 @@ const STATUSES = [
   { id: 5, label: 'Cancelled', icon: 'cancel' },
 ];
 
+type ModalField = { name: string; label: string; type: 'text'|'number'|'select'; options?: {value: string|number, label: string}[] | ((vals: any) => {value: string|number, label: string}[]); disabled?: boolean | ((vals: any) => boolean); };
+type ModalConfig = { isOpen: boolean; title: string; fields: ModalField[]; initial: any; onSubmit: (val: any) => Promise<void>; isDelete?: boolean };
+
 export const AdminDashboard = () => {
+  const [modal, setModal] = useState<ModalConfig>({ isOpen: false, title: '', fields: [], initial: {}, onSubmit: async () => {} });
+  const [modalVals, setModalVals] = useState<any>({});
+  const [modalSaving, setModalSaving] = useState(false);
+
+  const openModal = (title: string, fields: ModalField[], initial: any, onSubmit: (val: any) => Promise<void>, isDelete = false) => {
+    setModal({ isOpen: true, title, fields, initial, onSubmit, isDelete });
+    setModalVals(initial);
+  };
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -54,69 +65,57 @@ export const AdminDashboard = () => {
   };
 
   // ---- Categories ----
-  const handleNewCategory = async () => {
-    const name = window.prompt('Enter new category name:');
-    if (!name) return;
-    try {
-      await CatalogService.createCategory(name);
-      reloadAll();
-    } catch (e: any) { setError(e.message); }
-  };
-  const handleEditCategory = async (c: Category) => {
-    const name = window.prompt('Edit category name:', c.name);
-    if (!name || name === c.name) return;
-    try {
-      await CatalogService.updateCategory(c.id, name);
-      reloadAll();
-    } catch (e: any) { setError(e.message); }
-  };
-  const handleDeleteCategory = async (c: Category) => {
-    if (!window.confirm(`Delete category "${c.name}"?`)) return;
-    try {
-      await CatalogService.deleteCategory(c.id);
-      reloadAll();
-    } catch (e: any) { setError(e.message); }
-  };
+  const handleNewCategory = () => openModal('New Category', [{ name: 'name', label: 'Name', type: 'text' }], { name: '' }, async (v) => { await CatalogService.createCategory(v.name); reloadAll(); });
+  const handleEditCategory = (c: Category) => openModal('Edit Category', [{ name: 'name', label: 'Name', type: 'text' }], { name: c.name }, async (v) => { await CatalogService.updateCategory(c.id, v.name); reloadAll(); });
+  const handleDeleteCategory = (c: Category) => openModal('Delete Category', [], {}, async () => { await CatalogService.deleteCategory(c.id); reloadAll(); }, true);
 
   // ---- SubCategories ----
-  const handleNewSubCategory = async () => {
-    const name = window.prompt('Enter new sub-category name:');
-    if (!name) return;
-    const catIdStr = window.prompt(`Enter category ID for "${name}":\n` + categories.map(c => `${c.id} - ${c.name}`).join('\n'));
-    const catId = Number(catIdStr);
-    if (!catId) return;
-    try {
-      await CatalogService.createSubCategory(name, catId);
-      reloadAll();
-    } catch (e: any) { setError(e.message); }
+  const handleNewSubCategory = () => {
+    const opts = categories.map(c => ({ value: c.id, label: c.name }));
+    openModal('New Sub-category', [{ name: 'name', label: 'Name', type: 'text' }, { name: 'categoryId', label: 'Category', type: 'select', options: opts }], { name: '', categoryId: categories[0]?.id || '' }, async (v) => { await CatalogService.createSubCategory(v.name, Number(v.categoryId)); reloadAll(); });
   };
-  const handleEditSubCategory = async (s: SubCategory) => {
-    const name = window.prompt('Edit sub-category name:', s.name);
-    if (!name) return;
-    const catIdStr = window.prompt(`Enter category ID for "${name}":\n` + categories.map(c => `${c.id} - ${c.name}`).join('\n'), String(s.categoryId));
-    const catId = Number(catIdStr);
-    if (!catId) return;
-    try {
-      await CatalogService.updateSubCategory(s.id, name, catId);
-      reloadAll();
-    } catch (e: any) { setError(e.message); }
+  const handleEditSubCategory = (s: SubCategory) => {
+    const opts = categories.map(c => ({ value: c.id, label: c.name }));
+    openModal('Edit Sub-category', [{ name: 'name', label: 'Name', type: 'text' }, { name: 'categoryId', label: 'Category', type: 'select', options: opts }], { name: s.name, categoryId: s.categoryId }, async (v) => { await CatalogService.updateSubCategory(s.id, v.name, Number(v.categoryId)); reloadAll(); });
   };
-  const handleDeleteSubCategory = async (s: SubCategory) => {
-    if (!window.confirm(`Delete sub-category "${s.name}"?`)) return;
-    try {
-      await CatalogService.deleteSubCategory(s.id);
-      reloadAll();
-    } catch (e: any) { setError(e.message); }
-  };
+  const handleDeleteSubCategory = (s: SubCategory) => openModal('Delete Sub-category', [], {}, async () => { await CatalogService.deleteSubCategory(s.id); reloadAll(); }, true);
 
   // ---- Products ----
-  const handleDeleteProduct = async (p: Product) => {
-    if (!window.confirm(`Delete product "${p.name}"?`)) return;
-    try {
-      await CatalogService.deleteProduct(p.id);
-      reloadAll();
-    } catch (e: any) { setError(e.message); }
+  const handleNewProduct = () => {
+    const catOpts = [{ value: '', label: 'Select a category...' }, ...categories.map(c => ({ value: c.id, label: c.name }))];
+    const subOptsFn = (vals: any) => {
+      if (!vals.categoryId) return [{ value: '', label: 'Select category first...' }];
+      return [{ value: '', label: 'Select a sub-category...' }, ...subCategories.filter(s => s.categoryId === Number(vals.categoryId)).map(c => ({ value: c.id, label: c.name }))];
+    };
+    openModal('New Product', [
+      { name: 'sku', label: 'SKU', type: 'text' },
+      { name: 'name', label: 'Name', type: 'text' },
+      { name: 'price', label: 'Price', type: 'number' },
+      { name: 'stockQty', label: 'Stock', type: 'number' },
+      { name: 'categoryId', label: 'Category', type: 'select', options: catOpts },
+      { name: 'subCategoryId', label: 'Sub-category', type: 'select', options: subOptsFn, disabled: (v) => !v.categoryId }
+    ], { sku: '', name: '', price: 0, stockQty: 0, categoryId: '', subCategoryId: '' }, async (v) => {
+      await CatalogService.createProduct({ ...v, price: Number(v.price), stockQty: Number(v.stockQty), categoryId: Number(v.categoryId), subCategoryId: Number(v.subCategoryId) }); reloadAll();
+    });
   };
+  const handleEditProduct = (p: Product) => {
+    const catOpts = [{ value: '', label: 'Select a category...' }, ...categories.map(c => ({ value: c.id, label: c.name }))];
+    const subOptsFn = (vals: any) => {
+      if (!vals.categoryId) return [{ value: '', label: 'Select category first...' }];
+      return [{ value: '', label: 'Select a sub-category...' }, ...subCategories.filter(s => s.categoryId === Number(vals.categoryId)).map(c => ({ value: c.id, label: c.name }))];
+    };
+    openModal('Edit Product', [
+      { name: 'sku', label: 'SKU', type: 'text' },
+      { name: 'name', label: 'Name', type: 'text' },
+      { name: 'price', label: 'Price', type: 'number' },
+      { name: 'stockQty', label: 'Stock', type: 'number' },
+      { name: 'categoryId', label: 'Category', type: 'select', options: catOpts },
+      { name: 'subCategoryId', label: 'Sub-category', type: 'select', options: subOptsFn, disabled: (v) => !v.categoryId }
+    ], { sku: p.sku, name: p.name, price: p.price, stockQty: p.stockQty, categoryId: p.categoryId, subCategoryId: p.subCategoryId }, async (v) => {
+      await CatalogService.updateProduct(p.id, { ...v, price: Number(v.price), stockQty: Number(v.stockQty), categoryId: Number(v.categoryId), subCategoryId: Number(v.subCategoryId) }); reloadAll();
+    });
+  };
+  const handleDeleteProduct = (p: Product) => openModal('Delete Product', [], {}, async () => { await CatalogService.deleteProduct(p.id); reloadAll(); }, true);
 
   // ---- Orders ----
   const handleOrderStatus = async (o: Order, newStatus: number) => {
@@ -140,6 +139,9 @@ export const AdminDashboard = () => {
 
   const fmtMoney = (v: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(v);
 
+  const getCategoryName = (id: number) => categories.find(c => c.id === id)?.name || id;
+  const getSubCategoryName = (id: number) => subCategories.find(s => s.id === id)?.name || id;
+
   // Filtered lists
   const filteredCats = categories.filter(c => c.name.toLowerCase().includes(catFilter.toLowerCase()));
   const filteredSubs = subCategories.filter(s => s.name.toLowerCase().includes(subFilter.toLowerCase()));
@@ -147,24 +149,26 @@ export const AdminDashboard = () => {
 
   return (
     <div className="admin-page">
-      <div className="admin-header">
-        <div>
-          <div className="aw-badge" style={{ marginBottom: '0.5rem' }}>
-            <span className="material-icons" style={{ fontSize: '12px' }}>admin_panel_settings</span>
-            Admin
+      <div className="aw-page-header with-inner">
+        <div className="aw-page-header-inner">
+          <div>
+            <div className="aw-badge" style={{ marginBottom: '0.5rem' }}>
+              <span className="material-icons" style={{ fontSize: '12px' }}>admin_panel_settings</span>
+              Store Management
+            </div>
+            <h1 className="admin-title">Admin Dashboard</h1>
+            <p className="admin-subtitle">Manage catalog, orders, and store settings.</p>
           </div>
-          <h1 className="admin-title">Admin Dashboard</h1>
-          <p className="admin-subtitle">Manage catalog, orders, and store settings.</p>
-        </div>
-        <div>
-          <button className="btn-secondary-glass" onClick={reloadAll} disabled={loading}>
-            <span className="material-icons" style={{ marginRight: '6px' }}>refresh</span>
-            Refresh
-          </button>
+          <div>
+            <button className="btn-secondary-glass" onClick={reloadAll} disabled={loading}>
+              <span className="material-icons" style={{ marginRight: '6px' }}>refresh</span>
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="admin-body">
+      <div className="admin-body aw-page-content">
         {loading && <div className="admin-loading"><span className="material-icons rotating">sync</span> Loading data...</div>}
         {error && <div className="admin-error"><span className="material-icons">error_outline</span> {error}</div>}
 
@@ -227,12 +231,12 @@ export const AdminDashboard = () => {
             </div>
             <div className="admin-table-wrap">
               <table className="admin-table">
-                <thead><tr><th>Name</th><th>Category ID</th><th></th></tr></thead>
+                <thead><tr><th>Name</th><th>Category</th><th></th></tr></thead>
                 <tbody>
                   {filteredSubs.map(s => (
                     <tr key={s.id}>
                       <td className="name-cell">{s.name}</td>
-                      <td>{s.categoryId}</td>
+                      <td>{getCategoryName(s.categoryId)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button className="tbl-btn" onClick={() => handleEditSubCategory(s)}><span className="material-icons">edit</span> Edit</button>
                         <button className="tbl-btn tbl-btn-danger" onClick={() => handleDeleteSubCategory(s)} style={{ marginLeft: '6px' }}><span className="material-icons">delete</span> Del</button>
@@ -250,7 +254,7 @@ export const AdminDashboard = () => {
           <div className="admin-card">
             <div className="admin-card-head">
               <h3 className="admin-card-title"><span className="material-icons">pedal_bike</span> Products</h3>
-              <button className="btn-primary-glow" onClick={() => window.alert('Use API directly or implement Product Dialog')}><span className="material-icons">add</span> New Product</button>
+              <button className="btn-primary-glow" onClick={handleNewProduct}><span className="material-icons">add</span> New Product</button>
             </div>
             <div className="admin-filters">
               <div className="admin-search-wrap">
@@ -260,18 +264,18 @@ export const AdminDashboard = () => {
             </div>
             <div className="admin-table-wrap">
               <table className="admin-table">
-                <thead><tr><th>SKU</th><th>Name</th><th>Category ID</th><th>Sub ID</th><th style={{ textAlign: 'right' }}>Price</th><th style={{ textAlign: 'right' }}>Stock</th><th></th></tr></thead>
+                <thead><tr><th>SKU</th><th>Name</th><th>Category</th><th>Sub-category</th><th style={{ textAlign: 'right' }}>Price</th><th style={{ textAlign: 'right' }}>Stock</th><th></th></tr></thead>
                 <tbody>
                   {filteredProds.map(p => (
                     <tr key={p.id}>
                       <td className="mono">{p.sku}</td>
                       <td className="name-cell">{p.name}</td>
-                      <td>{p.categoryId}</td>
-                      <td>{p.subCategoryId}</td>
+                      <td>{getCategoryName(p.categoryId)}</td>
+                      <td>{getSubCategoryName(p.subCategoryId)}</td>
                       <td className="price-cell" style={{ textAlign: 'right' }}>{fmtMoney(p.price)}</td>
                       <td className={`stock-cell ${p.stockQty > 50 ? 'stock-high' : p.stockQty > 0 ? 'stock-low' : 'stock-zero'}`} style={{ textAlign: 'right' }}>{p.stockQty}</td>
                       <td style={{ textAlign: 'right' }}>
-                        <button className="tbl-btn" onClick={() => window.alert('Edit feature requires full product form.')}><span className="material-icons">edit</span> Edit</button>
+                        <button className="tbl-btn" onClick={() => handleEditProduct(p)}><span className="material-icons">edit</span> Edit</button>
                         <button className="tbl-btn tbl-btn-danger" onClick={() => handleDeleteProduct(p)} style={{ marginLeft: '6px' }}><span className="material-icons">delete</span> Del</button>
                       </td>
                     </tr>
@@ -319,6 +323,60 @@ export const AdminDashboard = () => {
         </div>
 
       </div>
+
+      {modal.isOpen && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal-content">
+            <div className="admin-modal-header">{modal.title}</div>
+            <div className="admin-modal-body">
+              {modal.isDelete ? (
+                <p>Are you sure you want to perform this deletion? This action cannot be undone.</p>
+              ) : (
+                modal.fields.map(f => (
+                  <div key={f.name} className="filter-item" style={{ textAlign: 'left' }}>
+                    <label>{f.label}</label>
+                    {f.type === 'select' ? (
+                      <select 
+                        className="aw-select" 
+                        value={modalVals[f.name]} 
+                        onChange={e => {
+                          const updated = {...modalVals, [f.name]: e.target.value};
+                          // Auto-clear subcategory if category changes
+                          if (f.name === 'categoryId') updated.subCategoryId = '';
+                          setModalVals(updated);
+                        }}
+                        disabled={typeof f.disabled === 'function' ? f.disabled(modalVals) : f.disabled}
+                      >
+                        {(typeof f.options === 'function' ? f.options(modalVals) : f.options)?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    ) : (
+                      <input 
+                        type={f.type} 
+                        className="aw-input" 
+                        value={modalVals[f.name]} 
+                        onChange={e => setModalVals({...modalVals, [f.name]: e.target.value})} 
+                      />
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="admin-modal-actions">
+              <button className="btn-secondary-glass" onClick={() => setModal({...modal, isOpen: false})} disabled={modalSaving}>Cancel</button>
+              <button className="btn-primary-glow" onClick={async () => {
+                setModalSaving(true);
+                try {
+                  await modal.onSubmit(modalVals);
+                  setModal({...modal, isOpen: false});
+                } catch(e:any) { setError(e.message); }
+                finally { setModalSaving(false); }
+              }} disabled={modalSaving}>
+                {modalSaving ? <span className="material-icons rotating">sync</span> : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

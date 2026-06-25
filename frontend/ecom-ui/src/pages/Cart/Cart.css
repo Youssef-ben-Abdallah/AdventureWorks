@@ -36,7 +36,7 @@
   font-size: 0.9rem;
   margin: 0.25rem 0 0;
 }
-.cart-grid{display:grid;grid-template-columns:1fr 340px;gap:24px;margin-top:14px;padding:0 clamp(1rem, 4vw, 3rem)}
+.cart-grid{display:grid;grid-template-columns:1fr 340px;gap:24px;max-width:1400px;margin:0 auto;}
 @media(max-width:900px){.cart-grid{grid-template-columns:1fr}}
 .item{display:grid;grid-template-columns:80px 1fr 160px 110px 44px;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.1)}
 [data-theme="light"] .item{border-bottom:1px solid rgba(0,0,0,0.1)}

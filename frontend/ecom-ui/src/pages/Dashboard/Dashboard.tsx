@@ -82,6 +82,10 @@ export const Dashboard = () => {
     setShipping(null);
   };
 
+  useEffect(() => {
+    handleApply();
+  }, [from, to, territoryId, territoryGroup, salesPersonId, shipMethodId, category, subCategory, currencyCode, online]);
+
   const handleClear = () => {
     setFrom('');
     setTo('');
@@ -152,90 +156,94 @@ export const Dashboard = () => {
 
   return (
     <div className="dashboard-shell">
-      <div className="header">
-        <div className="title">
-          <div className="h">Analytics Dashboard</div>
-          <div className="sub">Sales performance, product mix, customers, and operations.</div>
-        </div>
-        <div className="actions">
-          <button className="btn-secondary-glass" onClick={handleClear}>Reset</button>
-          <button className="btn-primary-glow" onClick={handleApply}>Apply filters</button>
+      <div className="aw-page-header with-inner">
+        <div className="aw-page-header-inner">
+          <div className="title">
+            <div className="h">Analytics Dashboard</div>
+            <div className="sub">Sales performance, product mix, customers, and operations.</div>
+          </div>
         </div>
       </div>
 
-      <div className="filters card">
-        <div className={`filters-grid ${loadingFilters ? 'busy' : ''}`}>
-          <div className="filter-item">
-            <label>Date From</label>
-            <input type="date" value={from} onChange={e => setFrom(e.target.value)} />
+      <div className="aw-page-content">
+        <div className="filters card">
+          <div className={`filters-grid ${loadingFilters ? 'busy' : ''}`}>
+            <div className="filter-item">
+              <label>Date From</label>
+              <input type="date" value={from} onChange={e => setFrom(e.target.value)} />
+            </div>
+            <div className="filter-item">
+              <label>Date To</label>
+              <input type="date" value={to} onChange={e => setTo(e.target.value)} />
+            </div>
+            <div className="filter-item">
+              <label>Territory</label>
+              <select value={territoryId} onChange={e => setTerritoryId(e.target.value)}>
+                <option value="">All</option>
+                {filters?.territories?.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+            <div className="filter-item">
+              <label>Territory group</label>
+              <select value={territoryGroup} onChange={e => setTerritoryGroup(e.target.value)}>
+                <option value="">All</option>
+                {filters?.territoryGroups?.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+            <div className="filter-item">
+              <label>Salesperson</label>
+              <select value={salesPersonId} onChange={e => setSalesPersonId(e.target.value)}>
+                <option value="">All</option>
+                {filters?.salesPeople?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <div className="filter-item">
+              <label>Ship method</label>
+              <select value={shipMethodId} onChange={e => setShipMethodId(e.target.value)}>
+                <option value="">All</option>
+                {filters?.shipMethods?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <div className="filter-item">
+              <label>Category</label>
+              <select value={category} onChange={e => setCategory(e.target.value)}>
+                <option value="">All</option>
+                {filters?.productCategories?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div className="filter-item">
+              <label>Subcategory</label>
+              <select value={subCategory} onChange={e => setSubCategory(e.target.value)}>
+                <option value="">All</option>
+                {filters?.productSubCategories?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div className="filter-item">
+              <label>Currency</label>
+              <select value={currencyCode} onChange={e => setCurrencyCode(e.target.value)}>
+                <option value="">All</option>
+                {filters?.currencies?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div className="filter-item">
+              <label>Online order</label>
+              <select value={online} onChange={e => setOnline(e.target.value)}>
+                <option value="">All</option>
+                <option value="true">Online</option>
+                <option value="false">Offline</option>
+              </select>
+            </div>
+            <div className="filter-item" style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button className="btn-secondary-glass" style={{ height: '40px', width: '100%' }} onClick={handleClear}>
+                <span className="material-icons" style={{ fontSize: '18px', marginRight: '6px' }}>refresh</span>
+                Reset
+              </button>
+            </div>
+            {loadingFilters && <div className="spinner"><span className="material-icons rotating">sync</span></div>}
           </div>
-          <div className="filter-item">
-            <label>Date To</label>
-            <input type="date" value={to} onChange={e => setTo(e.target.value)} />
-          </div>
-          <div className="filter-item">
-            <label>Territory</label>
-            <select value={territoryId} onChange={e => setTerritoryId(e.target.value)}>
-              <option value="">All</option>
-              {filters?.territories?.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-          </div>
-          <div className="filter-item">
-            <label>Territory group</label>
-            <select value={territoryGroup} onChange={e => setTerritoryGroup(e.target.value)}>
-              <option value="">All</option>
-              {filters?.territoryGroups?.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-          </div>
-          <div className="filter-item">
-            <label>Salesperson</label>
-            <select value={salesPersonId} onChange={e => setSalesPersonId(e.target.value)}>
-              <option value="">All</option>
-              {filters?.salesPeople?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-          <div className="filter-item">
-            <label>Ship method</label>
-            <select value={shipMethodId} onChange={e => setShipMethodId(e.target.value)}>
-              <option value="">All</option>
-              {filters?.shipMethods?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-          <div className="filter-item">
-            <label>Category</label>
-            <select value={category} onChange={e => setCategory(e.target.value)}>
-              <option value="">All</option>
-              {filters?.productCategories?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-          <div className="filter-item">
-            <label>Subcategory</label>
-            <select value={subCategory} onChange={e => setSubCategory(e.target.value)}>
-              <option value="">All</option>
-              {filters?.productSubCategories?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-          <div className="filter-item">
-            <label>Currency</label>
-            <select value={currencyCode} onChange={e => setCurrencyCode(e.target.value)}>
-              <option value="">All</option>
-              {filters?.currencies?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-          <div className="filter-item">
-            <label>Online order</label>
-            <select value={online} onChange={e => setOnline(e.target.value)}>
-              <option value="">All</option>
-              <option value="true">Online</option>
-              <option value="false">Offline</option>
-            </select>
-          </div>
-          {loadingFilters && <div className="spinner"><span className="material-icons rotating">sync</span></div>}
+          {error && <div className="error">{error}</div>}
         </div>
-        {error && <div className="error">{error}</div>}
-      </div>
 
-      <div className="tabs-container">
         <div className="tabs-header">
           {['Overview', 'Products', 'Customers', 'Sales team', 'Shipping'].map((name, i) => {
             const icons = ['dashboard', 'inventory_2', 'people', 'leaderboard', 'local_shipping'];
@@ -248,7 +256,7 @@ export const Dashboard = () => {
           })}
         </div>
 
-        <div className="tab-content">
+        <div className="tab-content" style={{ marginTop: '1.5rem' }}>
           {/* OVERVIEW */}
           {activeTab === 0 && (
             <div>

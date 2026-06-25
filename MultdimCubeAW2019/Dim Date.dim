@@ -133,7 +133,7 @@
       <AttributeRelationships>
         <AttributeRelationship dwd:design-time-name="2287787a-827f-4dd1-9373-0b153f1911a3">
           <AttributeID>Full Date Alternate Key</AttributeID>
-          <Name>Full Date Alternate Key</Name>
+          <Name>Date</Name>
         </AttributeRelationship>
       </AttributeRelationships>
       <OrderBy>Key</OrderBy>
@@ -142,7 +142,7 @@
     </Attribute>
     <Attribute dwd:design-time-name="98822b12-cab6-480e-9a3a-84210c16702e">
       <ID>Full Date Alternate Key</ID>
-      <Name>Full Date Alternate Key</Name>
+      <Name>Date</Name>
       <KeyColumns>
         <KeyColumn dwd:design-time-name="3d3934a5-1efc-48b9-b15e-c857dbf6a813">
           <DataType>WChar</DataType>
@@ -156,7 +156,7 @@
       <AttributeRelationships>
         <AttributeRelationship dwd:design-time-name="07191070-6b06-4f61-a9aa-6a08840a2754">
           <AttributeID>English Month Name</AttributeID>
-          <Name>English Month Name</Name>
+          <Name>Month Name</Name>
         </AttributeRelationship>
       </AttributeRelationships>
       <OrderBy>Key</OrderBy>
@@ -165,7 +165,7 @@
     </Attribute>
     <Attribute dwd:design-time-name="5c0b139a-2c3b-4b07-ab8b-0f48f0e1dfe6">
       <ID>English Month Name</ID>
-      <Name>English Month Name</Name>
+      <Name>Month Name</Name>
       <KeyColumns>
         <KeyColumn dwd:design-time-name="8b187710-149d-4d65-8807-c936de3e80e0_Y2">
           <DataType>SmallInt</DataType>
@@ -271,12 +271,12 @@
         </Level>
         <Level dwd:design-time-name="2492b428-099f-4ca0-a265-cc49d544b021">
           <ID>English Month Name</ID>
-          <Name>English Month Name</Name>
+          <Name>Month Name</Name>
           <SourceAttributeID>English Month Name</SourceAttributeID>
         </Level>
         <Level dwd:design-time-name="c0fc33a4-90ed-4b62-af73-5fb1c79cce87">
           <ID>Full Date Alternate Key</ID>
-          <Name>Full Date Alternate Key</Name>
+          <Name>Date</Name>
           <SourceAttributeID>Full Date Alternate Key</SourceAttributeID>
         </Level>
       </Levels>

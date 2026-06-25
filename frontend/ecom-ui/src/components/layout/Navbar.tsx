@@ -89,7 +89,7 @@ export const Navbar = () => {
                   <span className="material-icons nav-link-icon">insights</span>
                   <span>Dashboard</span>
                 </NavLink>
-                <NavLink to="/cube-insights" className={({ isActive }) => `nav-link reseller-btn ${isActive ? 'active' : ''}`} onClick={closeMenu}>
+                <NavLink to="/cube-insights" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
                   <span className="material-icons nav-link-icon">auto_awesome</span>
                   <span>Reseller Insights</span>
                 </NavLink>
@@ -187,7 +187,7 @@ export const Navbar = () => {
               <NavLink to="/dashboard" className="mobile-nav-link" onClick={closeMenu}>
                 <span className="material-icons">insights</span> Dashboard
               </NavLink>
-              <NavLink to="/cube-insights" className="mobile-nav-link reseller-btn-mobile" onClick={closeMenu}>
+              <NavLink to="/cube-insights" className="mobile-nav-link" onClick={closeMenu}>
                 <span className="material-icons">auto_awesome</span> Reseller Insights
               </NavLink>
             </>

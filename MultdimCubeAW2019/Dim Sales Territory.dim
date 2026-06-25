@@ -79,7 +79,7 @@
     </Attribute>
     <Attribute dwd:design-time-name="22222222-2222-2222-2222-222222222222">
       <ID>Sales Territory Group</ID>
-      <Name>Sales Territory Group</Name>
+      <Name>Group</Name>
       <KeyColumns>
         <KeyColumn dwd:design-time-name="33333333-3333-3333-3333-333333333333">
           <DataType>WChar</DataType>
@@ -96,7 +96,7 @@
     </Attribute>
     <Attribute dwd:design-time-name="55555555-5555-5555-5555-555555555555">
       <ID>Sales Territory Country</ID>
-      <Name>Sales Territory Country</Name>
+      <Name>Country</Name>
       <KeyColumns>
         <KeyColumn dwd:design-time-name="66666666-6666-6666-6666-666666666666">
           <DataType>WChar</DataType>
@@ -119,7 +119,7 @@
     </Attribute>
     <Attribute dwd:design-time-name="99999999-9999-9999-9999-999999999999">
       <ID>Sales Territory Region</ID>
-      <Name>Sales Territory Region</Name>
+      <Name>Region</Name>
       <KeyColumns>
         <KeyColumn dwd:design-time-name="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa">
           <DataType>WChar</DataType>

@@ -42,8 +42,8 @@ export const Cart = () => {
 
   return (
     <div>
-      <div className="cart-header">
-        <div className="header-inner">
+      <div className="aw-page-header with-inner">
+        <div className="aw-page-header-inner">
           <div>
             <div className="aw-badge" style={{ marginBottom: '0.5rem' }}>
               <span className="material-icons" style={{ fontSize: '12px' }}>shopping_cart</span>
@@ -71,7 +71,7 @@ export const Cart = () => {
           </div>
         </div>
       ) : (
-        <div className="cart-grid" style={{ margin: '1.5rem clamp(1rem, 4vw, 3rem)' }}>
+        <div className="cart-grid aw-page-content">
           <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px' }}>
             {items.map((i: CartItem) => {
               const imgUrl = CatalogService.imgUrl(i.product.imageFileName);

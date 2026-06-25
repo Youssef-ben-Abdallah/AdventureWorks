@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const environment = {
-  apiBaseUrl: 'http://127.0.0.1:57241',
+  apiBaseUrl: 'http://localhost:57241',
 };
 
 // Create a pre-configured Axios instance
@@ -10,4 +10,12 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });

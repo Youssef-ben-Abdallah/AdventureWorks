@@ -1,0 +1,82 @@
+@startuml C4_Context
+!theme cerulean-outline
+title C4 Context Diagram (Level 1) - AdventureWorks Sales BI Platform
+caption System context showing users and external system boundaries
+
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 80
+
+' ── Actors ────────────────────────────────────────────────
+actor "Customer\n<<Person>>" as CUSTOMER #E3F2FD
+note right of CUSTOMER
+    Browses product catalog
+    Manages shopping cart
+    Places and tracks orders
+    Views order history
+end note
+
+actor "Admin / Analyst\n<<Person>>" as ADMIN #E3F2FD
+note right of ADMIN
+    Manages product catalog
+    Views sales dashboards
+    Analyzes DW analytics
+    Explores OLAP cube insights
+end note
+
+' ── System ────────────────────────────────────────────────
+rectangle "AdventureWorks\nSales BI Platform\n<<Software System>>" as SYSTEM #C8E6C9 {
+    note as SYS_NOTE
+        Full-stack e-commerce and BI platform
+        built with ASP.NET Core .NET 9 API,
+        React 19 SPA, SSIS ETL pipelines,
+        and SSAS multidimensional cube.
+
+        Provides product browsing, order
+        management, sales analytics dashboards,
+        and OLAP cube exploration.
+    end note
+}
+
+' ── External Systems ──────────────────────────────────────
+rectangle "SQL Server\n<<External System>>" as SQLSERVER #FFE0B2 {
+    note as SQL_NOTE
+        Hosts three databases:
+        - AdventureWorks2019 (OLTP)
+        - AdventureWorksDW_Sales (DW)
+        - AdventureWorksDW2019 (SSAS source)
+    end note
+}
+
+rectangle "SQL Server Analysis Services\n<<External System>>" as SSAS #E1BEE7 {
+    note as SSAS_NOTE
+        SSAS Multidimensional instance
+        localhost\MSSQLSERVER0
+        Catalog: CubeAW2019
+        Provides OLAP analytics via MDX
+    end note
+}
+
+rectangle "File System\n<<External System>>" as FS #FFF9C4 {
+    note as FS_NOTE
+        Product image storage
+        C:\images\product\
+        Served as static files
+    end note
+}
+
+' ── Relationships ─────────────────────────────────────────
+
+CUSTOMER --> SYSTEM : "Browses products,\nplaces orders,\nviews order history\n[HTTPS]"
+
+ADMIN --> SYSTEM : "Manages catalog,\nviews dashboards,\nexplores cube insights\n[HTTPS]"
+
+SYSTEM --> SQLSERVER : "Reads/writes\ntransactional data\nand DW analytics\n[TDS]"
+
+SYSTEM --> SSAS : "Queries OLAP cube\nfor multidimensional\nanalytics\n[XMLA / ADOMD.NET]"
+
+SYSTEM --> FS : "Serves product\nimages to clients\n[File I/O]"
+
+SQLSERVER <.. SSAS : "SSAS processes\ncube from DW\n[TDS]"
+
+@enduml

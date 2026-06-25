@@ -1,0 +1,55 @@
+<h2 mat-dialog-title>{{ data.product ? 'Edit product' : 'New product' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div mat-dialog-content>
+    <div class="grid2">
+      <div class="form-field">
+        <label class="field-label">SKU</label>
+        <input class="aw-input" formControlName="sku" />
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Name</label>
+        <input class="aw-input" formControlName="name" />
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Price</label>
+        <input class="aw-input" type="number" formControlName="price" />
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Stock</label>
+        <input class="aw-input" type="number" formControlName="stockQty" />
+      </div>
+    </div>
+
+    <div class="form-field full" style="margin-top:12px;">
+      <label class="field-label">Description</label>
+      <textarea class="aw-input" rows="2" formControlName="description"></textarea>
+    </div>
+
+    <div class="grid2">
+      <div class="form-field">
+        <label class="field-label">Category</label>
+        <select class="aw-select" formControlName="categoryId">
+          <option *ngFor="let c of data.categories" [value]="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Sub-category</label>
+        <select class="aw-select" formControlName="subCategoryId">
+          <option *ngFor="let s of data.subCategories" [value]="s.id">{{ s.name }} ({{ s.categoryName }})</option>
+        </select>
+      </div>
+    </div>
+
+
+  </div>
+
+  <div class="dialog-actions">
+    <button type="button" class="btn-secondary-glass" (click)="ref.close()">Cancel</button>
+    <button type="submit" class="btn-primary-glow" [disabled]="form.invalid">Save</button>
+  </div>
+</form>

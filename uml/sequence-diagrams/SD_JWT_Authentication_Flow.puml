@@ -1,0 +1,185 @@
+@startuml SD_JWT_Authentication_Flow
+!theme cerulean-outline
+
+title JWT Authentication Lifecycle\nAdventureWorks Sales BI Platform
+
+autonumber "<b>[0]"
+hide footbox
+
+skinparam maxMessageSize 160
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBodyBackgroundColor #FAFAFA80
+skinparam sequenceDividerBackgroundColor #ECEFF1
+skinparam sequenceDividerBorderColor #90A4AE
+skinparam sequenceBoxBorderColor #90A4AE
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #37474F
+    FontColor #212121
+}
+skinparam boundary {
+    BackgroundColor #BBDEFB
+    BorderColor #1565C0
+    FontColor #0D47A1
+}
+skinparam participant {
+    BackgroundColor #E8EAF6
+    BorderColor #3949AB
+    FontColor #1A237E
+}
+skinparam control {
+    BackgroundColor #C8E6C9
+    BorderColor #2E7D32
+    FontColor #1B5E20
+}
+skinparam database {
+    BackgroundColor #F8BBD0
+    BorderColor #AD1457
+    FontColor #880E4F
+}
+
+box "Client Tier" #EBF5FB
+    actor       "User"                                    as User
+    boundary    "Browser / React\n(Login Page)"           as React
+    participant "Axios\napiClient\n(Interceptor)"         as Axios
+end box
+
+box "Backend — Auth" #F1F8E9
+    control     "AuthController"                          as AuthCtrl
+    control     "JwtTokenService"                         as JWT
+end box
+
+box "Backend — Middleware" #FFFDE7
+    control     "ASP.NET Core\nMiddleware Pipeline"       as Pipeline
+    control     "Controller\n[Authorize]"                 as Controller
+end box
+
+box "Data Layer" #FFF3E0
+    database    "OltpDbContext\n(SQL Server)"              as DB
+end box
+
+== Phase 1: Token Creation (Login) ==
+
+User -> React : Submits username + password
+React -> Axios : AuthService.login({ username, password })
+Axios -> AuthCtrl : **POST /api/auth/login**\n[AllowAnonymous]
+
+AuthCtrl -> DB : UserManager.FindByNameAsync(username)
+DB --> AuthCtrl : AppUser
+AuthCtrl -> DB : SignInManager.CheckPasswordSignInAsync(\n  user, password, lockoutOnFailure: false)
+DB --> AuthCtrl : Succeeded = true
+
+AuthCtrl -> JWT : CreateTokenAsync(user)
+
+JWT -> DB : UserManager.GetRolesAsync(user)
+DB --> JWT : roles = ["Admin"]
+
+JWT -> JWT : **Build Claims:**\n  ClaimTypes.NameIdentifier = userId\n  ClaimTypes.Name = username\n  JwtRegisteredClaimNames.Sub = userId\n  JwtRegisteredClaimNames.Email = email\n  "uid" = userId, "uname" = username\n  ClaimTypes.Role = "Admin"
+
+JWT -> JWT : **Sign Token:**\n  Key: SymmetricSecurityKey(Jwt:Key)\n  Algorithm: HmacSha256\n  Issuer: Jwt:Issuer, Audience: Jwt:Audience\n  Expires: UtcNow + ExpiresMinutes
+
+JWT --> AuthCtrl : (tokenString, expiresAtUtc, roles)
+AuthCtrl --> Axios : **200 OK**\nAuthResponseDto {\n  token, expiresAtUtc,\n  username, email, roles\n}
+
+== Phase 2: Token Storage (Client) ==
+
+Axios --> React : response.data
+React -> React : AuthContext.login(token, isAdmin, username)
+
+group localStorage Persistence
+    React -> React : localStorage.setItem(**"token"**, jwt_string)
+    React -> React : localStorage.setItem(**"role"**, "Admin")
+    React -> React : localStorage.setItem(**"username"**, username)
+end
+
+React -> React : Update AuthContext state:\n  isLoggedIn = true, isAdmin = true
+
+== Phase 3: Authenticated API Requests ==
+
+User -> React : Navigates to protected page\n(e.g. /orders, /dashboard)
+React -> Axios : API call (e.g. GET /api/orders/mine)
+
+Axios -> Axios : **Request Interceptor fires:**\nconst token = localStorage.getItem("token")\nif (token)\n  config.headers.Authorization = `Bearer ${token}`
+
+Axios -> Pipeline : **GET /api/orders/mine**\nHeaders: Authorization: Bearer eyJhbG...
+
+== Phase 4: Server-Side Token Validation ==
+
+Pipeline -> Pipeline : **1. UseAuthentication()**\nJwtBearerAuthentication middleware
+
+Pipeline -> Pipeline : **TokenValidationParameters:**\n  ValidateIssuer = true (Jwt:Issuer)\n  ValidateAudience = true (Jwt:Audience)\n  ValidateIssuerSigningKey = true\n  ValidateLifetime = true\n  ClockSkew = 15 seconds
+
+alt Token validation fails (bad signature / wrong issuer)
+    Pipeline --> Axios : **401 Unauthorized**\nWWW-Authenticate: Bearer error="invalid_token"
+else Token expired
+    Pipeline -> Pipeline : ValidateLifetime check:\ntoken.exp < UtcNow - ClockSkew
+    Pipeline --> Axios : **401 Unauthorized**\nWWW-Authenticate: Bearer error="invalid_token",\n  error_description="token expired"
+else Token valid
+    Pipeline -> Pipeline : Deserialize claims from token payload
+    Pipeline -> Pipeline : Build ClaimsPrincipal from token claims
+    Pipeline -> Pipeline : HttpContext.User = ClaimsPrincipal
+
+    Pipeline -> Pipeline : **2. UseAuthorization()**\nAuthorization middleware
+
+    Pipeline -> Controller : Route to controller action
+
+    Controller -> Controller : **[Authorize] attribute check:**\nIs HttpContext.User.Identity.IsAuthenticated?
+
+    opt Role-based authorization
+        Controller -> Controller : **[Authorize(Roles="Admin")]**\nCheck: User.IsInRole("Admin")\n=> ClaimTypes.Role contains "Admin"
+
+        alt Role not present
+            Controller --> Axios : **403 Forbidden**
+            note right of Controller
+                ConfigureApplicationCookie overrides
+                redirect: OnRedirectToAccessDenied
+                => 403 (not 302)
+            end note
+        end
+    end
+
+    Controller -> Controller : Extract identity claims:\nUser.FindFirstValue(ClaimTypes.NameIdentifier)\n=> userId for data filtering
+
+    Controller -> DB : Query with userId scope
+    DB --> Controller : Results
+    Controller --> Pipeline : Response
+    Pipeline --> Axios : **200 OK** + data
+    Axios --> React : response.data
+    React --> User : Rendered page
+end
+
+== Phase 5: Token Expiry & Re-authentication ==
+
+User -> React : Later... token has expired
+React -> Axios : API call
+Axios -> Axios : Interceptor attaches expired token
+Axios -> Pipeline : Request with expired Bearer token
+Pipeline -> Pipeline : ValidateLifetime fails: token.exp < UtcNow
+Pipeline --> Axios : **401 Unauthorized**
+Axios --> React : err.response.status = 401
+React -> React : Error handler detects 401
+React -> React : Redirect to /login?returnUrl={currentPath}
+React --> User : Login page shown — "Session expired"
+
+== Phase 6: Logout ==
+
+User -> React : Clicks **"Logout"** in Navbar
+React -> React : AuthContext.logout()
+
+group Clear localStorage
+    React -> React : localStorage.removeItem("token")
+    React -> React : localStorage.removeItem("role")
+    React -> React : localStorage.removeItem("username")
+end
+
+React -> React : Update AuthContext:\n  isLoggedIn = false, isAdmin = false, username = null
+
+note over React, Axios
+    Subsequent API calls will NOT include Authorization header
+    (interceptor finds no token). Protected endpoints return 401.
+end note
+
+React --> User : Redirect to Home / Login page
+
+@enduml

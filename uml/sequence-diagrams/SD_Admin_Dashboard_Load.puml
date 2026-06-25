@@ -1,0 +1,157 @@
+@startuml SD_Admin_Dashboard_Load
+!theme cerulean-outline
+
+title Admin Dashboard Load Flow\nAdventureWorks Sales BI Platform
+
+autonumber "<b>[0]"
+hide footbox
+
+skinparam maxMessageSize 160
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBodyBackgroundColor #FAFAFA80
+skinparam sequenceDividerBackgroundColor #ECEFF1
+skinparam sequenceDividerBorderColor #90A4AE
+skinparam sequenceBoxBorderColor #90A4AE
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #37474F
+    FontColor #212121
+}
+skinparam boundary {
+    BackgroundColor #BBDEFB
+    BorderColor #1565C0
+    FontColor #0D47A1
+}
+skinparam participant {
+    BackgroundColor #E8EAF6
+    BorderColor #3949AB
+    FontColor #1A237E
+}
+skinparam control {
+    BackgroundColor #C8E6C9
+    BorderColor #2E7D32
+    FontColor #1B5E20
+}
+skinparam database {
+    BackgroundColor #F8BBD0
+    BorderColor #AD1457
+    FontColor #880E4F
+}
+
+box "Client Tier" #EBF5FB
+    actor       "Admin"                                                  as Admin
+    boundary    "Browser / React\n(Dashboard Page)"                      as React
+end box
+
+box "Transport" #F9FBE7
+    participant "Axios\napiClient"                                        as Axios
+end box
+
+box "Backend" #F1F8E9
+    control     "DashboardController\n[Authorize(Roles=\"Admin\")]"       as Controller
+    control     "DashboardService"                                        as Service
+end box
+
+box "Data Layer" #FFF3E0
+    database    "AnalyticsDbContext\n(SQL Server\nAdventureWorksDW_Sales)" as DB
+end box
+
+== Navigation & Authorization Check ==
+
+Admin -> React : Navigates to /dashboard
+React -> React : Route guard checks\nAuthContext.isAdmin
+
+alt Not admin
+    React --> Admin : Redirect to /login\nor "Access Denied"
+else Is admin
+
+    == Phase 1: Load Filter Options ==
+
+    React -> React : useEffect triggers\ninitial data load
+
+    React -> Axios : DashboardService.getFilters()
+    Axios -> Axios : Interceptor: Authorization: Bearer {token}
+    Axios -> Controller : **GET /api/dashboard/filters**
+
+    Controller -> Controller : [Authorize(Roles="Admin")]\nvalidate JWT + role claim
+
+    alt Not authorized (missing Admin role)
+        Controller --> Axios : **403 Forbidden**
+        Axios --> React : Error displayed
+    else Authorized
+        Controller -> Service : GetFiltersAsync(ct)
+
+        group Parallel AnalyticsDbContext queries
+            Service -> DB : Territories.OrderBy(Name)
+            Service -> DB : Territories.Select(Group).Distinct()
+            Service -> DB : SalesPeople.OrderBy(LastName, FirstName)
+            Service -> DB : ShipMethods.OrderBy(Name)
+            Service -> DB : Products.Select(CategoryName).Distinct()
+            Service -> DB : Products.Select(SubCategoryName).Distinct()
+            Service -> DB : Currencies.Select(CurrencyCode).Distinct()
+        end
+
+        DB --> Service : All filter dimension data
+
+        Service -> Service : Build DashboardFiltersDto {\n  Territories[], TerritoryGroups[],\n  SalesPeople[], ShipMethods[],\n  ProductCategories[], ProductSubCategories[],\n  Currencies[]\n}
+
+        Service --> Controller : DashboardFiltersDto
+        Controller --> Axios : **200 OK** DashboardFiltersDto
+        Axios --> React : filtersData
+
+        React -> React : Populate filter dropdowns:\n- Date range pickers\n- Territory / Territory Group\n- Sales Person, Ship Method\n- Category / SubCategory\n- Currency
+        React --> Admin : Filter panel rendered
+
+        == Phase 2: Load Overview Data ==
+
+        React -> Axios : DashboardService.getOverview(query)
+        note right of React
+            DashboardQuery {
+              from?, to?,
+              territoryId?, territoryGroup?,
+              salesPersonId?, shipMethodId?,
+              category?, subCategory?,
+              currencyCode?, online?
+            }
+        end note
+
+        Axios -> Controller : **GET /api/dashboard/overview**\n?from=...&to=...&territoryId=...
+        Controller -> Service : GetOverviewAsync(query, ct)
+
+        Service -> DB : Complex LINQ joins:\n  SalesFacts\n  JOIN Products (Category, SubCategory)\n  JOIN Territories, SalesPeople\n  WHERE date range + filters\n  GROUP BY for aggregations
+
+        DB --> Service : Aggregated results
+
+        Service -> Service : Build OverviewDto {\n  Kpis: [\n    { "totalRevenue", value },\n    { "totalOrders", value },\n    { "avgOrderValue", value },\n    ...\n  ],\n  RevenueTrend: [{ X: month, Y: revenue }],\n  RevenueByCategory: [{ Key, Label, Value, Share }],\n  RevenueByTerritory: [{ Key, Label, Value, Share }],\n  TopProducts: [{ Key, Label, Value }]\n}
+
+        Service --> Controller : OverviewDto
+        Controller --> Axios : **200 OK** OverviewDto
+        Axios --> React : overviewData
+
+        == Phase 3: Render Dashboard ==
+
+        React -> React : Render KPI cards:\n- Total Revenue / Total Orders\n- Avg Order Value / Margin %
+
+        React -> React : Render charts:\n- Revenue Trend (line chart)\n- Revenue by Category (pie/bar)\n- Revenue by Territory (bar)\n- Top Products (horizontal bar)
+
+        React --> Admin : Full dashboard rendered\nwith interactive charts
+
+        == User Applies Filters ==
+
+        Admin -> React : Changes filter selection\n(e.g. Territory = "Northwest")
+        React -> React : Update DashboardQuery state
+        React -> Axios : DashboardService.getOverview(\n  updatedQuery)
+        Axios -> Controller : **GET /api/dashboard/overview**\n?territoryId=4&from=...
+        Controller -> Service : GetOverviewAsync(updatedQuery, ct)
+        Service -> DB : Re-query with new filters
+        DB --> Service : Filtered results
+        Service --> Controller : OverviewDto (filtered)
+        Controller --> Axios : **200 OK**
+        Axios --> React : filteredData
+        React -> React : Re-render all charts\nwith filtered data
+        React --> Admin : Dashboard updated\nwith applied filters
+    end
+end
+
+@enduml

@@ -1,0 +1,118 @@
+@startuml C4_Component
+!theme cerulean-outline
+title C4 Component Diagram (Level 3) - ASP.NET Core API Container
+caption Internal components of the Ecom.Api and their external connections
+
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 50
+skinparam componentStyle rectangle
+
+' ── External Systems ──────────────────────────────────────
+rectangle "React SPA\n<<Container>>" as SPA #BBDEFB
+
+database "SQL Server\nAdventureWorks2019\n<<OLTP>>" as OLTP #FFE0B2
+database "SQL Server\nAdventureWorksDW_Sales\n<<Data Warehouse>>" as DW #FFE0B2
+database "SSAS\nCubeAW2019\n<<OLAP>>" as SSAS #E1BEE7
+storage "File System\nC:\\images\\product\\\n<<Static Files>>" as FS #FFF9C4
+
+' ── API Container ─────────────────────────────────────────
+rectangle "ASP.NET Core API\n<<Container: .NET 9>>" as API {
+
+    ' ── Auth Component ────────────────────────────────────
+    rectangle "Auth Component\n<<Component>>" as AUTH #C8E6C9 {
+        component "[AuthController]\n/api/auth\nlogin, register" as AuthCtrl #E8F5E9
+        component "[JwtTokenService]\n<<IJwtTokenService>>\nToken generation\n& validation" as JwtSvc #E8F5E9
+        component "[ASP.NET Identity]\n<<IdentityFramework>>\nUserManager,\nSignInManager" as Identity #E8F5E9
+
+        AuthCtrl --> JwtSvc : generates token
+        AuthCtrl --> Identity : authenticates
+    }
+
+    ' ── Catalog Component ─────────────────────────────────
+    rectangle "Catalog Component\n<<Component>>" as CATALOG #BBDEFB {
+        component "[CategoriesController]\n/api/categories\n{Authorize}" as CatCtrl #E3F2FD
+        component "[SubCategoriesController]\n/api/subcategories\n{Authorize}" as SubCatCtrl #E3F2FD
+        component "[ProductsController]\n/api/products" as ProdCtrl #E3F2FD
+        component "[CategoryRepository]\n<<ICategoryRepository>>" as CatRepo #E3F2FD
+        component "[SubCategoryRepository]\n<<ISubCategoryRepository>>" as SubCatRepo #E3F2FD
+        component "[ProductRepository]\n<<IProductRepository>>" as ProdRepo #E3F2FD
+
+        CatCtrl --> CatRepo : queries
+        SubCatCtrl --> SubCatRepo : queries
+        ProdCtrl --> ProdRepo : queries
+    }
+
+    ' ── Orders Component ──────────────────────────────────
+    rectangle "Orders Component\n<<Component>>" as ORDERS #FFE0B2 {
+        component "[OrdersController]\n/api/orders\n{Authorize}" as OrdCtrl #FFF3E0
+        component "[OrderRepository]\n<<IOrderRepository>>" as OrdRepo #FFF3E0
+
+        OrdCtrl --> OrdRepo : creates, queries
+    }
+
+    ' ── DW Analytics Component ────────────────────────────
+    rectangle "DW Analytics Component\n<<Component>>" as DWANALYTICS #E1BEE7 {
+        component "[DashboardController]\n/api/dashboard\n{Authorize(Admin)}" as DashCtrl #F3E5F5
+        component "[DashboardService]\n<<IDashboardService>>\nServices/Dashboard/" as DashSvc #F3E5F5
+        component "[AnalyticsDbContext]\n<<DbContext>>\nStar schema entities" as DwCtx #F3E5F5
+
+        DashCtrl --> DashSvc : delegates
+        DashSvc --> DwCtx : queries
+    }
+
+    ' ── OLAP Analytics Component ──────────────────────────
+    rectangle "OLAP Analytics Component\n<<Component>>" as OLAPANALYTICS #FFCDD2 {
+        component "[CubeInsightsController]\n/api/cubeinsights\n{Authorize}" as CubeCtrl #FFEBEE
+        component "[OlapService]\n<<IOlapService>>\nADOMD.NET client" as OlapSvc #FFEBEE
+
+        CubeCtrl --> OlapSvc : delegates
+    }
+
+    ' ── Static Files ──────────────────────────────────────
+    rectangle "Static Files Middleware\n<<Component>>" as STATICFILES #FFF9C4 {
+        component "[UseStaticFiles]\nMaps /images/product/\nto physical path" as StaticMw #FFFDE7
+    }
+
+    ' ── Cross-cutting ─────────────────────────────────────
+    rectangle "Cross-cutting Concerns\n<<Component>>" as CROSSCUT #CFD8DC {
+        component "[OltpDbContext]\n<<DbContext>>\nEF Core OLTP" as OltpCtx #ECEFF1
+        component "[DTOs]\nAuthDtos, CatalogDtos\nDashboardDtos, OrderDtos" as DTOs #ECEFF1
+        component "[JWT Middleware]\nBearer token validation\n[Authorize] attribute" as JwtMw #ECEFF1
+    }
+}
+
+' ── External Connections ──────────────────────────────────
+
+' SPA -> API components
+SPA --> AuthCtrl : "POST /api/auth\n[HTTP, JSON]"
+SPA --> CatCtrl : "GET /api/categories\n[HTTP, JSON, JWT]"
+SPA --> SubCatCtrl : "GET /api/subcategories\n[HTTP, JSON, JWT]"
+SPA --> ProdCtrl : "GET /api/products\n[HTTP, JSON]"
+SPA --> OrdCtrl : "POST/GET /api/orders\n[HTTP, JSON, JWT]"
+SPA --> DashCtrl : "GET /api/dashboard\n[HTTP, JSON, JWT]"
+SPA --> CubeCtrl : "GET /api/cubeinsights\n[HTTP, JSON, JWT]"
+SPA --> StaticMw : "GET /images/product/*\n[HTTP]"
+
+' Components -> External data stores
+CatRepo --> OltpCtx : uses
+SubCatRepo --> OltpCtx : uses
+ProdRepo --> OltpCtx : uses
+OrdRepo --> OltpCtx : uses
+Identity --> OltpCtx : uses
+
+OltpCtx --> OLTP : "TDS\nEF Core"
+DwCtx --> DW : "TDS\nEF Core"
+OlapSvc --> SSAS : "XMLA\nADOMD.NET\nMDX Queries"
+StaticMw --> FS : "File I/O"
+
+note bottom of API
+    All controllers return DTOs (not entities).
+    Dependency Injection via Program.cs:
+    - AddScoped<IRepo, Repo>
+    - AddScoped<IService, Service>
+    - AddDbContext<OltpDbContext>
+    - AddDbContext<AnalyticsDbContext>
+end note
+
+@enduml

@@ -1,80 +1,32 @@
-# ecom-ui
+# React + TypeScript + Vite
 
-Angular 17 frontend for the e-commerce and dashboard experience.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-## Tech stack
+Currently, two official plugins are available:
 
-- Angular 17
-- Angular Material
-- Angular CDK
-- Chart.js
-- ng2-charts
-- RxJS
-- TypeScript
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Available npm scripts
+## React Compiler
 
-```bash
-npm install
-npm start
-npm run build
-npm test
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the Oxlint configuration
+
+If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+
+```json
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "options": {
+    "typeAware": true
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+  }
+}
 ```
 
-Script behavior from `package.json`:
-- `npm start` -> `ng serve -o`
-- `npm run build` -> production-style Angular build
-- `npm test` -> Karma/Jasmine tests
-
-## Local run
-
-```bash
-npm install
-npm start
-```
-
-## API target
-
-The app currently calls:
-- `https://localhost:57240`
-
-This is defined in:
-- `src/app/core/api.config.ts`
-
-If the backend runs on another host/port, update that file before running locally.
-
-## Main routes
-
-- `/` - home page
-- `/products` - catalog page
-- `/products/:id` - product details
-- `/cart` - authenticated cart
-- `/login` - login page
-- `/orders` - authenticated user orders
-- `/admin` - admin management screen
-- `/dashboard` - admin analytics dashboard
-
-## Source layout
-
-- `src/app/core/` - config, models, auth, services, guards, interceptor
-- `src/app/pages/` - route-level pages
-- `src/app/shared/` - reusable components, widgets, dialogs
-
-## Dependencies already declared
-
-- `@angular/*` 17.3.x
-- `@angular/material` 17.3.x
-- `chart.js` 4.4.x
-- `ng2-charts` 5.0.x
-
-## Notes for running successfully
-
-- Start the backend first.
-- Make sure the browser trusts the local ASP.NET HTTPS development certificate if prompted.
-- If authentication calls fail because of host mismatch, verify the backend is actually listening on `https://localhost:57240`.
-
-
-## Authors
-
-- **Youssef Ben Abdallah**
-- **Mariem Ben Slim**
+See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.

@@ -1,0 +1,134 @@
+@startuml CMP_Backend_Architecture
+!theme cerulean-outline
+title Backend Layered Architecture - AdventureWorks Sales BI Platform
+caption ASP.NET Core .NET 9 API
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 50
+
+skinparam component {
+    BackgroundColor #FAFAFA
+    BorderColor #607D8B
+    FontColor #212121
+    BackgroundColor<<RestController>> #BBDEFB
+    BorderColor<<RestController>> #1565C0
+    BackgroundColor<<Service>> #C8E6C9
+    BorderColor<<Service>> #2E7D32
+    BackgroundColor<<Repository>> #FFE0B2
+    BorderColor<<Repository>> #E65100
+    BackgroundColor<<DbContext>> #E1BEE7
+    BorderColor<<DbContext>> #6A1B9A
+}
+
+skinparam interface {
+    BackgroundColor #F3E5F5
+    BorderColor #7B1FA2
+}
+
+' ── API Layer ──────────────────────────────────────────────
+package "API Layer\n[ASP.NET Core Controllers]" as API <<Rectangle>> #E3F2FD {
+    component "AuthController\n/api/auth" <<RestController>> as AuthCtrl
+    component "CategoriesController\n/api/categories\n{Authorize}" <<RestController>> as CatCtrl
+    component "SubCategoriesController\n/api/subcategories\n{Authorize}" <<RestController>> as SubCatCtrl
+    component "ProductsController\n/api/products" <<RestController>> as ProdCtrl
+    component "OrdersController\n/api/orders\n{Authorize}" <<RestController>> as OrdCtrl
+    component "DashboardController\n/api/dashboard\n{Authorize(Admin)}" <<RestController>> as DashCtrl
+    component "CubeInsightsController\n/api/cubeinsights\n{Authorize(Admin)}" <<RestController>> as CubeCtrl
+
+    note right of AuthCtrl
+        JWT Bearer Authentication
+        via ASP.NET Identity
+    end note
+}
+
+' ── Service Layer ─────────────────────────────────────────
+package "Service Layer" as SVC <<Rectangle>> #E8F5E9 {
+    interface "IJwtTokenService" as IJwt
+    component "JwtTokenService" <<Service>> as JwtSvc
+    IJwt -- JwtSvc
+
+    interface "IDashboardService" as IDash
+    component "DashboardService" <<Service>> as DashSvc
+    IDash -- DashSvc
+
+    interface "IOlapService" as IOlap
+    component "OlapService\n[ADOMD.NET]" <<Service>> as OlapSvc
+    IOlap -- OlapSvc
+}
+
+' ── Repository Layer ──────────────────────────────────────
+package "Repository Layer" as REPO <<Rectangle>> #FFF3E0 {
+    interface "ICategoryRepository" as ICatRepo
+    component "CategoryRepository" <<Repository>> as CatRepo
+    ICatRepo -- CatRepo
+
+    interface "ISubCategoryRepository" as ISubCatRepo
+    component "SubCategoryRepository" <<Repository>> as SubCatRepo
+    ISubCatRepo -- SubCatRepo
+
+    interface "IProductRepository" as IProdRepo
+    component "ProductRepository" <<Repository>> as ProdRepo
+    IProdRepo -- ProdRepo
+
+    interface "IOrderRepository" as IOrdRepo
+    component "OrderRepository" <<Repository>> as OrdRepo
+    IOrdRepo -- OrdRepo
+}
+
+' ── Data Layer ────────────────────────────────────────────
+package "Data Layer\n[Entity Framework Core]" as DATA <<Rectangle>> #F3E5F5 {
+    component "OltpDbContext\nAdventureWorks2019" <<DbContext>> as OltpCtx
+    component "AnalyticsDbContext\nAdventureWorksDW_Sales" <<DbContext>> as DwCtx
+    component "DbSeeder" <<DbContext>> as Seeder
+}
+
+' ── External Systems ──────────────────────────────────────
+package "External Systems" as EXT <<Rectangle>> #FFEBEE {
+    database "SQL Server\nAdventureWorks2019\n<<OLTP>>" as OLTP #EF9A9A
+    database "SQL Server\nAdventureWorksDW_Sales\n<<Data Warehouse>>" as DW #EF9A9A
+    database "SSAS\nCubeAW2019\n<<Multidimensional>>" as SSAS #EF9A9A
+    storage "File System\nC:\\images\\product\n<<Static Files>>" as FS #EF9A9A
+}
+
+' ── Dependency Injection Arrows ───────────────────────────
+
+' Controllers -> Services (DI)
+AuthCtrl ..> IJwt : <<inject>>
+DashCtrl ..> IDash : <<inject>>
+CubeCtrl ..> IOlap : <<inject>>
+
+' Controllers -> Repositories (DI)
+CatCtrl ..> ICatRepo : <<inject>>
+SubCatCtrl ..> ISubCatRepo : <<inject>>
+ProdCtrl ..> IProdRepo : <<inject>>
+OrdCtrl ..> IOrdRepo : <<inject>>
+
+' Services -> Data Layer
+DashSvc --> DwCtx : uses
+OlapSvc --> SSAS : XMLA / ADOMD.NET
+
+' Repositories -> Data Layer
+CatRepo --> OltpCtx : uses
+SubCatRepo --> OltpCtx : uses
+ProdRepo --> OltpCtx : uses
+OrdRepo --> OltpCtx : uses
+
+' Data Layer -> External
+OltpCtx --> OLTP : TDS (EF Core)
+DwCtx --> DW : TDS (EF Core)
+Seeder --> OltpCtx : seeds on startup
+
+' Static files
+ProdCtrl ..> FS : serves images
+
+note bottom of EXT
+    All SQL connections use connection strings
+    from appsettings.json:
+    • OLTPConnection → AdventureWorks2019
+    • AnalyticsConnection → AdventureWorksDW_Sales
+    • SsasConnection → CubeAW2019
+end note
+
+@enduml

@@ -1,0 +1,61 @@
+<div class="cart-header">
+  <div class="header-inner">
+    <div>
+      <div class="aw-badge" style="margin-bottom:0.5rem;">
+        <span class="material-icons" style="font-size:12px;">shopping_cart</span>
+        Your Cart
+      </div>
+      <h1 class="cart-title">Cart</h1>
+      <p class="cart-subtitle">Review your items and checkout.</p>
+    </div>
+    <button class="btn-danger" (click)="cart.clear()" [disabled]="items.length===0" data-testid="cart-clear">
+      <span class="material-icons" style="font-size: 16px; margin-right: 4px; vertical-align: middle;">delete_sweep</span>
+      <span style="vertical-align: middle;">Clear</span>
+    </button>
+  </div>
+</div>
+<div class="neon-divider"></div>
+
+<div *ngIf="error" class="error" style="margin: 1.5rem clamp(1rem, 4vw, 3rem);">{{ error }}</div>
+
+<div class="glass" style="padding: 2rem; margin: 0 clamp(1rem, 4vw, 3rem); border-radius: 16px; text-align: center;" *ngIf="items.length===0">
+  <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 1rem;">shopping_cart</mat-icon>
+  <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">Your cart is empty.</div>
+  <div style="margin-top:1.5rem;">
+    <a class="btn-primary-glow" routerLink="/products">Browse products</a>
+  </div>
+</div>
+
+<div class="cart-grid" *ngIf="items.length>0" style="margin: 1.5rem clamp(1rem, 4vw, 3rem);">
+  <div class="glass" style="padding: 1.5rem; border-radius: 16px;">
+    <div class="item cart-item" *ngFor="let i of items">
+      <img class="thumb" [src]="imgUrl(i.product.imageFileName)" [alt]="i.product.name" />
+      <div class="info">
+        <div class="name">{{ i.product.name }}</div>
+        <div class="small text-muted">{{ i.product.categoryName }} / {{ i.product.subCategoryName }}</div>
+        <div class="price text-glow-cyan">${{ i.product.price | number:'1.2-2' }}</div>
+      </div>
+      <div class="qty">
+        <button class="qty-btn" (click)="dec(i)" [disabled]="i.qty<=1" data-testid="cart-qty-dec"><mat-icon>remove</mat-icon></button>
+        <input class="aw-input qty-input" type="number" [ngModel]="i.qty" (ngModelChange)="update(i,$event)" min="1" data-testid="cart-qty-input" />
+        <button class="qty-btn" (click)="inc(i)" data-testid="cart-qty-inc"><mat-icon>add</mat-icon></button>
+      </div>
+      <div class="lineTotal">${{ (i.qty*i.product.price) | number:'1.2-2' }}</div>
+      <button class="btn-danger-icon" (click)="cart.remove(i.product.id)" data-testid="cart-remove-item">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="glass summary" style="padding: 1.5rem; border-radius: 16px; align-self: start;">
+    <div class="sum-title" style="font-size:1.25rem; font-weight:700; margin-bottom: 1rem;">Order Summary</div>
+    <div class="sumRow text-muted"><span>Items</span><b>{{ cart.count }}</b></div>
+    <div class="sumRow" style="font-size: 1.25rem; color: var(--text-primary); margin-top: 1rem;"><span>Total</span><b class="text-glow-cyan">${{ cart.total | number:'1.2-2' }}</b></div>
+    <div style="margin:1.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);"></div>
+    <button class="btn-primary-glow" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem;" (click)="checkout()" [disabled]="loading" data-testid="cart-checkout">
+      <mat-icon>shopping_bag</mat-icon>
+      Checkout
+    </button>
+    <div class="small text-muted" style="margin-top:1rem; text-align: center;">Creates an order using your account.</div>
+  </div>
+</div>

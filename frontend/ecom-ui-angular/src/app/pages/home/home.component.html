@@ -1,0 +1,263 @@
+<!-- HOME PAGE -->
+<div class="home-page">
+
+  <!-- =============== HERO SECTION =============== -->
+  <section class="hero-section">
+    <!-- Background layers -->
+    <div class="hero-bg">
+      <img src="assets/images/hero-bg.png" alt="" class="hero-bg-img" aria-hidden="true" />
+      <div class="hero-overlay"></div>
+    </div>
+
+    <!-- Floating orbs -->
+    <div class="orb orb-primary" style="width:500px;height:500px;top:-100px;right:-100px;animation:orb-pulse 5s ease-in-out infinite;"></div>
+    <div class="orb orb-cyan" style="width:350px;height:350px;bottom:-50px;left:100px;animation:orb-pulse 7s ease-in-out infinite 1s;"></div>
+
+    <!-- Hero content -->
+    <div class="hero-content">
+      <div class="hero-badge animate-slide-up">
+        <span class="material-icons" style="font-size:14px;">rocket_launch</span>
+        Premium Cycling Experience
+      </div>
+
+      <h1 class="hero-headline animate-slide-up" style="animation-delay:0.1s;">
+        Ride the Future.<br>
+        <span class="hero-highlight">Adventure</span>
+        <span class="hero-highlight-alt"> Awaits.</span>
+      </h1>
+
+      <p class="hero-sub animate-slide-up" style="animation-delay:0.2s;">
+        Discover {{ totalProducts }}+ premium bikes, components &amp; accessories from AdventureWorks.
+        Built for performance. Designed for the road ahead.
+      </p>
+
+      <div class="hero-actions animate-slide-up" style="animation-delay:0.3s;">
+        <a class="btn-primary-glow hero-btn" routerLink="/products" data-testid="home-browse-products">
+          <span class="material-icons">pedal_bike</span>
+          Browse Collection
+        </a>
+        <a class="btn-secondary-glass hero-btn" routerLink="/orders" *ngIf="(isLoggedIn$ | async)" data-testid="home-my-orders">
+          <span class="material-icons">receipt_long</span>
+          My Orders
+        </a>
+        <a class="btn-secondary-glass hero-btn" routerLink="/login" *ngIf="!(isLoggedIn$ | async)">
+          <span class="material-icons">login</span>
+          Get Started
+        </a>
+      </div>
+
+      <!-- Hero stats -->
+      <div class="hero-stats animate-fade-in" style="animation-delay:0.5s;">
+        <div class="hero-stat">
+          <div class="hero-stat-value">{{ totalProducts }}+</div>
+          <div class="hero-stat-label">Products</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">{{ totalCategories }}</div>
+          <div class="hero-stat-label">Categories</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">4.9★</div>
+          <div class="hero-stat-label">Avg. Rating</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">24/7</div>
+          <div class="hero-stat-label">Support</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="scroll-indicator">
+      <div class="scroll-dot"></div>
+    </div>
+  </section>
+
+  <!-- =============== CATEGORY PILLS =============== -->
+  <section class="categories-section">
+    <div class="section-wrap">
+      <div class="categories-row">
+        <button class="cat-pill" [class.active]="selectedCategory === 1" (click)="setCategory(1)">
+          <span class="material-icons">pedal_bike</span> Bikes
+        </button>
+        <button class="cat-pill" [class.active]="selectedCategory === 2" (click)="setCategory(2)">
+          <span class="material-icons">build</span> Components
+        </button>
+        <button class="cat-pill" [class.active]="selectedCategory === 3" (click)="setCategory(3)">
+          <span class="material-icons">sports_motorsports</span> Clothing
+        </button>
+        <button class="cat-pill" [class.active]="selectedCategory === 4" (click)="setCategory(4)">
+          <span class="material-icons">backpack</span> Accessories
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============== FEATURES SECTION =============== -->
+  <section class="features-section">
+    <div class="section-wrap">
+      <div class="section-header">
+        <div class="aw-badge">
+          <span class="material-icons" style="font-size:12px;">auto_awesome</span>
+          Why AdventureWorks
+        </div>
+        <h2 class="section-title">Built for riders who <span class="text-gradient">demand more</span></h2>
+        <p class="section-subtitle">
+          Real adventure data, real product lines — powered by the industry-standard AdventureWorks2019 dataset.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card gradient-border" *ngFor="let f of features; let i = index"
+             [style.animation-delay]="(i * 0.1) + 's'" class="animate-slide-up">
+          <div class="feature-icon-wrap" [style.background]="f.gradient">
+            <span class="material-icons feature-icon">{{ f.icon }}</span>
+          </div>
+          <h3 class="feature-title">{{ f.title }}</h3>
+          <p class="feature-desc">{{ f.desc }}</p>
+          <div class="feature-footer">
+            <span class="feature-tag">{{ f.tag }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============== TOP PRODUCTS SECTION =============== -->
+  <section class="products-section">
+    <div class="section-wrap">
+      <div class="section-header-row">
+        <div>
+          <div class="aw-badge aw-badge-cyan">
+            <span class="material-icons" style="font-size:12px;">local_fire_department</span>
+            Featured Picks
+          </div>
+          <h2 class="section-title" style="margin-top:0.5rem;">Top Products</h2>
+        </div>
+        <a class="btn-secondary-glass" routerLink="/products">
+          View all <span class="material-icons" style="font-size:16px;">arrow_forward</span>
+        </a>
+      </div>
+
+      <!-- Loading skeleton -->
+      <div class="products-grid" *ngIf="loading">
+        <div class="aw-product-card skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
+          <div class="skeleton" style="height:200px;border-radius:12px 12px 0 0;"></div>
+          <div style="padding:1rem;">
+            <div class="skeleton" style="height:16px;width:70%;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:12px;width:50%;margin-bottom:12px;"></div>
+            <div class="skeleton" style="height:14px;width:30%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div class="error-state" *ngIf="error">
+        <span class="material-icons" style="font-size:2rem;color:#f87171;">error_outline</span>
+        <p>{{ error }}</p>
+      </div>
+
+      <!-- Products grid -->
+      <div class="products-grid" *ngIf="!loading && !error">
+        <div class="aw-product-card" *ngFor="let p of filteredTop">
+          <div class="product-img-wrap">
+            <div class="product-placeholder">{{ p.name }}</div>
+            <div class="product-img-overlay"></div>
+            <div class="product-badges-overlay">
+              <span class="aw-badge aw-badge-cyan">{{ p.subCategoryName }}</span>
+            </div>
+            <button class="quick-add-btn" (click)="addToCart(p,1)" [title]="p.stockQty <= 0 ? 'Out of stock' : 'Quick add to cart'" [disabled]="p.stockQty <= 0">
+              <span class="material-icons">add_shopping_cart</span>
+            </button>
+          </div>
+
+          <div class="product-content">
+            <div class="product-meta">
+              <span class="category-tag">{{ p.categoryName }}</span>
+            </div>
+            <h3 class="product-name">{{ p.name }}</h3>
+            <p class="product-desc" *ngIf="p.description">{{ p.description | slice:0:80 }}{{ p.description.length > 80 ? '...' : '' }}</p>
+
+            <div class="product-footer">
+              <div class="product-price">
+                <span class="price-currency">$</span>{{ p.price | number:'1.2-2' }}
+              </div>
+              <div class="product-actions">
+                <a class="btn-secondary-glass btn-sm" [routerLink]="['/products', p.id]">Details</a>
+                <button class="btn-primary-glow btn-sm" (click)="addToCart(p,1)" [disabled]="p.stockQty <= 0" [title]="p.stockQty <= 0 ? 'Out of stock' : ''">
+                  <span class="material-icons" style="font-size:15px;">add</span> Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============== DATA MODULES SECTION =============== -->
+  <section class="modules-section">
+    <div class="section-wrap">
+      <div class="section-header">
+        <div class="aw-badge">
+          <span class="material-icons" style="font-size:12px;">storage</span>
+          Data Catalog
+        </div>
+        <h2 class="section-title">The AdventureWorks <span class="text-gradient">Dataset</span></h2>
+        <p class="section-subtitle">
+          A complete business story: a bike company with product lines, inventory, customers, regions, and order history.
+        </p>
+      </div>
+
+      <div class="modules-grid">
+        <div class="module-card gradient-border" *ngFor="let m of modules; let i = index">
+          <div class="module-icon-wrap">
+            <span class="material-icons">{{ m.icon }}</span>
+          </div>
+          <h3 class="module-title">{{ m.title }}</h3>
+          <p class="module-desc">{{ m.desc }}</p>
+          <ul class="module-bullets">
+            <li *ngFor="let b of m.bullets">
+              <span class="material-icons" style="font-size:14px;color:#6366f1;">check_circle</span>
+              {{ b }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============== CTA SECTION =============== -->
+  <section class="cta-section">
+    <div class="section-wrap">
+      <div class="cta-card gradient-border">
+        <div class="cta-orb-left"></div>
+        <div class="cta-orb-right"></div>
+        <div class="cta-content">
+          <div class="aw-badge" style="margin-bottom:1.25rem;">
+            <span class="material-icons" style="font-size:12px;">shopping_cart</span>
+            Start Shopping
+          </div>
+          <h2 class="cta-title">Ready to ride?</h2>
+          <p class="cta-desc">
+            Browse our full collection of {{ totalProducts }}+ products. From performance road bikes to essential accessories.
+          </p>
+          <div class="cta-actions">
+            <a class="btn-primary-glow" routerLink="/products">
+              <span class="material-icons">pedal_bike</span>
+              Shop Now
+            </a>
+            <a class="btn-cyan-glow" routerLink="/login" *ngIf="!(isLoggedIn$ | async)">
+              <span class="material-icons">login</span>
+              Create Account
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>

@@ -1,0 +1,162 @@
+@startuml KPI_Hierarchy
+!theme cerulean-outline
+title AdventureWorks Sales BI Platform - KPI Hierarchy
+caption Business objectives mapped to KPIs, measures, and data sources
+
+skinparam defaultTextAlignment center
+skinparam shadowing true
+skinparam roundCorner 10
+
+skinparam rectangle {
+    BackgroundColor<<objective>> #1565C0
+    FontColor<<objective>> #FFFFFF
+    BorderColor<<objective>> #0D47A1
+    BackgroundColor<<kpi>> #F3E5F5
+    BorderColor<<kpi>> #6A1B9A
+    BackgroundColor<<measure>> #FFF3E0
+    BorderColor<<measure>> #E65100
+    BackgroundColor<<formula>> #FFFDE7
+    BorderColor<<formula>> #F9A825
+    BackgroundColor<<source>> #E8F5E9
+    BorderColor<<source>> #2E7D32
+    BackgroundColor<<visual>> #FCE4EC
+    BorderColor<<visual>> #C62828
+}
+
+' ════════════════════════════════════════════════════════════════
+' Strategic Goal
+' ════════════════════════════════════════════════════════════════
+rectangle "**STRATEGIC GOAL**\nMaximize Sales Performance\n& Operational Efficiency" as GOAL <<objective>>
+
+' ════════════════════════════════════════════════════════════════
+' Objective 1: Maximize Revenue
+' ════════════════════════════════════════════════════════════════
+rectangle "**Objective 1**\nMaximize Revenue" as OBJ1 <<objective>>
+    rectangle "**KPI: Total Revenue**\nTarget: Track growth YoY" as KPI1 <<kpi>>
+        rectangle "**[Measures].[Sales Amount]**\nBase measure from cube" as M1 <<measure>>
+            rectangle "SUM(FactResellerSales\n.SalesAmount)" as F1 <<formula>>
+                rectangle "FactResellerSales\n.SalesAmount\n(AdventureWorksDW2019)" as S1 <<source>>
+    rectangle "**KPI: Sales Trend**\nMonthly revenue trajectory" as KPI1B <<kpi>>
+        rectangle "**Sales by Month**\n[Order Date].[Month Name]" as M1B <<measure>>
+
+' ════════════════════════════════════════════════════════════════
+' Objective 2: Improve Profitability
+' ════════════════════════════════════════════════════════════════
+rectangle "**Objective 2**\nImprove Profitability" as OBJ2 <<objective>>
+    rectangle "**KPI: Gross Profit Margin**\nTarget: > 40%" as KPI2 <<kpi>>
+        rectangle "**[Measures].[Gross Profit Margin]**\nCalculated member" as M2 <<measure>>
+            rectangle "(Sales Amount -\nTotal Product Cost)\n/ Sales Amount" as F2 <<formula>>
+                rectangle "FactResellerSales\n.SalesAmount\n.TotalProductCost" as S2 <<source>>
+    rectangle "**KPI: Net Profit**\nAfter tax & freight" as KPI2B <<kpi>>
+        rectangle "**[Measures].[Net Profit Amt]**\nSales - Cost - Tax - Freight" as M2B <<measure>>
+
+' ════════════════════════════════════════════════════════════════
+' Objective 3: Optimize Pricing
+' ════════════════════════════════════════════════════════════════
+rectangle "**Objective 3**\nOptimize Pricing" as OBJ3 <<objective>>
+    rectangle "**KPI: Discount Ratio**\nTarget: < 5%" as KPI3 <<kpi>>
+        rectangle "**[Measures].[Discount Ratio]**\nCalculated member" as M3 <<measure>>
+            rectangle "Discount Amount /\n(Sales Amount +\nDiscount Amount)" as F3 <<formula>>
+                rectangle "FactResellerSales\n.DiscountAmount\n.ExtendedAmount" as S3 <<source>>
+    rectangle "**KPI: Price Gap**\nList vs Actual price" as KPI3B <<kpi>>
+        rectangle "**Extended Amount vs Sales Amount**\nBy product category" as M3B <<measure>>
+
+' ════════════════════════════════════════════════════════════════
+' Objective 4: Control Costs
+' ════════════════════════════════════════════════════════════════
+rectangle "**Objective 4**\nControl Costs" as OBJ4 <<objective>>
+    rectangle "**KPI: Freight/Revenue Ratio**\nTarget: < 3%" as KPI4 <<kpi>>
+        rectangle "**[Measures].[Freight Revenue Ratio]**\nCalculated member" as M4 <<measure>>
+            rectangle "Freight /\nSales Amount" as F4 <<formula>>
+                rectangle "FactResellerSales\n.Freight\n.SalesAmount" as S4 <<source>>
+    rectangle "**KPI: Freight Per Unit**\nShipping cost efficiency" as KPI4B <<kpi>>
+        rectangle "**[Measures].[Freight Per Unit]**\nFreight / Order Quantity" as M4B <<measure>>
+
+' ════════════════════════════════════════════════════════════════
+' Objective 5: Employee Productivity
+' ════════════════════════════════════════════════════════════════
+rectangle "**Objective 5**\nEmployee Productivity" as OBJ5 <<objective>>
+    rectangle "**KPI: Revenue per Employee**\nTrack seller efficiency" as KPI5 <<kpi>>
+        rectangle "**[Measures].[Avg Revenue Per Employee]**\nCalculated member" as M5 <<measure>>
+            rectangle "Sales Amount /\nCOUNT(NONEMPTY(\nDim Employee.Members,\nSales Amount))" as F5 <<formula>>
+                rectangle "FactResellerSales\n+ DimEmployee\n(EmployeeKey)" as S5 <<source>>
+    rectangle "**KPI: Active Employees**\nSellers with transactions" as KPI5B <<kpi>>
+        rectangle "**COUNT(NONEMPTY(...))**\nDistinct active sellers" as M5B <<measure>>
+
+' ════════════════════════════════════════════════════════════════
+' Objective 6: Territory Growth
+' ════════════════════════════════════════════════════════════════
+rectangle "**Objective 6**\nTerritory Growth" as OBJ6 <<objective>>
+    rectangle "**KPI: Territory Sales vs Target**\nTarget: $5M per group" as KPI6 <<kpi>>
+        rectangle "**Sales Amount vs Target Amount**\nBy territory group/country" as M6 <<measure>>
+            rectangle "Sales Amount vs\nTarget ($5,000,000)\nper territory" as F6 <<formula>>
+                rectangle "FactResellerSales\n+ DimSalesTerritory\n(Group, Country, Region)" as S6 <<source>>
+
+' ════════════════════════════════════════════════════════════════
+' Connections - Top Level
+' ════════════════════════════════════════════════════════════════
+GOAL -[#0D47A1,bold]-> OBJ1
+GOAL -[#0D47A1,bold]-> OBJ2
+GOAL -[#0D47A1,bold]-> OBJ3
+GOAL -[#0D47A1,bold]-> OBJ4
+GOAL -[#0D47A1,bold]-> OBJ5
+GOAL -[#0D47A1,bold]-> OBJ6
+
+' Obj1
+OBJ1 -[#6A1B9A]-> KPI1
+OBJ1 -[#6A1B9A]-> KPI1B
+KPI1 -[#E65100]-> M1
+M1 -[#F9A825]-> F1
+F1 -[#2E7D32]-> S1
+KPI1B -[#E65100]-> M1B
+
+' Obj2
+OBJ2 -[#6A1B9A]-> KPI2
+OBJ2 -[#6A1B9A]-> KPI2B
+KPI2 -[#E65100]-> M2
+M2 -[#F9A825]-> F2
+F2 -[#2E7D32]-> S2
+KPI2B -[#E65100]-> M2B
+
+' Obj3
+OBJ3 -[#6A1B9A]-> KPI3
+OBJ3 -[#6A1B9A]-> KPI3B
+KPI3 -[#E65100]-> M3
+M3 -[#F9A825]-> F3
+F3 -[#2E7D32]-> S3
+KPI3B -[#E65100]-> M3B
+
+' Obj4
+OBJ4 -[#6A1B9A]-> KPI4
+OBJ4 -[#6A1B9A]-> KPI4B
+KPI4 -[#E65100]-> M4
+M4 -[#F9A825]-> F4
+F4 -[#2E7D32]-> S4
+KPI4B -[#E65100]-> M4B
+
+' Obj5
+OBJ5 -[#6A1B9A]-> KPI5
+OBJ5 -[#6A1B9A]-> KPI5B
+KPI5 -[#E65100]-> M5
+M5 -[#F9A825]-> F5
+F5 -[#2E7D32]-> S5
+KPI5B -[#E65100]-> M5B
+
+' Obj6
+OBJ6 -[#6A1B9A]-> KPI6
+KPI6 -[#E65100]-> M6
+M6 -[#F9A825]-> F6
+F6 -[#2E7D32]-> S6
+
+legend right
+  |= Level |= Description |
+  | <#1565C0> Objective | Strategic business goal |
+  | <#F3E5F5> KPI | Key performance indicator |
+  | <#FFF3E0> Measure | SSAS cube measure (base or calculated) |
+  | <#FFFDE7> Formula | Calculation definition |
+  | <#E8F5E9> Source | Physical data source (fact/dim tables) |
+endlegend
+
+footer AdventureWorks Sales BI Platform | KPI Hierarchy Diagram
+
+@enduml

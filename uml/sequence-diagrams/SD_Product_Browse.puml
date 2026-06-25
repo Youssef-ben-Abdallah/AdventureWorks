@@ -1,0 +1,138 @@
+@startuml SD_Product_Browse
+!theme cerulean-outline
+
+title Product Browse Flow\nAdventureWorks Sales BI Platform
+
+autonumber "<b>[0]"
+hide footbox
+
+skinparam maxMessageSize 160
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBodyBackgroundColor #FAFAFA80
+skinparam sequenceDividerBackgroundColor #ECEFF1
+skinparam sequenceDividerBorderColor #90A4AE
+skinparam sequenceBoxBorderColor #90A4AE
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #37474F
+    FontColor #212121
+}
+skinparam boundary {
+    BackgroundColor #BBDEFB
+    BorderColor #1565C0
+    FontColor #0D47A1
+}
+skinparam participant {
+    BackgroundColor #E8EAF6
+    BorderColor #3949AB
+    FontColor #1A237E
+}
+skinparam control {
+    BackgroundColor #C8E6C9
+    BorderColor #2E7D32
+    FontColor #1B5E20
+}
+skinparam entity {
+    BackgroundColor #FFE0B2
+    BorderColor #E65100
+    FontColor #BF360C
+}
+skinparam database {
+    BackgroundColor #F8BBD0
+    BorderColor #AD1457
+    FontColor #880E4F
+}
+
+box "Client Tier" #EBF5FB
+    actor       "User"                                        as User
+    boundary    "Browser / React\n(Products Page)"            as React
+end box
+
+box "Transport" #F9FBE7
+    participant "Axios\napiClient"                            as Axios
+end box
+
+box "Backend" #F1F8E9
+    control     "CategoriesController\n[AllowAnonymous]"      as CatCtrl
+    control     "ProductsController\n[AllowAnonymous]"        as ProdCtrl
+    entity      "ProductRepository"                           as Repo
+end box
+
+box "Data Layer" #FFF3E0
+    database    "OltpDbContext\n(SQL Server\nAdventureWorks2019)" as DB
+end box
+
+== Page Load ==
+
+User -> React : Navigates to /products
+React -> React : useEffect triggers\ndata fetch on mount
+
+React -> Axios : CatalogService.getCategories()
+Axios -> CatCtrl : **GET /api/categories**
+CatCtrl -> DB : _db.Categories\n.AsNoTracking()\n.OrderBy(c => c.Name)
+DB --> CatCtrl : Category[]
+CatCtrl --> Axios : **200 OK** Category[]
+Axios --> React : categories
+
+React -> Axios : CatalogService.getProducts()
+Axios -> ProdCtrl : **GET /api/products**
+
+ProdCtrl -> Repo : _repo.GetAllAsync()
+Repo -> DB : _db.Products\n  .Include(x => x.Category)\n  .Include(x => x.SubCategory)\n  .AsNoTracking()\n  .OrderBy(x => x.Name)
+DB --> Repo : List<Product>
+Repo --> ProdCtrl : List<Product>
+
+ProdCtrl -> ProdCtrl : Map to ProductDto[]\n(Id, Sku, Name, Description,\n Price, StockQty, ImageFileName,\n CategoryId, CategoryName,\n SubCategoryId, SubCategoryName)
+
+ProdCtrl --> Axios : **200 OK**\nProductDto[]
+Axios --> React : products[]
+
+React -> React : Render product grid\nwith category filter sidebar
+
+== Product Image Loading ==
+
+loop For each product with ImageFileName
+    React -> React : CatalogService.imgUrl(filename)\n=> http://localhost:57241/images/product/{filename}
+    React -> Axios : <img src={imgUrl} />
+    Axios -> ProdCtrl : **GET /images/product/{filename}**
+    note right of ProdCtrl
+        StaticFiles middleware
+        PhysicalFileProvider
+        => C:\images\product\
+    end note
+    ProdCtrl --> Axios : Image binary (PNG/JPG)
+    Axios --> React : Rendered product image
+end
+
+== Category Filtering ==
+
+User -> React : Selects a category\nfrom filter sidebar
+React -> React : Filter products client-side\nby selected categoryId
+React -> React : Re-render product grid\nshowing filtered results
+React --> User : Filtered product list displayed
+
+== Product Detail Navigation ==
+
+User -> React : Clicks on a product card
+React -> React : navigate(`/products/${id}`)
+React -> Axios : CatalogService.getProduct(id)
+Axios -> ProdCtrl : **GET /api/products/{id}**
+
+ProdCtrl -> Repo : _repo.GetByIdAsync(id)
+Repo -> DB : _db.Products\n  .Include(Category)\n  .Include(SubCategory)\n  .FirstOrDefaultAsync(x => x.Id == id)
+DB --> Repo : Product | null
+
+alt Product not found
+    Repo --> ProdCtrl : null
+    ProdCtrl --> Axios : **404 Not Found**
+    Axios --> React : Error displayed
+else Product found
+    Repo --> ProdCtrl : Product
+    ProdCtrl -> ProdCtrl : Map to ProductDto
+    ProdCtrl --> Axios : **200 OK** ProductDto
+    Axios --> React : product
+    React --> User : Render ProductDetails page\nwith image, description,\nprice, stock, Add to Cart
+end
+
+@enduml

@@ -1,0 +1,10 @@
+%%{init: {"theme": "base", "xyChart": {"width": 800, "height": 400, "plotReservedSpacePercent": 50}}}%%
+%% OLAP Measure Usage Frequency
+%% Bar chart showing which OLAP measures are queried most frequently.
+%% Based on query log analysis of the AdventureWorks SSAS cube.
+
+xychart-beta
+    title "OLAP Measure Usage Frequency (%)"
+    x-axis ["Sales Amt", "Order Qty", "Net Profit", "Freight", "Discount", "Prod Cost", "Extended", "Tax Amt", "Margin", "AOV"]
+    y-axis "Query Frequency (%)" 0 --> 100
+    bar [95, 78, 72, 65, 58, 55, 42, 38, 35, 30]

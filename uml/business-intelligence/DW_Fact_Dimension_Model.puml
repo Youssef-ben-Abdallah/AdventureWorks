@@ -1,0 +1,154 @@
+@startuml DW_Fact_Dimension_Model
+!theme cerulean-outline
+title AdventureWorksDW_Sales - Fact & Dimension Model
+caption Shared dimensions, measure organization by business area, and dimension hierarchies
+
+skinparam shadowing true
+skinparam roundCorner 10
+skinparam packageStyle frame
+skinparam defaultTextAlignment center
+
+skinparam package {
+    BackgroundColor<<measures>> #E3F2FD
+    BorderColor<<measures>> #1565C0
+    BackgroundColor<<dim>> #E8F5E9
+    BorderColor<<dim>> #2E7D32
+    BackgroundColor<<hierarchy>> #FFF8E1
+    BorderColor<<hierarchy>> #F9A825
+    BackgroundColor<<shared>> #F3E5F5
+    BorderColor<<shared>> #6A1B9A
+}
+
+' ════════════════════════════════════════
+' CENTRAL FACT TABLE
+' ════════════════════════════════════════
+package "Fact: Sales" as FACT <<measures>> #E3F2FD {
+
+    package "Revenue Measures" as REV <<measures>> {
+        component "LineTotal" as M1
+        component "SubTotal" as M2
+        component "TotalDue" as M3
+        component "UnitPrice" as M4
+    }
+
+    package "Cost & Tax Measures" as COST <<measures>> {
+        component "TaxAmt" as M5
+        component "Freight" as M6
+        component "UnitPriceDiscount" as M7
+    }
+
+    package "Quantity Measures" as QTY <<measures>> {
+        component "OrderQty" as M8
+    }
+
+    package "Date Attributes" as DATES <<measures>> {
+        component "OrderDate" as D1
+        component "DueDate" as D2
+        component "ShipDate" as D3
+    }
+}
+
+' ════════════════════════════════════════
+' DIMENSIONS WITH HIERARCHIES
+' ════════════════════════════════════════
+
+package "Customer Dimension" as CUSTDIM <<dim>> {
+    component "CustomerID (PK)" as CID
+    package "Customer Attributes" <<hierarchy>> {
+        component "PersonType" as C1
+        component "FirstName" as C2
+        component "LastName" as C3
+        component "MiddleName" as C4
+    }
+}
+
+package "Products Dimension" as PRODDIM <<dim>> {
+    component "ProductID (PK)" as PID
+    package "Product Hierarchy" as PRODHIER <<hierarchy>> {
+        component "CategoryName" as P1
+        component "SubCategoryName" as P2
+        component "Name (Product)" as P3
+    }
+    package "Product Attributes" <<hierarchy>> {
+        component "ProductNumber" as P4
+        component "Color" as P5
+        component "StandardCost" as P6
+        component "ListPrice" as P7
+    }
+    P1 -[#F9A825,bold]-> P2 : drills to
+    P2 -[#F9A825,bold]-> P3 : drills to
+}
+
+package "Territory Dimension" as TERRDIM <<shared>> {
+    component "TerritoryID (PK)" as TID
+    package "Territory Hierarchy" as TERRHIER <<hierarchy>> {
+        component "Group" as T1
+        component "CountryRegionCode" as T2
+        component "Name (Region)" as T3
+    }
+    T1 -[#F9A825,bold]-> T2 : drills to
+    T2 -[#F9A825,bold]-> T3 : drills to
+}
+
+package "Currency Dimension" as CURRDIM <<dim>> {
+    component "CurrencyID (PK)" as CRID
+    package "Currency Attributes" <<hierarchy>> {
+        component "CurrencyCode" as CR1
+        component "Name" as CR2
+        component "AverageRate" as CR3
+        component "EndOfDayRate" as CR4
+    }
+}
+
+package "SalesPerson Dimension" as SPDIM <<shared>> {
+    component "BusinessEntityID (PK)" as SPID
+    package "SalesPerson Attributes" <<hierarchy>> {
+        component "FirstName / LastName" as SP1
+        component "SalesQuota" as SP2
+        component "Bonus" as SP3
+        component "CommissionPct" as SP4
+    }
+    note bottom of SPDIM
+        <b>Shared Dimension</b>
+        Links to Territory via TerritoryID
+    end note
+}
+
+package "ShipMethod Dimension" as SHIPDIM <<dim>> {
+    component "ShipMethodID (PK)" as SMID
+    package "Shipping Attributes" <<hierarchy>> {
+        component "Name" as SM1
+        component "ShipBase" as SM2
+        component "ShipRate" as SM3
+    }
+}
+
+' ════════════════════════════════════════
+' VIEW
+' ════════════════════════════════════════
+component "vwSalesDashboard\n(Pre-joined View)" as VIEW #BBDEFB
+
+' ════════════════════════════════════════
+' RELATIONSHIPS
+' ════════════════════════════════════════
+CUSTDIM -[#2E7D32,bold]--> FACT : CustomerID
+PRODDIM -[#2E7D32,bold]--> FACT : ProductID
+TERRDIM -[#6A1B9A,bold]--> FACT : TerritoryID
+CURRDIM -[#2E7D32,bold]--> FACT : CurrencyRateID
+SPDIM -[#6A1B9A,bold]--> FACT : SalesPersonID
+SHIPDIM -[#2E7D32,bold]--> FACT : ShipMethodID
+
+' Shared dimension link
+TERRDIM .[#6A1B9A,dashed].> SPDIM : SalesPerson.TerritoryID\n(shared)
+
+FACT -[#1565C0,dotted]-> VIEW : materializes into
+
+legend bottom
+  |= Color |= Meaning |
+  | <back:#E3F2FD>Blue</back> | Fact table & measures |
+  | <back:#E8F5E9>Green</back> | Standard dimensions |
+  | <back:#F3E5F5>Purple</back> | Shared / conformed dimensions |
+  | <back:#FFF8E1>Yellow</back> | Hierarchies & drill paths |
+endlegend
+
+@enduml

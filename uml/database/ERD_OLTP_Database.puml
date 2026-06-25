@@ -1,0 +1,180 @@
+@startuml ERD_OLTP_Database
+!theme cerulean-outline
+
+title AdventureWorks Sales BI Platform\nOLTP Database ERD
+caption Entity-relationship diagram for the transactional database schema
+
+skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam packageStyle rectangle
+
+skinparam entity {
+    BackgroundColor #FAFAFA
+    BorderColor #607D8B
+    HeaderBackgroundColor #ECEFF1
+    FontColor #212121
+    BackgroundColor<<Entity>> #FAFAFA
+    BorderColor<<Entity>> #546E7A
+    HeaderBackgroundColor<<Entity>> #CFD8DC
+}
+
+skinparam ArrowColor #37474F
+skinparam ArrowThickness 1.5
+
+hide empty members
+
+' ─────────────────────────────────────────────
+'  ASP.NET Identity tables
+' ─────────────────────────────────────────────
+package "dbo (ASP.NET Identity)" <<Database>> #EEF2FF {
+
+    entity "AspNetUsers" as Users <<Entity>> {
+        * **Id** : nvarchar(450) <<PK>>
+        --
+        UserName : nvarchar(256)
+        NormalizedUserName : nvarchar(256)
+        Email : nvarchar(256)
+        NormalizedEmail : nvarchar(256)
+        EmailConfirmed : bit
+        PasswordHash : nvarchar(max)
+        SecurityStamp : nvarchar(max)
+        ConcurrencyStamp : nvarchar(max)
+        PhoneNumber : nvarchar(max)
+        PhoneNumberConfirmed : bit
+        TwoFactorEnabled : bit
+        LockoutEnd : datetimeoffset
+        LockoutEnabled : bit
+        AccessFailedCount : int
+    }
+
+    entity "AspNetRoles" as Roles <<Entity>> {
+        * **Id** : nvarchar(450) <<PK>>
+        --
+        Name : nvarchar(256)
+        NormalizedName : nvarchar(256)
+        ConcurrencyStamp : nvarchar(max)
+    }
+
+    entity "AspNetUserRoles" as UserRoles <<Entity>> {
+        * **UserId** : nvarchar(450) <<PK, FK>>
+        * **RoleId** : nvarchar(450) <<PK, FK>>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Product catalog tables
+' ─────────────────────────────────────────────
+package "dbo (Catalog)" <<Database>> #F0FDF4 {
+
+    entity "Categories" as Categories <<Entity>> {
+        * **Id** : int <<PK, Identity>>
+        --
+        Name : nvarchar(100) <<not null>>
+    }
+
+    entity "SubCategories" as SubCategories <<Entity>> {
+        * **Id** : int <<PK, Identity>>
+        --
+        Name : nvarchar(100) <<not null>>
+        CategoryId : int <<FK, not null>>
+    }
+
+    entity "Products" as Products <<Entity>> {
+        * **Id** : int <<PK, Identity>>
+        --
+        Sku : nvarchar(50)
+        Name : nvarchar(200) <<not null>>
+        ProductNumber : nvarchar(50)
+        Color : nvarchar(30)
+        Price : decimal(18,2) <<not null>>
+        Size : nvarchar(10)
+        Weight : decimal(18,2) <<nullable>>
+        CategoryId : int <<FK, not null>>
+        SubCategoryId : int <<FK, not null>>
+        ModelId : int <<nullable>>
+        ModelName : nvarchar(100)
+        Description : nvarchar(max)
+        ImageFileName : nvarchar(255)
+        StockQty : int <<not null, default 0>>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Sales order tables (mapped to Sales schema)
+' ─────────────────────────────────────────────
+package "Sales" <<Database>> #FFF7ED {
+
+    entity "SalesOrderHeader" as OrderHeader <<Entity>> {
+        * **SalesOrderID** : int <<PK>>
+        --
+        OrderDate : datetime2 <<not null>>
+        SubTotal : decimal(18,2) <<not null>>
+        Comment : nvarchar(450) <<FK -> AspNetUsers.Id>>
+        Status : tinyint <<not null, default 1>>
+        ==
+        <i>Entity mapping:</i>
+        <i>Order.Id -> SalesOrderID</i>
+        <i>Order.CreatedAtUtc -> OrderDate</i>
+        <i>Order.Total -> SubTotal</i>
+        <i>Order.UserId -> Comment</i>
+    }
+
+    entity "SalesOrderDetail" as OrderDetail <<Entity>> {
+        * **SalesOrderDetailID** : int <<PK>>
+        --
+        SalesOrderID : int <<FK, not null>>
+        ProductID : int <<FK, not null>>
+        OrderQty : smallint <<not null>>
+        UnitPrice : decimal(18,2) <<not null>>
+        LineTotal : decimal(38,6) <<not null>>
+        ==
+        <i>Entity mapping:</i>
+        <i>OrderItem.Id -> SalesOrderDetailID</i>
+        <i>OrderItem.OrderId -> SalesOrderID</i>
+        <i>OrderItem.Qty -> OrderQty</i>
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Relationships
+' ─────────────────────────────────────────────
+Users ||--o{ UserRoles : UserId
+Roles ||--o{ UserRoles : RoleId
+
+Categories ||--o{ SubCategories : CategoryId
+SubCategories ||--o{ Products : SubCategoryId
+Categories ||--o{ Products : CategoryId
+
+Users ||--o{ OrderHeader : "Comment (UserId)"
+OrderHeader ||--|{ OrderDetail : SalesOrderID
+Products ||--o{ OrderDetail : ProductID
+
+' ─────────────────────────────────────────────
+'  Legend
+' ─────────────────────────────────────────────
+note bottom of OrderHeader
+    <b>EF Core Mapping Quirk</b>
+    Order.UserId stored in <i>Comment</i> column (nvarchar FK workaround).
+    Trigger <i>uSalesOrderHeader</i> fires on UPDATE.
+    Table is marked <i>ExcludeFromMigrations()</i> — pre-exists in AdventureWorks.
+    SalesOrderDetail similarly uses existing AW trigger <i>iduSalesOrderDetail</i>.
+end note
+
+legend bottom right
+    |= Symbol |= Meaning |
+    | \|\|--o{ | One-to-many (zero or more on right) |
+    | \|\|--\|{ | One-to-many (one or more on right) |
+    | <<PK>> | Primary key |
+    | <<FK>> | Foreign key reference |
+    | <<Identity>> | SQL Server IDENTITY auto-increment |
+    | * bold | Mandatory / NOT NULL column |
+    | #EEF2FF | ASP.NET Identity schema (dbo) |
+    | #F0FDF4 | Product catalog schema (dbo) |
+    | #FFF7ED | Sales order schema (Sales.*) |
+endlegend
+
+@enduml

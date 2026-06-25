@@ -1,0 +1,116 @@
+@startuml PKG_Backend_Structure
+!theme cerulean-outline
+title Backend Package Structure - Ecom.Api
+caption ASP.NET Core .NET 9 Namespace Organization
+
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 40
+
+package "Ecom.Api" as ROOT #E3F2FD {
+
+    package "Controllers" as CTRL #BBDEFB {
+        class AuthController <<RestController>>
+        class CategoriesController <<RestController>>
+        class SubCategoriesController <<RestController>>
+        class ProductsController <<RestController>>
+        class OrdersController <<RestController>>
+        class DashboardController <<RestController>>
+        class CubeInsightsController <<RestController>>
+    }
+
+    package "Services" as SVC #C8E6C9 {
+        interface IJwtTokenService
+        class JwtTokenService
+
+        package "Dashboard" as SVC_DASH #A5D6A7 {
+            interface IDashboardService
+            class DashboardService
+        }
+
+        interface IOlapService
+        class OlapService
+    }
+
+    package "Repositories" as REPO #FFE0B2 {
+        interface ICategoryRepository
+        class CategoryRepository
+        interface ISubCategoryRepository
+        class SubCategoryRepository
+        interface IProductRepository
+        class ProductRepository
+        interface IOrderRepository
+        class OrderRepository
+    }
+
+    package "Entities" as ENT #E1BEE7 {
+        class AppUser
+        class Category
+        class SubCategory
+        class Product
+        class Order
+        class OrderItem
+        enum OrderStatus
+
+        package "Analytics" as ENT_ANALYTICS #CE93D8 {
+            class SalesFact
+            class CustomerDim
+            class ProductDim
+            class TerritoryDim
+            class CurrencyDim
+            class SalesPersonDim
+            class ShipMethodDim
+        }
+    }
+
+    package "Data" as DATA #FFCDD2 {
+        class OltpDbContext <<DbContext>>
+        class AnalyticsDbContext <<DbContext>>
+        class DbSeeder
+    }
+
+    package "DTOs" as DTO #B3E5FC {
+        class AuthDtos <<record>>
+        class CatalogDtos <<record>>
+        class DashboardDtos <<record>>
+        class OrderDtos <<record>>
+    }
+
+    package "Migrations" as MIG #CFD8DC {
+        note "EF Core auto-generated\nmigration files" as MigNote
+    }
+}
+
+' ── Dependency Arrows ─────────────────────────────────────
+
+' Controllers depend on Services and Repositories
+CTRL --> SVC : <<uses>>
+CTRL --> REPO : <<uses>>
+CTRL --> DTO : <<maps to/from>>
+
+' Services depend on Data and Entities
+SVC --> DATA : <<queries>>
+SVC --> ENT : <<operates on>>
+
+' Repositories depend on Data and Entities
+REPO --> DATA : <<queries>>
+REPO --> ENT : <<operates on>>
+
+' Data depends on Entities
+DATA --> ENT : <<maps>>
+
+' DTOs are used across layers
+SVC ..> DTO : <<returns>>
+REPO ..> ENT : <<returns>>
+
+' Migrations depend on Data
+MIG --> DATA : <<generated from>>
+
+note bottom of ROOT
+    Dependency Injection configured in Program.cs
+    All interfaces registered as Scoped services
+    EF Core contexts registered with connection strings
+end note
+
+@enduml

@@ -1,0 +1,97 @@
+@startuml DEP_Development_Environment
+!theme cerulean-outline
+title Development Environment - AdventureWorks Sales BI Platform
+caption Local development setup on Windows 10 Pro
+
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 50
+
+' ── Developer Machine ─────────────────────────────────────
+node "Developer Machine\n<<Windows 10 Pro 10.0.19045>>" as DEV #E3F2FD {
+
+    ' ── SQL Server ────────────────────────────────────────
+    node "SQL Server Instance\n<<Database Engine>>" as SQLSRV #FFE0B2 {
+        database "AdventureWorks2019\n<<OLTP>>\nProducts, Orders,\nCustomers, Identity" as OLTP #FFF3E0
+        database "AdventureWorksDW_Sales\n<<Data Warehouse>>\nStar Schema\nFact + Dimensions" as DW #FFF3E0
+        database "AdventureWorksDW2019\n<<SSAS Source>>\nCube processing source" as DW2019 #FFF3E0
+    }
+
+    ' ── SSAS ──────────────────────────────────────────────
+    node "SSAS Instance\nlocalhost\\MSSQLSERVER0\n<<Analysis Services>>" as SSAS #E1BEE7 {
+        artifact "CubeAW2019\n<<Multidimensional Cube>>\nAdventure Works DW2019.cube\n8 Dimensions" as Cube #F3E5F5
+    }
+
+    ' ── .NET API ──────────────────────────────────────────
+    node ".NET 9 SDK\n<<Kestrel Web Server>>" as DOTNET #C8E6C9 {
+        artifact "Ecom.Api\n<<ASP.NET Core API>>" as API #E8F5E9
+        portin "HTTPS :57240" as P_HTTPS
+        portin "HTTP :57241" as P_HTTP
+    }
+
+    ' ── Node / Vite ───────────────────────────────────────
+    node "Node.js 20\n<<Vite 8 Dev Server>>" as NODE #BBDEFB {
+        artifact "ecom-ui\n<<React 19 SPA>>" as SPA #E3F2FD
+        portin ":5173" as P_VITE
+    }
+
+    ' ── Visual Studio ─────────────────────────────────────
+    node "Visual Studio 2022\n<<IDE>>" as VS #CFD8DC {
+        artifact "AW_Sales_DW_ETL\n<<SSIS Project>>\n01_Load_Dimension.dtsx\n02_Load_FactSales.dtsx" as SSIS #ECEFF1
+        artifact "MultdimCubeAW2019\n<<SSAS Project>>" as SSASProj #ECEFF1
+    }
+
+    ' ── File Storage ──────────────────────────────────────
+    storage "C:\\images\\product\\\n<<Static File Storage>>\nProduct images\n(.jpg, .png)" as IMG #FFF9C4
+}
+
+' ── Browser ───────────────────────────────────────────────
+node "Browser\n<<Chrome / Edge>>" as BROWSER #FFCDD2 {
+    artifact "React App\n(client-side)" as CLIENT
+}
+
+' ── Connections ───────────────────────────────────────────
+
+' Browser -> Vite
+BROWSER --> P_VITE : "HTTP\nlocalhost:5173\n+ HMR WebSocket"
+
+' Vite proxies / React calls API
+SPA --> P_HTTP : "HTTP\nlocalhost:57241\nAxios + JWT"
+
+' API -> SQL Server
+API --> OLTP : "TDS\nEF Core\nOltpDbContext"
+API --> DW : "TDS\nEF Core\nAnalyticsDbContext"
+
+' API -> SSAS
+API --> Cube : "XMLA\nADOMD.NET\nMDX Queries"
+
+' API -> Images
+API --> IMG : "File I/O\nStaticFiles\nMiddleware"
+
+' SSIS -> SQL Server
+SSIS --> OLTP : "TDS\nOLE DB\nExtract"
+SSIS --> DW : "TDS\nOLE DB\nLoad"
+
+' SSAS Project -> SSAS Instance
+SSASProj --> SSAS : "Deploy\nXMLA"
+Cube --> DW2019 : "TDS\nOLE DB\nProcess"
+
+note bottom of DEV
+    Development tools:
+    - Visual Studio Code (frontend)
+    - Visual Studio 2022 (SSIS, SSAS)
+    - SQL Server Management Studio (SSMS)
+    - Git (version control)
+    - npm / pnpm (package management)
+end note
+
+legend bottom right
+    |= Port |= Service |= Protocol |
+    | 5173 | Vite Dev Server | HTTP + WS |
+    | 57240 | ASP.NET Core | HTTPS |
+    | 57241 | ASP.NET Core | HTTP |
+    | 1433 | SQL Server | TDS |
+    | 2383 | SSAS | XMLA |
+endlegend
+
+@enduml

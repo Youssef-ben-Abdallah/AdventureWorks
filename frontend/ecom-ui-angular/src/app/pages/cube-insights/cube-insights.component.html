@@ -1,0 +1,117 @@
+<div class="ci-shell">
+
+  <!-- ===== HEADER (matches dashboard header pattern) ===== -->
+  <div class="ci-header">
+    <div class="ci-header-left">
+      <div class="h">
+        <span class="material-icons header-icon">auto_awesome</span>
+        Reseller Analytics Hub
+      </div>
+      <div class="sub">Powered by Multidimensional SSAS Cube — explore KPIs, product performance & territory sales</div>
+    </div>
+
+    <!-- Filters inline in header (like dashboard actions) -->
+    <div class="ci-filters">
+      <div class="filter-item">
+        <label>Calendar Year</label>
+        <select [(ngModel)]="selectedYear" (change)="onFilterChange()">
+          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <label>Sales Territory</label>
+        <select [(ngModel)]="selectedTerritory" (change)="onFilterChange()">
+          <option *ngFor="let t of territories" [value]="t">{{ t }}</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TABS (Material tabs — same as dashboard) ===== -->
+  <mat-tab-group (selectedIndexChange)="tabChanged($event)" class="ci-tabs">
+
+    <!-- OVERVIEW -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="material-icons tab-icon">dashboard</span>
+        <span>Overview</span>
+      </ng-template>
+      <div class="tab-panel">
+        <!-- KPI Cards -->
+        <section class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon icon-purple"><span class="material-icons">query_stats</span></div>
+            <div class="kpi-info">
+              <h3>Gross Profit Margin</h3>
+              <p class="kpi-value">{{ kpis.grossProfitMargin | percent:'1.2-2' }}</p>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon icon-blue"><span class="material-icons">payments</span></div>
+            <div class="kpi-info">
+              <h3>Average Order Value</h3>
+              <p class="kpi-value">{{ kpis.aov | currency }}</p>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon icon-pink"><span class="material-icons">local_offer</span></div>
+            <div class="kpi-info">
+              <h3>Discount Ratio</h3>
+              <p class="kpi-value">{{ kpis.discountRatio | percent:'1.2-2' }}</p>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon icon-cyan"><span class="material-icons">account_balance</span></div>
+            <div class="kpi-info">
+              <h3>Effective Tax Rate</h3>
+              <p class="kpi-value">{{ kpis.effectiveTaxRate | percent:'1.2-2' }}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Charts -->
+        <section class="charts-grid">
+          <div class="chart-card" style="height: 400px;">
+            <canvas baseChart [data]="trendChartData" [options]="trendChartOptions" [type]="'line'"></canvas>
+          </div>
+          <div class="chart-card" style="height: 400px;">
+            <canvas baseChart [data]="profitChartData" [options]="profitChartOptions" [type]="'bar'"></canvas>
+          </div>
+        </section>
+      </div>
+    </mat-tab>
+
+    <!-- PRODUCT INSIGHTS -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="material-icons tab-icon">inventory_2</span>
+        <span>Product Insights</span>
+      </ng-template>
+      <div class="tab-panel">
+        <section class="charts-grid">
+          <div class="chart-card" style="height: 600px;">
+            <canvas baseChart [data]="topProductsChartData" [options]="topProductsChartOptions" [type]="'bar'"></canvas>
+          </div>
+        </section>
+      </div>
+    </mat-tab>
+
+    <!-- TERRITORY MAP -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="material-icons tab-icon">public</span>
+        <span>Territory Map</span>
+      </ng-template>
+      <div class="tab-panel">
+        <div class="chart-card map-card">
+          <div class="chart-header">
+            <h2>Global Territory Sales Map</h2>
+          </div>
+          <div id="territoryMap" style="width: 100%; height: 600px; border-radius: 0 0 12px 12px;"></div>
+        </div>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+
+</div>

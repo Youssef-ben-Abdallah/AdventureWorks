@@ -1,0 +1,170 @@
+@startuml AD_ETL_Execution_Workflow
+!theme cerulean-outline
+title SSIS Package Execution Workflow
+caption Activity diagram for ETL orchestration of AdventureWorksDW_Sales
+
+|#E8F5E9| SSIS Orchestration |
+start
+:Initialize SSIS Runtime;
+note right
+  SSIS packages execute sequentially:
+  1. Dimensions first
+  2. Fact table second
+end note
+
+:Establish connection to\n**AdventureWorks2019**\n(SQL Server OLTP);
+
+if (Connection successful?) then (yes)
+else (no)
+    #FFCDD2:Log connection failure;
+    :Send error notification;
+    stop
+endif
+
+|#FFF3E0| 01_Load_Dimension.dtsx |
+:Begin Dimension Load Package;
+:Log package start timestamp;
+
+fork
+    :Execute **updateCurrency**;
+    note right
+      Load from Sales.CurrencyRate
+      + Sales.Currency
+    end note
+    if (Success?) then (yes)
+        :Currency dimension loaded;
+    else (no)
+        #FFCDD2:Log error for Currency;
+        :Write rejected records;
+    endif
+fork again
+    :Execute **updateCustomer**;
+    note right
+      Load from Sales.Customer
+      + Person.Person
+    end note
+    if (Success?) then (yes)
+        :Customer dimension loaded;
+    else (no)
+        #FFCDD2:Log error for Customer;
+        :Write rejected records;
+    endif
+fork again
+    :Execute **UpdateProduct**;
+    note right
+      Load from Production.Product
+      + ProductSubcategory
+      + ProductCategory
+    end note
+    if (Success?) then (yes)
+        :Products dimension loaded;
+    else (no)
+        #FFCDD2:Log error for Products;
+        :Write rejected records;
+    endif
+fork again
+    :Execute **updateTerritory**;
+    note right
+      Load from
+      Sales.SalesTerritory
+    end note
+    if (Success?) then (yes)
+        :Territory dimension loaded;
+    else (no)
+        #FFCDD2:Log error for Territory;
+        :Write rejected records;
+    endif
+fork again
+    :Execute **updateSalesPerson**;
+    note right
+      Load from Sales.SalesPerson
+      + Person.Person
+    end note
+    if (Success?) then (yes)
+        :SalesPerson dimension loaded;
+    else (no)
+        #FFCDD2:Log error for SalesPerson;
+        :Write rejected records;
+    endif
+fork again
+    :Execute **updateShipMethod**;
+    note right
+      Load from
+      Purchasing.ShipMethod
+    end note
+    if (Success?) then (yes)
+        :ShipMethod dimension loaded;
+    else (no)
+        #FFCDD2:Log error for ShipMethod;
+        :Write rejected records;
+    endif
+end fork
+
+:Log dimension load results;
+
+if (All dimensions loaded successfully?) then (yes)
+    :Dimension package completed;
+else (partial failures)
+    #FFFDE7:Log partial failure warnings;
+    :Continue with available dimensions;
+endif
+
+|#E3F2FD| 02_Load_FactSales.dtsx |
+:Begin Fact Sales Load Package;
+:Log package start timestamp;
+
+:Verify referential integrity\n(all FK dimensions exist);
+
+if (Referential integrity OK?) then (yes)
+    :Execute **updateSales**;
+    note right
+      Load from Sales.SalesOrderHeader
+      + Sales.SalesOrderDetail
+      Maps FKs: CustomerID, ProductID,
+      TerritoryID, CurrencyRateID,
+      SalesPersonID, ShipMethodID
+    end note
+    if (Success?) then (yes)
+        #C8E6C9:Sales fact table loaded;
+    else (no)
+        #FFCDD2:Log error for Sales fact;
+        :Write rejected records;
+        :Send critical alert notification;
+    endif
+else (no)
+    #FFCDD2:Log referential integrity failure;
+    :Identify missing dimension records;
+    :Send error notification;
+endif
+
+|#E8F5E9| SSIS Orchestration |
+:Compile execution summary;
+
+:Log results to SSIS catalog;
+note right
+  Summary includes:
+  - Rows loaded per table
+  - Rejected record count
+  - Execution duration
+  - Error details (if any)
+end note
+
+:Update **vwSalesDashboard** view\n(available for DW queries);
+
+if (Any errors occurred?) then (yes)
+    #FFFDE7:Generate error report;
+    :Send notification to admin;
+else (no)
+    #C8E6C9:ETL completed successfully;
+endif
+
+stop
+
+legend bottom
+  |= Package |= Target Tables |
+  | 01_Load_Dimension.dtsx | Customer, Products, Territory, Currency, SalesPerson, ShipMethod |
+  | 02_Load_FactSales.dtsx | Sales (Fact) |
+  | Target Database | AdventureWorksDW_Sales |
+endlegend
+
+@enduml

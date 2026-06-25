@@ -1,0 +1,122 @@
+@startuml CMP_System_Integration
+!theme cerulean-outline
+title System Integration - AdventureWorks Sales BI Platform
+caption End-to-End Architecture showing all subsystem interactions
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 70
+skinparam ranksep 60
+
+skinparam component {
+    BackgroundColor #FAFAFA
+    BorderColor #607D8B
+    FontColor #212121
+    BackgroundColor<<SPA>> #BBDEFB
+    BorderColor<<SPA>> #1565C0
+    BackgroundColor<<API>> #C8E6C9
+    BorderColor<<API>> #2E7D32
+    BackgroundColor<<ETL>> #C8E6C9
+    BorderColor<<ETL>> #2E7D32
+    BackgroundColor<<SSAS>> #C8E6C9
+    BorderColor<<SSAS>> #2E7D32
+}
+
+skinparam database {
+    BackgroundColor #FFE0B2
+    BorderColor #E65100
+}
+
+skinparam storage {
+    BackgroundColor #E1BEE7
+    BorderColor #6A1B9A
+}
+
+skinparam cloud {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+}
+
+' ── Client Tier ───────────────────────────────────────────
+package "Client Tier" as CLIENT <<Rectangle>> #E3F2FD {
+    component "React SPA\nVite 8 Dev Server\nPort 5173\nTypeScript + Recharts + react-leaflet" <<SPA>> as ReactApp
+    component "Browser\nChrome / Edge / Firefox" <<SPA>> as Browser
+}
+
+' ── Application Tier ──────────────────────────────────────
+package "Application Tier" as APP <<Rectangle>> #E8F5E9 {
+    component "ASP.NET Core API\n.NET 9\nHTTPS: 57240 | HTTP: 57241\nJWT Bearer Auth + ASP.NET Identity" <<API>> as API
+
+    component "SSIS ETL\nAW_Sales_DW_ETL\n01_Load_Dimension.dtsx\n02_Load_FactSales.dtsx" <<ETL>> as SSIS
+
+    component "SSAS Cube Project\nMultdimCubeAW2019\nAdventure Works DW2019.cube\n8 Dimension files" <<SSAS>> as SSASProj
+}
+
+' ── Data Tier ─────────────────────────────────────────────
+package "Data Tier" as DATA <<Rectangle>> #FFF3E0 {
+    database "SQL Server\nAdventureWorks2019\n<<OLTP Source>>\nProducts, Orders, Customers, Identity" as OLTP
+    database "SQL Server\nAdventureWorksDW_Sales\n<<Data Warehouse>>\nStar Schema: Fact + Dimensions" as DW
+    database "SQL Server\nAdventureWorksDW2019\n<<SSAS Source DB>>\nDW for Cube Processing" as SSAS_SRC
+    database "SSAS Instance\nlocalhost\\MSSQLSERVER0\nCatalog: CubeAW2019\n<<Multidimensional OLAP>>" as SSAS
+}
+
+' ── File Storage ──────────────────────────────────────────
+package "File Storage" as STORAGE <<Rectangle>> #F3E5F5 {
+    storage "Product Images\nC:\\images\\product\\\nServed at /images/product/\n<<Static Files>>" as Images
+}
+
+' ── Connections ───────────────────────────────────────────
+
+' Client -> App
+Browser --> ReactApp : "localhost:5173\nHMR (WebSocket)"
+ReactApp --> API : "HTTP/HTTPS\nREST JSON\nAxios + JWT Bearer"
+
+' API -> Data
+API --> OLTP : "TDS\nEF Core (OltpDbContext)"
+API --> DW : "TDS\nEF Core (AnalyticsDbContext)"
+API --> SSAS : "XMLA\nADOMD.NET (MDX Queries)"
+
+' API -> Storage
+API --> Images : "File I/O\nStaticFiles Middleware"
+
+' ETL Flow
+SSIS --> OLTP : "TDS\nOLE DB Source\nExtract"
+SSIS --> DW : "TDS\nOLE DB Destination\nLoad"
+
+' SSAS Processing
+SSASProj --> SSAS : "Deploy & Process\nXMLA"
+SSAS --> SSAS_SRC : "TDS\nOLE DB\nCube Processing"
+
+note right of SSIS
+    ETL Pipeline (manual trigger):
+    1. 01_Load_Dimension.dtsx (SCD)
+    2. 02_Load_FactSales.dtsx
+    Source: AdventureWorks2019
+    Target: AdventureWorksDW_Sales
+end note
+
+note right of SSAS
+    SSAS processes cube from
+    AdventureWorksDW2019
+    (separate source DB from DW)
+end note
+
+note bottom of API
+    Middleware Pipeline:
+    CORS → Auth → Static Files → Routing → Controllers
+    JWT tokens issued by AuthController
+    [Authorize] / [Authorize(Roles="Admin")]
+    on protected endpoints
+end note
+
+' ── Legend ─────────────────────────────────────────────────
+legend bottom right
+    |= Protocol |= Usage |
+    | HTTP/HTTPS | React SPA <-> ASP.NET API (REST) |
+    | TDS | API/SSIS <-> SQL Server |
+    | XMLA | API <-> SSAS (ADOMD.NET) |
+    | File I/O | API -> Product Image Files |
+    | WebSocket | Vite HMR (dev only) |
+endlegend
+
+@enduml

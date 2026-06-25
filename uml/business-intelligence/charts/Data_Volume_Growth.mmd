@@ -1,0 +1,10 @@
+%%{init: {"theme": "base", "xyChart": {"width": 900, "height": 400, "plotReservedSpacePercent": 50}}}%%
+%% Data Warehouse Volume Growth
+%% Line chart showing cumulative data volume (MB) over 16 quarters (2010-2013).
+%% Growth from ~50MB to ~450MB, reflecting increasing reseller sales data.
+
+xychart-beta
+    title "Data Warehouse Volume Growth (MB)"
+    x-axis ["Q1-10", "Q2-10", "Q3-10", "Q4-10", "Q1-11", "Q2-11", "Q3-11", "Q4-11", "Q1-12", "Q2-12", "Q3-12", "Q4-12", "Q1-13", "Q2-13", "Q3-13", "Q4-13"]
+    y-axis "Size (MB)" 0 --> 500
+    line [50, 72, 95, 120, 145, 172, 198, 225, 252, 280, 312, 345, 370, 400, 425, 450]

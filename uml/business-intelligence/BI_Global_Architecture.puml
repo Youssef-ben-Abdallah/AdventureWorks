@@ -1,0 +1,135 @@
+@startuml BI_Global_Architecture
+!theme cerulean-outline
+title AdventureWorks Sales BI Platform - Global Architecture
+caption End-to-end data flow from OLTP sources to reporting dashboards
+
+skinparam componentStyle rectangle
+skinparam defaultTextAlignment center
+skinparam shadowing true
+skinparam roundCorner 10
+skinparam packageStyle frame
+
+' ── Color palette ──
+skinparam component {
+    BackgroundColor<<source>> #E8F5E9
+    BorderColor<<source>> #2E7D32
+    BackgroundColor<<etl>> #FFF3E0
+    BorderColor<<etl>> #E65100
+    BackgroundColor<<dw>> #E3F2FD
+    BorderColor<<dw>> #1565C0
+    BackgroundColor<<cube>> #F3E5F5
+    BorderColor<<cube>> #6A1B9A
+    BackgroundColor<<api>> #FFFDE7
+    BorderColor<<api>> #F9A825
+    BackgroundColor<<ui>> #FCE4EC
+    BorderColor<<ui>> #C62828
+}
+
+' ════════════════════════════════════════
+' Layer 1 - OLTP Source Systems
+' ════════════════════════════════════════
+package "Source Layer" as SRC #E8F5E9/white {
+    database "AdventureWorks2019\n(SQL Server OLTP)" as OLTP <<source>> {
+        component "Sales Schema" as SS <<source>>
+        component "Production Schema" as PS <<source>>
+        component "Person Schema" as PRS <<source>>
+        component "Purchasing Schema" as PUS <<source>>
+        component "HumanResources Schema" as HRS <<source>>
+    }
+}
+
+' ════════════════════════════════════════
+' Layer 2 - ETL (SSIS)
+' ════════════════════════════════════════
+package "ETL Layer (SSIS)" as ETLPKG #FFF3E0/white {
+    component "01_Load_Dimension.dtsx" as DIM_PKG <<etl>> {
+        component "updateCurrency" as sp1 <<etl>>
+        component "updateCustomer" as sp2 <<etl>>
+        component "UpdateProduct" as sp3 <<etl>>
+        component "updateSalesPerson" as sp4 <<etl>>
+        component "updateShipMethod" as sp5 <<etl>>
+        component "updateTerritory" as sp6 <<etl>>
+    }
+    component "02_Load_FactSales.dtsx" as FACT_PKG <<etl>> {
+        component "updateSales" as sp7 <<etl>>
+    }
+}
+
+' ════════════════════════════════════════
+' Layer 3 - Data Warehouse
+' ════════════════════════════════════════
+package "Data Warehouse Layer" as DWLAYER #E3F2FD/white {
+    database "AdventureWorksDW_Sales\n(SQL Server DW)" as DW <<dw>> {
+        component "Fact: Sales" as FACT <<dw>>
+        component "Dim: Customer" as DC <<dw>>
+        component "Dim: Products" as DP <<dw>>
+        component "Dim: Territory" as DT <<dw>>
+        component "Dim: Currency" as DCR <<dw>>
+        component "Dim: SalesPerson" as DSP <<dw>>
+        component "Dim: ShipMethod" as DSM <<dw>>
+        component "vwSalesDashboard" as VW <<dw>>
+    }
+}
+
+' ════════════════════════════════════════
+' Layer 4 - SSAS Cube
+' ════════════════════════════════════════
+package "OLAP Layer" as OLAPLAYER #F3E5F5/white {
+    database "AdventureWorksDW2019\n(SSAS Source DB)" as SSASDB <<cube>>
+    component "Adventure Works DW2019\n(SSAS Multidimensional Cube)\n<<MultdimCubeAW2019>>" as CUBE <<cube>> {
+        component "Measure Group:\nFact Reseller Sales\n(12 Base + 8 Calculated)" as MG <<cube>>
+        component "Dimensions:\nDate | Product | Territory\nEmployee | Reseller\nPromotion | Currency" as DIMS <<cube>>
+    }
+}
+
+' ════════════════════════════════════════
+' Layer 5 - Backend API
+' ════════════════════════════════════════
+package "API Layer" as APILAYER #FFFDE7/white {
+    component "ASP.NET Core .NET 9 API\n(Ecom.Api)" as API <<api>> {
+        component "EF Core\n(DW Queries)" as EF <<api>>
+        component "ADOMD.NET\n(MDX Queries)" as ADOMD <<api>>
+        component "Swagger\nAPI Docs" as SWAGGER <<api>>
+    }
+}
+
+' ════════════════════════════════════════
+' Layer 6 - Reporting / Frontend
+' ════════════════════════════════════════
+package "Presentation Layer" as UILAYER #FCE4EC/white {
+    component "React + Vite\nFrontend (ecom-ui)" as UI <<ui>> {
+        component "Dashboard\n(DW Data)\nOverview | Products\nCustomers | Sales Team\nShipping" as DASH <<ui>>
+        component "Cube Insights\n(SSAS Data)\nOverview | Product Insights\nTerritory Map | Employee\nPromotions | Fulfillment" as CUBEDASH <<ui>>
+    }
+}
+
+' ════════════════════════════════════════
+' Connections
+' ════════════════════════════════════════
+OLTP -[#2E7D32,bold]-> DIM_PKG : Extract\nDimension Data
+OLTP -[#2E7D32,bold]-> FACT_PKG : Extract\nFact Data
+
+DIM_PKG -[#E65100,bold]-> DW : Load\nDimensions
+FACT_PKG -[#E65100,bold]-> DW : Load\nFact Table
+
+DW -[#1565C0,bold]-> EF : EF Core\nLINQ Queries
+DW -[#1565C0,dashed]-> VW
+
+SSASDB -[#6A1B9A,bold]-> CUBE : Process\nCube
+CUBE -[#6A1B9A,bold]-> ADOMD : MDX\nQueries
+
+EF -[#F9A825,bold]-> DASH : REST API\n/api/dashboard/*
+ADOMD -[#F9A825,bold]-> CUBEDASH : REST API\n/api/cubeinsights/*
+API -[#F9A825,dotted]-> SWAGGER
+
+legend right
+  |= Layer |= Technology |
+  | Source | SQL Server 2019 (OLTP) |
+  | ETL | SSIS Packages + Stored Procedures |
+  | Data Warehouse | SQL Server (Star Schema) |
+  | OLAP | SSAS Multidimensional |
+  | API | ASP.NET Core .NET 9 |
+  | Frontend | React + Vite (TypeScript) |
+endlegend
+
+@enduml

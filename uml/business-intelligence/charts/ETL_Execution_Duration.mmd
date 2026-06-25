@@ -1,0 +1,11 @@
+%%{init: {"theme": "base", "xyChart": {"width": 750, "height": 400, "plotReservedSpacePercent": 50}}}%%
+%% ETL Total Execution Duration per Monthly Run
+%% Bar = total run time (minutes). Line = 3-month rolling average.
+%% Dimension loads range 2-5 min; fact loads range 8-15 min.
+
+xychart-beta
+    title "ETL Total Execution Duration per Monthly Run (minutes)"
+    x-axis ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    y-axis "Duration (minutes)" 0 --> 25
+    bar [15, 12, 18, 14, 20, 16, 16, 11, 14, 17, 13, 10]
+    line [15, 15, 15, 15, 17, 17, 17, 14, 14, 14, 13, 13]

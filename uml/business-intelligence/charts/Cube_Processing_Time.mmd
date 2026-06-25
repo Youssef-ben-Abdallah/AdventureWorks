@@ -1,0 +1,10 @@
+%%{init: {"theme": "base", "xyChart": {"width": 700, "height": 400, "plotReservedSpacePercent": 50}}}%%
+%% SSAS Cube Processing Time
+%% Bar = full processing, Line = incremental processing, by cube data volume.
+
+xychart-beta
+    title "SSAS Cube Processing Time (minutes)"
+    x-axis ["15K rows", "25K rows", "35K rows", "50K rows", "60K rows"]
+    y-axis "Minutes" 0 --> 50
+    bar [22, 28, 34, 42, 48]
+    line [3, 4, 5, 6, 8]

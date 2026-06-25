@@ -1,0 +1,10 @@
+%%{init: {"theme": "base", "xyChart": {"width": 750, "height": 400, "plotReservedSpacePercent": 50}}}%%
+%% Records Loaded per ETL Run
+%% Bar chart showing total records (dimension + fact combined) loaded per monthly ETL run.
+%% Demonstrates the volume of data processed in each ETL cycle.
+
+xychart-beta
+    title "Records Loaded per ETL Run"
+    x-axis ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    y-axis "Records" 0 --> 10000
+    bar [4500, 3800, 6200, 5100, 7800, 6500, 5900, 3200, 4800, 6900, 5500, 4100]

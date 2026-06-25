@@ -1,0 +1,116 @@
+@startuml SD_Add_To_Cart
+!theme cerulean-outline
+
+title Add to Cart Flow (Client-Side Only)\nAdventureWorks Sales BI Platform
+
+autonumber "<b>[0]"
+hide footbox
+
+skinparam maxMessageSize 160
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBodyBackgroundColor #FAFAFA80
+skinparam sequenceDividerBackgroundColor #ECEFF1
+skinparam sequenceDividerBorderColor #90A4AE
+skinparam sequenceBoxBorderColor #90A4AE
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #37474F
+    FontColor #212121
+}
+skinparam boundary {
+    BackgroundColor #BBDEFB
+    BorderColor #1565C0
+    FontColor #0D47A1
+}
+skinparam control {
+    BackgroundColor #C8E6C9
+    BorderColor #2E7D32
+    FontColor #1B5E20
+}
+skinparam database {
+    BackgroundColor #F8BBD0
+    BorderColor #AD1457
+    FontColor #880E4F
+}
+
+box "Client Tier — No API calls in this flow" #EBF5FB
+    actor       "User"                                   as User
+    boundary    "Browser / React\n(ProductDetails Page)" as React
+    control     "CartContext\n(React Context)"           as CartCtx
+    database    "localStorage\n(ecom_cart_v1)"           as Storage
+    boundary    "Navbar\n(Cart Badge)"                   as Navbar
+end box
+
+note over React, Storage
+    The cart is entirely client-side.
+    No API calls are made when adding items to cart.
+    Cart state lives in React Context + localStorage.
+end note
+
+== User Views Product ==
+
+User -> React : Viewing ProductDetails page\nProduct: { id, name, price, stockQty, ... }
+React --> User : Shows product info,\nquantity selector,\n"Add to Cart" button
+
+== Add to Cart ==
+
+User -> React : Sets quantity (e.g. qty = 2)\nClicks **"Add to Cart"**
+
+React -> CartCtx : cart.add(product, qty)
+
+CartCtx -> CartCtx : const q = Math.max(1, qty)
+
+alt Product already in cart
+    CartCtx -> CartCtx : Find existing CartItem\nwhere item.product.id === product.id
+    CartCtx -> CartCtx : Update qty:\nMath.min(\n  existingQty + q,\n  product.stockQty\n)
+    note right of CartCtx : Caps at stockQty\nto prevent over-ordering
+else Product not in cart
+    CartCtx -> CartCtx : Push new CartItem:\n{ product, qty: Math.min(q, stockQty) }
+end
+
+CartCtx -> CartCtx : setItems(updatedItems)\nTriggers React re-render
+
+== Persist to localStorage ==
+
+CartCtx -> CartCtx : useEffect detects\nitems state change
+
+CartCtx -> Storage : localStorage.setItem(\n  "ecom_cart_v1",\n  JSON.stringify(items)\n)
+
+note right of Storage
+    Stored as JSON array:
+    [
+      {
+        "product": { id, name, price, ... },
+        "qty": 2
+      }
+    ]
+end note
+
+== UI Updates (via React Context) ==
+
+CartCtx -> CartCtx : Recompute derived state:\n  count = items.reduce(sum + qty)\n  total = items.reduce(sum + qty * price)
+
+CartCtx -> Navbar : Context re-render propagates\nto all CartContext consumers
+Navbar -> Navbar : Update cart badge\ncount = {cart.count}
+Navbar --> User : Badge shows updated\nitem count (e.g. "2")
+
+CartCtx -> React : Re-render ProductDetails\nif cart state referenced
+React --> User : Visual feedback:\n"Added to cart" confirmation
+
+== Cart Restoration on Page Reload ==
+
+note over CartCtx, Storage
+    On app startup (CartProvider mount):
+end note
+
+User -> React : Refreshes page / reopens app
+React -> CartCtx : CartProvider initializes
+CartCtx -> Storage : localStorage.getItem("ecom_cart_v1")
+Storage --> CartCtx : JSON string
+CartCtx -> CartCtx : JSON.parse(raw)\nFilter valid items:\n  x.product exists\n  x.product.id is number
+CartCtx -> CartCtx : useState initialized\nwith restored items
+CartCtx -> Navbar : Badge shows persisted count
+Navbar --> User : Cart badge reflects\nprevious session items
+
+@enduml

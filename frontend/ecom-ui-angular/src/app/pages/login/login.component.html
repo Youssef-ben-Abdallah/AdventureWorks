@@ -1,0 +1,154 @@
+<div class="login-page">
+
+  <!-- Background orbs -->
+  <div class="login-orb orb-1"></div>
+  <div class="login-orb orb-2"></div>
+
+  <!-- Grid pattern overlay -->
+  <div class="login-grid-bg"></div>
+
+  <div class="login-container">
+
+    <!-- Left branding panel -->
+    <div class="login-brand-panel">
+      <div class="brand-logo">
+        <div class="brand-icon-box">
+          <span class="material-icons">directions_bike</span>
+        </div>
+        <div>
+          <div class="brand-name">AdventureWorks</div>
+          <div class="brand-tagline">Bike Store</div>
+        </div>
+      </div>
+      <h2 class="brand-headline">Your next ride<br><span class="text-gradient">starts here.</span></h2>
+      <p class="brand-sub">
+        Access your account to manage orders, track your bikes, and explore our premium catalog.
+      </p>
+
+      <div class="brand-features">
+        <div class="brand-feature">
+          <span class="material-icons">check_circle</span>
+          <span>500+ premium products</span>
+        </div>
+        <div class="brand-feature">
+          <span class="material-icons">check_circle</span>
+          <span>Real-time order tracking</span>
+        </div>
+        <div class="brand-feature">
+          <span class="material-icons">check_circle</span>
+          <span>Secure JWT authentication</span>
+        </div>
+      </div>
+
+      <div class="brand-footer-note">
+        Powered by AdventureWorks2019 · ASP.NET Core · Angular 17
+      </div>
+    </div>
+
+    <!-- Auth form panel -->
+    <div class="login-form-panel glass-strong">
+      <!-- Mode tabs -->
+      <div class="mode-tabs">
+        <button class="mode-tab" [class.active]="mode === 'login'" (click)="switchMode('login')" data-testid="mode-login">
+          <span class="material-icons">login</span>
+          Sign In
+        </button>
+        <button class="mode-tab" [class.active]="mode === 'register'" (click)="switchMode('register')" data-testid="mode-register">
+          <span class="material-icons">person_add</span>
+          Create Account
+        </button>
+      </div>
+
+      <div class="form-header">
+        <h1 class="form-title">{{ mode === 'login' ? 'Welcome back' : 'Create your account' }}</h1>
+        <p class="form-subtitle">{{ mode === 'login' ? 'Sign in to continue to AdventureWorks' : 'Join thousands of cycling enthusiasts' }}</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+
+        <div class="form-field">
+          <label class="field-label">
+            <span class="material-icons">person</span>
+            Username
+          </label>
+          <input
+            class="aw-input"
+            formControlName="username"
+            placeholder="Enter your username"
+            data-testid="login-username"
+            autocomplete="username"
+          />
+          <div class="field-error" *ngIf="usernameCtrl?.touched && usernameCtrl?.invalid">
+            <span class="material-icons">error</span>
+            Username is required
+          </div>
+        </div>
+
+        <div class="form-field" *ngIf="mode === 'register'">
+          <label class="field-label">
+            <span class="material-icons">email</span>
+            Email
+          </label>
+          <input
+            class="aw-input"
+            formControlName="email"
+            placeholder="your@email.com"
+            type="email"
+            data-testid="register-email"
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">
+            <span class="material-icons">lock</span>
+            Password
+          </label>
+          <div class="password-wrap">
+            <input
+              class="aw-input"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter your password"
+              data-testid="login-password"
+              autocomplete="current-password"
+            />
+            <button type="button" class="toggle-pass" (click)="showPassword = !showPassword">
+              <span class="material-icons">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          <div class="field-error" *ngIf="passwordCtrl?.touched && passwordCtrl?.invalid">
+            <span class="material-icons">error</span>
+            Password is required
+          </div>
+        </div>
+
+        <!-- Error message -->
+        <div class="form-error" *ngIf="error">
+          <span class="material-icons">error_outline</span>
+          {{ error }}
+        </div>
+
+        <!-- Submit -->
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="loading || form.invalid"
+          data-testid="auth-submit"
+        >
+          <span class="material-icons" *ngIf="!loading">{{ mode === 'login' ? 'login' : 'person_add' }}</span>
+          <span class="spinner" *ngIf="loading"></span>
+          {{ loading ? 'Processing...' : (mode === 'login' ? 'Sign In' : 'Create Account') }}
+        </button>
+
+      </form>
+
+      <!-- Dev credentials hint -->
+      <div class="dev-hint">
+        <span class="material-icons">info</span>
+        Dev admin: <code>admin</code> / <code>Admin123!</code>
+      </div>
+    </div>
+
+  </div>
+</div>

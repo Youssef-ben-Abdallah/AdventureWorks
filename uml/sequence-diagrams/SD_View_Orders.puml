@@ -1,0 +1,135 @@
+@startuml SD_View_Orders
+!theme cerulean-outline
+
+title View My Orders Flow\nAdventureWorks Sales BI Platform
+
+autonumber "<b>[0]"
+hide footbox
+
+skinparam maxMessageSize 160
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBodyBackgroundColor #FAFAFA80
+skinparam sequenceDividerBackgroundColor #ECEFF1
+skinparam sequenceDividerBorderColor #90A4AE
+skinparam sequenceBoxBorderColor #90A4AE
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #37474F
+    FontColor #212121
+}
+skinparam boundary {
+    BackgroundColor #BBDEFB
+    BorderColor #1565C0
+    FontColor #0D47A1
+}
+skinparam participant {
+    BackgroundColor #E8EAF6
+    BorderColor #3949AB
+    FontColor #1A237E
+}
+skinparam control {
+    BackgroundColor #C8E6C9
+    BorderColor #2E7D32
+    FontColor #1B5E20
+}
+skinparam entity {
+    BackgroundColor #FFE0B2
+    BorderColor #E65100
+    FontColor #BF360C
+}
+skinparam database {
+    BackgroundColor #F8BBD0
+    BorderColor #AD1457
+    FontColor #880E4F
+}
+
+box "Client Tier" #EBF5FB
+    actor       "User"                                        as User
+    boundary    "Browser / React\n(MyOrders Page)"            as React
+end box
+
+box "Transport" #F9FBE7
+    participant "Axios\napiClient"                            as Axios
+end box
+
+box "Backend" #F1F8E9
+    control     "OrdersController\n[Authorize]"               as Controller
+    entity      "OrderRepository"                             as Repo
+end box
+
+box "Data Layer" #FFF3E0
+    database    "OltpDbContext\n(SQL Server\nAdventureWorks2019)" as DB
+end box
+
+== Page Load ==
+
+User -> React : Navigates to /orders
+React -> React : useEffect triggers\ndata fetch on mount
+
+React -> Axios : OrdersService.myOrders()
+Axios -> Axios : Interceptor adds header:\nAuthorization: Bearer {token}\n(from localStorage)
+Axios -> Controller : **GET /api/orders/mine**
+
+== JWT Authentication & Authorization ==
+
+Controller -> Controller : [Authorize] middleware\nvalidates JWT token
+
+alt No token or token expired
+    Controller --> Axios : **401 Unauthorized**
+    Axios --> React : catch(err) — err.response.status = 401
+    React -> React : Redirect to\n/login?returnUrl=/orders
+    React --> User : Login page shown
+else Token valid
+    Controller -> Controller : Extract userId:\nUser.FindFirstValue(\n  ClaimTypes.NameIdentifier)
+
+    alt userId is null/empty
+        Controller --> Axios : **401 Unauthorized**
+        Axios --> React : Error state
+        React --> User : "Please log in" message
+    else userId extracted
+
+        == Query User's Orders ==
+
+        Controller -> Repo : GetMyOrdersAsync(userId)
+        Repo -> DB : SELECT * FROM Orders\n  WHERE UserId = @userId\n  INCLUDE Items\n    THEN INCLUDE Product\n  INCLUDE User\n  ORDER BY CreatedAtUtc DESC\n  AsNoTracking()
+        DB --> Repo : List<Order>
+        Repo --> Controller : List<Order>
+
+        Controller -> Controller : Map each Order to OrderDto:\nrows.Select(Map).ToList()
+
+        note right of Controller
+            OrderDto {
+              Id, CreatedAtUtc,
+              Status (Pending/Shipped/...),
+              UserId, Username, Total,
+              Items: [{
+                Id, ProductId, ProductName,
+                Qty, UnitPrice, LineTotal
+              }]
+            }
+        end note
+
+        Controller --> Axios : **200 OK**\nOrderDto[]
+        Axios --> React : orders[]
+
+        == Render Orders ==
+
+        React -> React : setOrders(data)\nsetLoading(false)
+
+        alt No orders
+            React --> User : "No orders yet"\nempty state message
+        else Orders exist
+            React -> React : Render order list:\n- Order #{id}\n- Date: {createdAtUtc}\n- Status badge (Pending/Shipped/...)\n- Total: ${total}\n- Expandable item details
+            React --> User : Order list displayed\nwith status badges\nand item summaries
+
+            == User Expands Order Details ==
+
+            User -> React : Clicks on an order row\nto expand details
+            React -> React : Toggle expanded state\nShow order items:\n- Product name\n- Qty x UnitPrice\n- LineTotal
+            React --> User : Order items displayed\nwithin expanded row
+        end
+    end
+end
+
+@enduml

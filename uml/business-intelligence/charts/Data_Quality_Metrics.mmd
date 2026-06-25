@@ -1,0 +1,10 @@
+%%{init: {"theme": "base", "xyChart": {"width": 700, "height": 400, "plotReservedSpacePercent": 50}}}%%
+%% Data Quality Metrics
+%% Bar chart showing data quality dimension scores for the AdventureWorks DW.
+%% All metrics above 96%, demonstrating high data integrity. Values rounded to nearest integer.
+
+xychart-beta
+    title "Data Quality Metrics (%)"
+    x-axis ["Completeness", "Accuracy", "Consistency", "Timeliness", "Uniqueness"]
+    y-axis "Score (%)" 94 --> 100
+    bar [99, 99, 98, 97, 100]

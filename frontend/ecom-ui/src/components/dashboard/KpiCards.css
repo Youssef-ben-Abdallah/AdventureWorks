@@ -1,0 +1,74 @@
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+@media (max-width: 1024px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+.kpi {
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kpi:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(99,102,241,0.15);
+}
+
+.kpi-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.kpi-icon .material-icons {
+  font-size: 28px;
+}
+
+.kpi .label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 0.3rem;
+}
+
+[data-theme="light"] .kpi .label {
+  color: #64748b;
+}
+
+.kpi .value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.03em;
+}
+
+/* Color variations for icons */
+.icon-0 { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+.icon-1 { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
+.icon-2 { background: linear-gradient(135deg, #ec4899, #e11d48); }
+.icon-3 { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+.icon-4 { background: linear-gradient(135deg, #f59e0b, #ea580c); }
+.icon-5 { background: linear-gradient(135deg, #8b5cf6, #d946ef); }

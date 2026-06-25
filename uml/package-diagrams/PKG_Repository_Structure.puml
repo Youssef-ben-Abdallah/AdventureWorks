@@ -1,0 +1,127 @@
+@startuml PKG_Repository_Structure
+!theme cerulean-outline
+title Repository Module Structure - AdventureWorks Sales BI Platform
+caption Full project organization at the repository root level
+
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 50
+
+package "AdventureWorks/" as ROOT #E3F2FD {
+
+    package "backend/Ecom.Api" as BACKEND #C8E6C9 {
+        package "Controllers" as B_CTRL #A5D6A7 {
+            note as B_CTRL_N
+                7 REST API controllers
+                Auth, Categories, SubCategories,
+                Products, Orders, Dashboard,
+                CubeInsights
+            end note
+        }
+        package "Services" as B_SVC #A5D6A7 {
+            note as B_SVC_N
+                JwtTokenService
+                DashboardService
+                OlapService
+                + interfaces
+            end note
+        }
+        package "Repositories" as B_REPO #A5D6A7 {
+            note as B_REPO_N
+                4 repositories
+                + 4 interfaces
+            end note
+        }
+        package "Entities" as B_ENT #A5D6A7
+        package "Data" as B_DATA #A5D6A7
+        package "DTOs" as B_DTO #A5D6A7
+        package "Migrations" as B_MIG #A5D6A7
+    }
+
+    package "frontend/ecom-ui" as FRONTEND #BBDEFB {
+        package "src/pages" as F_PAGES #90CAF9 {
+            note as F_PAGES_N
+                9 page components
+                Home, Products, ProductDetails,
+                Login, Cart, MyOrders,
+                Dashboard, CubeInsights,
+                AdminDashboard
+            end note
+        }
+        package "src/components" as F_COMP #90CAF9
+        package "src/context" as F_CTX #90CAF9
+        package "src/services" as F_SVC #90CAF9
+        package "src/config" as F_CFG #90CAF9
+        package "src/types" as F_TYPES #90CAF9
+    }
+
+    package "AW_Sales_DW_ETL" as ETL #FFE0B2 {
+        note as ETL_N
+            SSIS Packages:
+            01_Load_Dimension.dtsx
+            02_Load_FactSales.dtsx
+        end note
+    }
+
+    package "MultdimCubeAW2019" as SSAS #E1BEE7 {
+        note as SSAS_N
+            SSAS Multidimensional Project:
+            Adventure Works DW2019.cube
+            8 dimension files (.dim):
+            Date, Product, Currency,
+            Sales Territory, Employee,
+            Promotion, Reseller,
+            Fact Reseller Sales
+        end note
+    }
+
+    package "Database" as DB #FFCDD2 {
+        note as DB_N
+            SQL Scripts:
+            DW table definitions
+            Stored procedures
+            Views
+        end note
+    }
+
+    package "quality-assurance" as QA #B3E5FC {
+        note as QA_N
+            QA documentation
+            and test artifacts
+        end note
+    }
+
+    package "docs" as DOCS #CFD8DC {
+        note as DOCS_N
+            Project documentation
+        end note
+    }
+
+    package "uml" as UML #FFF9C4 {
+        note as UML_N
+            PlantUML diagrams:
+            component-diagrams/
+            package-diagrams/
+            deployment-diagrams/
+            architecture/
+        end note
+    }
+}
+
+' ── Inter-module Relationships ────────────────────────────
+
+FRONTEND -[#2196F3]-> BACKEND : "HTTP REST\nAPI calls"
+ETL -[#FF9800]-> DB : "ETL target\nDW tables"
+SSAS -[#9C27B0]-> DB : "Cube source\nDW data"
+BACKEND -[#4CAF50]-> DB : "EF Core\nqueries"
+BACKEND -[#9C27B0]--> SSAS : "ADOMD.NET\nMDX queries"
+
+note bottom of ROOT
+    Version Control: Git
+    Branch: react-migration
+    CI/CD: GitHub Actions
+    (.github/workflows/ci.yml)
+end note
+
+@enduml

@@ -1,0 +1,175 @@
+<div class="products-page">
+
+  <!-- Page Header -->
+  <div class="products-header">
+    <div class="header-inner">
+      <div>
+        <div class="aw-badge" style="margin-bottom:0.5rem;">
+          <span class="material-icons" style="font-size:12px;">pedal_bike</span>
+          Full Catalog
+        </div>
+        <h1 class="products-title">Products</h1>
+        <p class="products-subtitle">Browse and filter {{ filteredTotal }} items. Add to your cart.</p>
+      </div>
+      <a class="btn-secondary-glass" routerLink="/cart" data-testid="products-open-cart">
+        <span class="material-icons">shopping_cart</span>
+        View Cart
+      </a>
+    </div>
+  </div>
+
+  <div class="neon-divider"></div>
+
+  <!-- Loading -->
+  <div class="state-loading" *ngIf="loading">
+    <div class="skeleton-grid">
+      <div class="skeleton-item" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+        <div class="skeleton" style="height:180px;border-radius:12px 12px 0 0;"></div>
+        <div style="padding:1rem;">
+          <div class="skeleton" style="height:14px;width:75%;margin-bottom:8px;border-radius:4px;"></div>
+          <div class="skeleton" style="height:12px;width:50%;margin-bottom:12px;border-radius:4px;"></div>
+          <div class="skeleton" style="height:30px;width:100%;border-radius:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="state-error" *ngIf="error">
+    <span class="material-icons">error_outline</span>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Main content -->
+  <div class="products-main" *ngIf="!loading">
+
+    <!-- Sidebar Filters -->
+    <aside class="filters-sidebar glass">
+      <div class="filters-title">
+        <span class="material-icons">tune</span>
+        Filters
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Search</label>
+        <div class="search-wrap">
+          <span class="material-icons search-icon">search</span>
+          <input
+            class="aw-input search-input"
+            [(ngModel)]="q"
+            (ngModelChange)="resetPage()"
+            placeholder="Name, SKU, description…"
+            data-testid="products-search"
+          />
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Category</label>
+        <select class="aw-select" [(ngModel)]="categoryId" (ngModelChange)="onCategoryChange()" data-testid="products-category">
+          <option [value]="0">All categories</option>
+          <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Sub-category</label>
+        <select class="aw-select" [(ngModel)]="subCategoryId" (ngModelChange)="resetPage()" data-testid="products-subcategory">
+          <option [value]="0">All sub-categories</option>
+          <option *ngFor="let s of subsForSelected" [value]="s.id">{{ s.name }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Max Price</label>
+        <input
+          class="aw-input"
+          type="number"
+          [(ngModel)]="maxPrice"
+          (ngModelChange)="resetPage()"
+          placeholder="e.g. 500"
+          data-testid="products-max-price"
+        />
+      </div>
+
+      <!-- Results count -->
+      <div class="filter-results" *ngIf="!loading">
+        <span class="material-icons" style="font-size:14px;color:#6366f1;">filter_list</span>
+        {{ filteredTotal }} results
+      </div>
+    </aside>
+
+    <!-- Products Grid -->
+    <div class="products-content">
+
+      <!-- No results -->
+      <div class="empty-state" *ngIf="!filteredTotal">
+        <span class="material-icons">search_off</span>
+        <h3>No products found</h3>
+        <p>Try adjusting your search or filters.</p>
+        <button class="btn-primary-glow" (click)="clearFilters()">Clear Filters</button>
+      </div>
+
+      <!-- Cards -->
+      <div class="products-grid" *ngIf="filteredTotal">
+        <div class="aw-product-card" *ngFor="let p of pagedProducts">
+
+          <div class="product-img-wrap">
+            <div class="product-placeholder">{{ p.name }}</div>
+            <div class="product-img-overlay"></div>
+            <div class="product-badges-overlay">
+              <span class="aw-badge-mini">{{ p.subCategoryName }}</span>
+            </div>
+            <button class="quick-add-btn" (click)="addToCart(p,1)" [title]="p.stockQty <= 0 ? 'Out of stock' : 'Quick add'" data-testid="product-add-to-cart" [disabled]="p.stockQty <= 0">
+              <span class="material-icons">add_shopping_cart</span>
+            </button>
+          </div>
+
+          <div class="product-body">
+            <div class="product-meta-row">
+              <span class="category-tag">{{ p.categoryName }}</span>
+              <span class="product-sku">{{ p.sku }}</span>
+            </div>
+            <h3 class="product-name">{{ p.name }}</h3>
+            <p class="product-desc" *ngIf="p.description">{{ p.description | slice:0:70 }}{{ p.description.length > 70 ? '…' : '' }}</p>
+
+            <div class="product-footer-row">
+              <div class="product-price">
+                <span class="price-curr">$</span>{{ p.price | number:'1.2-2' }}
+              </div>
+              <div class="product-btns">
+                <a class="btn-ghost-sm" [routerLink]="['/products', p.id]" data-testid="product-details-link">
+                  <span class="material-icons">visibility</span>
+                </a>
+                <button class="btn-cart-sm" (click)="addToCart(p,1)" data-testid="product-add-to-cart" [disabled]="p.stockQty <= 0" [title]="p.stockQty <= 0 ? 'Out of stock' : ''">
+                  <span class="material-icons">add</span> Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="filteredTotal">
+        <div class="page-info">
+          Showing <strong>{{ startItem }}–{{ endItem }}</strong> of <strong>{{ filteredTotal }}</strong>
+        </div>
+        <div class="page-actions">
+          <button class="page-btn" (click)="prevPage()" [disabled]="page <= 1" data-testid="products-prev-page">
+            <span class="material-icons">chevron_left</span>
+          </button>
+          <div class="page-numbers">
+            <button *ngFor="let n of pageRange" class="page-num" [class.active]="n === page" (click)="goToPage(n)">
+              {{ n }}
+            </button>
+          </div>
+          <button class="page-btn" (click)="nextPage()" [disabled]="page >= totalPages" data-testid="products-next-page">
+            <span class="material-icons">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

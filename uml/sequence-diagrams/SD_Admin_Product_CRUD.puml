@@ -1,0 +1,259 @@
+@startuml SD_Admin_Product_CRUD
+!theme cerulean-outline
+
+title Admin Product CRUD Lifecycle\nAdventureWorks Sales BI Platform
+
+autonumber "<b>[0]"
+hide footbox
+
+skinparam maxMessageSize 160
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBodyBackgroundColor #FAFAFA80
+skinparam sequenceDividerBackgroundColor #ECEFF1
+skinparam sequenceDividerBorderColor #90A4AE
+skinparam sequenceBoxBorderColor #90A4AE
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #37474F
+    FontColor #212121
+}
+skinparam boundary {
+    BackgroundColor #BBDEFB
+    BorderColor #1565C0
+    FontColor #0D47A1
+}
+skinparam participant {
+    BackgroundColor #E8EAF6
+    BorderColor #3949AB
+    FontColor #1A237E
+}
+skinparam control {
+    BackgroundColor #C8E6C9
+    BorderColor #2E7D32
+    FontColor #1B5E20
+}
+skinparam entity {
+    BackgroundColor #FFE0B2
+    BorderColor #E65100
+    FontColor #BF360C
+}
+skinparam database {
+    BackgroundColor #F8BBD0
+    BorderColor #AD1457
+    FontColor #880E4F
+}
+
+box "Client Tier" #EBF5FB
+    actor       "Admin"                                           as Admin
+    boundary    "Browser / React\n(Admin Page)"                  as React
+end box
+
+box "Transport" #F9FBE7
+    participant "Axios\napiClient"                               as Axios
+end box
+
+box "Backend" #F1F8E9
+    control     "Controllers\n[Authorize(Roles=\"Admin\")]"       as Controller
+    entity      "ProductRepository"                              as Repo
+end box
+
+box "Data Layer" #FFF3E0
+    database    "OltpDbContext\n(SQL Server\nAdventureWorks2019)" as DB
+end box
+
+note over Axios
+    All requests include:
+    Authorization: Bearer {token}
+    (via Axios interceptor)
+end note
+
+== Step 1: Load Admin Page Data ==
+
+Admin -> React : Navigates to Admin Products page
+React -> React : useEffect triggers\nparallel data load
+
+par Load categories and products
+    React -> Axios : CatalogService.getCategories()
+    Axios -> Controller : **GET /api/categories**
+    Controller -> DB : _db.Categories.OrderBy(Name)
+    DB --> Controller : Category[]
+    Controller --> Axios : **200 OK** Category[]
+    Axios --> React : categories
+
+    React -> Axios : CatalogService.getProducts()
+    Axios -> Controller : **GET /api/products**
+    Controller -> Repo : GetAllAsync()
+    Repo -> DB : SELECT Products\nINCLUDE Category, SubCategory\nORDER BY Name
+    DB --> Repo : Product[]
+    Repo --> Controller : Product[]
+    Controller --> Axios : **200 OK** ProductDto[]
+    Axios --> React : products
+end
+
+React -> React : Render product table\nwith Edit/Delete buttons\nand "Add Product" form
+React --> Admin : Admin product management\npage displayed
+
+== Step 2: Create Product ==
+
+Admin -> React : Fills create form:\nSku, Name, Description,\nPrice, StockQty, CategoryId,\nSubCategoryId
+Admin -> React : Clicks **"Add Product"**
+
+React -> Axios : CatalogService.createProduct(productData)
+Axios -> Controller : **POST /api/products**\nBody: CreateProductDto
+
+Controller -> Controller : [Authorize(Roles="Admin")]\nvalidate Admin role
+
+Controller -> Repo : ExistsBySkuAsync(dto.Sku)
+Repo -> DB : SELECT ANY WHERE Sku = @sku
+DB --> Repo : true / false
+
+alt SKU already exists
+    Repo --> Controller : true
+    Controller --> Axios : **400 Bad Request**\n"SKU already exists."
+    Axios --> React : Show error
+else SKU is unique
+    Repo --> Controller : false
+
+    Controller -> Controller : Build Product entity
+    Controller -> Repo : AddAsync(entity)
+    Repo -> DB : INSERT INTO Products\n(CategoryId, Description,\nImageFileName, Name, Price,\nSku, StockQty, SubCategoryId)\nVALUES (...)
+    note right of DB
+        Uses raw SQL to bypass
+        EF Core @@ROWCOUNT issue
+        with INSTEAD OF INSERT trigger
+    end note
+    DB --> Repo : OK
+    Repo -> DB : SELECT WHERE Sku = @sku\n(get generated Id)
+    DB --> Repo : Product with Id
+    Repo --> Controller : created entity
+
+    Controller -> Repo : GetByIdAsync(id)
+    Repo -> DB : SELECT with Includes
+    DB --> Repo : Product
+    Controller --> Axios : **201 Created**\nProductDto + Location header
+    Axios --> React : newProduct
+    React -> React : Add to product list\nRefresh table
+    React --> Admin : New product appears in table
+end
+
+== Step 3: Upload Product Image ==
+
+Admin -> React : Clicks **"Upload Image"**\non product row
+Admin -> React : Selects image file\n(PNG, JPG, JPEG, GIF, max 20MB)
+
+React -> Axios : CatalogService.uploadProductImage(id, file)
+React -> React : Build FormData:\nformData.append("file", file)
+
+Axios -> Controller : **POST /api/products/{id}/image**\nContent-Type: multipart/form-data
+note right of Controller
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(20_000_000)]
+end note
+
+Controller -> Repo : GetByIdAsync(id)
+Repo -> DB : SELECT Product
+DB --> Repo : Product
+
+alt Product not found
+    Controller --> Axios : **404 Not Found**
+else Product found
+    Controller -> Controller : Validate file extension:\n.png, .jpg, .jpeg, .gif
+
+    alt Invalid file type
+        Controller --> Axios : **400 Bad Request**\n"Invalid file type."
+    else Valid file type
+        opt Old image exists
+            Controller -> Controller : Delete old image file:\nFile.Delete(oldPath)
+        end
+
+        Controller -> Controller : Generate filename:\nproduct-{id}-{guid}{ext}
+        Controller -> Controller : Save to disk:\nDirectory.CreateDirectory(root)\nC:\images\product\{filename}
+
+        Controller -> Repo : UpdateAsync(product)\nproduct.ImageFileName = newFilename
+        Repo -> DB : UPDATE Products\nSET ImageFileName = @name\nWHERE Id = @id
+        DB --> Repo : OK
+
+        Controller -> Repo : GetByIdAsync(id)
+        Repo -> DB : SELECT with Includes
+        DB --> Repo : Updated product
+        Controller --> Axios : **200 OK** ProductDto\n(with new ImageFileName)
+        Axios --> React : updatedProduct
+        React -> React : Update product in list\nImage thumbnail refreshes
+        React --> Admin : Product image updated
+    end
+end
+
+== Step 4: Update Product ==
+
+Admin -> React : Clicks **"Edit"** on product row
+React -> React : Open edit form\npre-filled with current values
+Admin -> React : Modifies fields, Clicks **"Save"**
+
+React -> Axios : CatalogService.updateProduct(id, data)
+Axios -> Controller : **PUT /api/products/{id}**\nBody: CreateProductDto
+
+Controller -> Repo : GetByIdAsync(id)
+Repo -> DB : SELECT Product
+DB --> Repo : Product
+
+alt Product not found
+    Controller --> Axios : **404 Not Found**
+else Product found
+    Controller -> Repo : ExistsBySkuAsync(sku, exceptId: id)
+    Repo -> DB : ANY WHERE Sku = @sku AND Id != @id
+    DB --> Repo : true / false
+
+    alt SKU conflict
+        Controller --> Axios : **400 Bad Request**\n"SKU already exists."
+    else SKU OK
+        Controller -> Controller : Update entity fields:\nSku, Name, Description,\nPrice, StockQty, ImageFileName,\nCategoryId, SubCategoryId
+
+        Controller -> Repo : UpdateAsync(product)
+        Repo -> DB : UPDATE Products SET ...\nWHERE Id = @id
+        note right of DB : Raw SQL bypasses\nINSTEAD OF UPDATE trigger issue
+        DB --> Repo : OK
+
+        Controller --> Axios : **204 No Content**
+        Axios --> React : Success
+        React -> React : Refresh product list
+        React --> Admin : Product updated in table
+    end
+end
+
+== Step 5: Delete Product ==
+
+Admin -> React : Clicks **"Delete"** on product row
+React -> React : Confirmation dialog:\n"Delete this product?"
+Admin -> React : Confirms deletion
+
+React -> Axios : CatalogService.deleteProduct(id)
+Axios -> Controller : **DELETE /api/products/{id}**
+
+Controller -> Repo : GetByIdAsync(id)
+Repo -> DB : SELECT Product
+DB --> Repo : Product
+
+alt Product not found
+    Controller --> Axios : **404 Not Found**
+else Product found
+    Controller -> Repo : DeleteAsync(product)
+    Repo -> DB : DELETE FROM Products\nWHERE Id = @id
+
+    alt Foreign key constraint (referenced by OrderItems)
+        DB --> Repo : DbUpdateException
+        Repo --> Controller : throws DbUpdateException
+        Controller --> Axios : **409 Conflict**\n"Product cannot be deleted:\nreferenced by existing order items."
+        Axios --> React : Show error message
+        React --> Admin : Error: "Cannot delete —\nreferenced by orders"
+    else Delete succeeds
+        DB --> Repo : OK
+        Repo --> Controller : OK
+        Controller --> Axios : **204 No Content**
+        Axios --> React : Success
+        React -> React : Remove product from list
+        React --> Admin : Product removed from table
+    end
+end
+
+@enduml

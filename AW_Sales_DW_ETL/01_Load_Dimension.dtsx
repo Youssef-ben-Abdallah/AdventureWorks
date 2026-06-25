@@ -11,8 +11,8 @@
   DTS:LocaleID="1033"
   DTS:ObjectName="Package1"
   DTS:PackageType="5"
-  DTS:VersionBuild="48"
-  DTS:VersionGUID="{B5DF9018-F163-4268-A285-02DF2F5C12CB}">
+  DTS:VersionBuild="49"
+  DTS:VersionGUID="{CC78AF5F-638E-4323-9F88-FE4E32BE081C}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -8425,6 +8425,10 @@ where [refTable].[TerritoryID] = ?</property>
       <GraphLayout
         Capacity="8" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph">
         <NodeLayout
+          Size="120.8,41.6"
+          Id="Package\Currency"
+          TopLeft="425.499977052213,113.833332579997" />
+        <NodeLayout
           Size="123.2,41.6"
           Id="Package\Customer"
           TopLeft="35.8333313754863,35.533333086239" />
@@ -8441,16 +8445,320 @@ where [refTable].[TerritoryID] = ?</property>
           Id="Package\ShipMethod"
           TopLeft="96.6666613850331,110.066665901277" />
         <NodeLayout
-          Size="116.8,41.6"
+          Size="139.2,41.6"
           Id="Package\Territory"
           TopLeft="217.16665510171,41.899999746879" />
-        <NodeLayout
-          Size="120.8,41.6"
-          Id="Package\Currency"
-          TopLeft="425.499977052213,113.833332579997" />
       </GraphLayout>
     </LayoutInfo>
   </Package>
+  <TaskHost
+    design-time-name="Package\Currency">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="16" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        <NodeLayout
+          Size="219.2,41.6"
+          Id="Package\Currency\OLE DB Source CurrencyRate"
+          TopLeft="60.4999969949326,46.2333330500788" />
+        <NodeLayout
+          Size="196.8,41.6"
+          Id="Package\Currency\OLE DB Source Currency"
+          TopLeft="363.833315393992,50.2333332308796" />
+        <NodeLayout
+          Size="97.6,41.6"
+          Id="Package\Currency\Sort"
+          TopLeft="125.499996721745,146.099999439518" />
+        <NodeLayout
+          Size="106.4,41.6"
+          Id="Package\Currency\Sort 1"
+          TopLeft="409.666649501358,144.033332995839" />
+        <EdgeLayout
+          Id="Package\Currency.Paths[OLE DB Source Output]"
+          TopLeft="172.199996858339,87.8333330500788">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,58.2666663894389"
+              Start="0,0"
+              End="0,50.7666663894389">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,50.7666663894389" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\Currency.Paths[OLE DB Source Output1]"
+          TopLeft="462.549982447675,91.8333332308796">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,52.199999764959"
+              Start="0,0"
+              End="0,44.699999764959">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,44.699999764959" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <NodeLayout
+          Size="129.6,41.6"
+          Id="Package\Currency\Merge Join"
+          TopLeft="259.666659336123,243.366665847037" />
+        <EdgeLayout
+          Id="Package\Currency.Paths[Sort Output]"
+          TopLeft="174.299996721745,187.699999439518">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="150.166662614379,55.6666664075189"
+              Start="0,0"
+              End="150.166662614379,48.1666664075189">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,23.8333332037595" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,23.8333332037595"
+                    Point2="0,27.8333332037595"
+                    Point3="4,27.8333332037595" />
+                  <mssgle:LineSegment
+                    End="146.166662614379,27.8333332037595" />
+                  <mssgle:CubicBezierSegment
+                    Point1="146.166662614379,27.8333332037595"
+                    Point2="150.166662614379,27.8333332037595"
+                    Point3="150.166662614379,31.8333332037595" />
+                  <mssgle:LineSegment
+                    End="150.166662614379,48.1666664075189" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\Currency.Paths[Sort Output1]"
+          TopLeft="462.866649501358,185.633332995839">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-118.133323498567,57.733332851198"
+              Start="0,0"
+              End="-118.133323498567,50.233332851198">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,30.2175606898563" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,30.2175606898563"
+                    Point2="0,34.2175606898563"
+                    Point3="-4,34.2175606898563" />
+                  <mssgle:LineSegment
+                    End="-114.133323498567,34.2175606898563" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-114.133323498567,34.2175606898563"
+                    Point2="-118.133323498567,34.2175606898563"
+                    Point3="-118.133323498567,38.2175606898563" />
+                  <mssgle:LineSegment
+                    End="-118.133323498567,50.233332851198" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <NodeLayout
+          Size="112.8,41.6"
+          Id="Package\Currency\Lookup"
+          TopLeft="267.999993853271,340.966665376955" />
+        <EdgeLayout
+          Id="Package\Currency.Paths[Merge Join Output]"
+          TopLeft="324.433326594697,284.966665847037">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,55.9999995299179"
+              Start="0,0"
+              End="0,48.4999995299179">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,48.4999995299179" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <NodeLayout
+          Size="171.2,41.6"
+          Id="Package\Currency\OLE DB Destination"
+          TopLeft="147.166668761108,461.099998083512" />
+        <EdgeLayout
+          Id="Package\Currency.Paths[Lookup No Match Output]"
+          TopLeft="324.399993853271,382.566665376955">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-91.6333250921637,78.5333327065574"
+              Start="0,0"
+              End="-91.6333250921637,71.0333327065574">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,35.2666663532787" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,35.2666663532787"
+                    Point2="0,39.2666663532787"
+                    Point3="-4,39.2666663532787" />
+                  <mssgle:LineSegment
+                    End="-87.6333250921637,39.2666663532787" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-87.6333250921637,39.2666663532787"
+                    Point2="-91.6333250921637,39.2666663532787"
+                    Point3="-91.6333250921637,43.2666663532787" />
+                  <mssgle:LineSegment
+                    End="-91.6333250921637,71.0333327065574" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-101.623049264832,44.2666663532787,111.6127734375,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <NodeLayout
+          Size="167.2,41.6"
+          Id="Package\Currency\OLE DB Command"
+          TopLeft="364.666647042666,462.566663532787" />
+        <EdgeLayout
+          Id="Package\Currency.Paths[Lookup Match Output]"
+          TopLeft="341.866660519938,382.566665376955">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="106.399986522728,79.9999981558324"
+              Start="0,0"
+              End="106.399986522728,72.4999981558324">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,28.6713279181861" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,28.6713279181861"
+                    Point2="0,32.6713279181861"
+                    Point3="4,32.6713279181861" />
+                  <mssgle:LineSegment
+                    End="102.399986522728,32.6713279181861" />
+                  <mssgle:CubicBezierSegment
+                    Point1="102.399986522728,32.6713279181861"
+                    Point2="106.399986522728,32.6713279181861"
+                    Point3="106.399986522728,36.6713279181861" />
+                  <mssgle:LineSegment
+                    End="106.399986522728,72.4999981558324" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="5.00860654261403,37.6713279181861,96.3827734375,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+      </GraphLayout>
+    </LayoutInfo>
+  </TaskHost>
+  <PipelineComponentMetadata
+    design-time-name="Package\Currency\OLE DB Destination">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Currency\OLE DB Source CurrencyRate">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Currency\OLE DB Source Currency">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Currency\Lookup">
+    <Properties>
+      <Property>
+        <Name>OverwriteParamsSQLProp</Name>
+        <Value
+          type="q2:string">false</Value>
+      </Property>
+      <Property>
+        <Name>UsedTableName</Name>
+        <Value
+          type="q3:string"></Value>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q4:string">0</Value>
+      </Property>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
   <TaskHost
     design-time-name="Package\Customer">
     <LayoutInfo>
@@ -9859,314 +10167,6 @@ where [refTable].[TerritoryID] = ?</property>
       </Property>
       <Property>
         <Name>DataSourceViewID</Name>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <TaskHost
-    design-time-name="Package\Currency">
-    <LayoutInfo>
-      <GraphLayout
-        Capacity="16" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
-        <NodeLayout
-          Size="219.2,41.6"
-          Id="Package\Currency\OLE DB Source CurrencyRate"
-          TopLeft="60.4999969949326,46.2333330500788" />
-        <NodeLayout
-          Size="196.8,41.6"
-          Id="Package\Currency\OLE DB Source Currency"
-          TopLeft="363.833315393992,50.2333332308796" />
-        <NodeLayout
-          Size="97.6,41.6"
-          Id="Package\Currency\Sort"
-          TopLeft="125.499996721745,146.099999439518" />
-        <NodeLayout
-          Size="106.4,41.6"
-          Id="Package\Currency\Sort 1"
-          TopLeft="409.666649501358,144.033332995839" />
-        <EdgeLayout
-          Id="Package\Currency.Paths[OLE DB Source Output]"
-          TopLeft="172.199996858339,87.8333330500788">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,58.2666663894389"
-              Start="0,0"
-              End="0,50.7666663894389">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,50.7666663894389" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\Currency.Paths[OLE DB Source Output1]"
-          TopLeft="462.549982447675,91.8333332308796">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,52.199999764959"
-              Start="0,0"
-              End="0,44.699999764959">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,44.699999764959" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <NodeLayout
-          Size="129.6,41.6"
-          Id="Package\Currency\Merge Join"
-          TopLeft="259.666659336123,243.366665847037" />
-        <EdgeLayout
-          Id="Package\Currency.Paths[Sort Output]"
-          TopLeft="174.299996721745,187.699999439518">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="150.166662614379,55.6666664075189"
-              Start="0,0"
-              End="150.166662614379,48.1666664075189">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,23.8333332037595" />
-                  <mssgle:CubicBezierSegment
-                    Point1="0,23.8333332037595"
-                    Point2="0,27.8333332037595"
-                    Point3="4,27.8333332037595" />
-                  <mssgle:LineSegment
-                    End="146.166662614379,27.8333332037595" />
-                  <mssgle:CubicBezierSegment
-                    Point1="146.166662614379,27.8333332037595"
-                    Point2="150.166662614379,27.8333332037595"
-                    Point3="150.166662614379,31.8333332037595" />
-                  <mssgle:LineSegment
-                    End="150.166662614379,48.1666664075189" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\Currency.Paths[Sort Output1]"
-          TopLeft="462.866649501358,185.633332995839">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="-118.133323498567,57.733332851198"
-              Start="0,0"
-              End="-118.133323498567,50.233332851198">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,30.2175606898563" />
-                  <mssgle:CubicBezierSegment
-                    Point1="0,30.2175606898563"
-                    Point2="0,34.2175606898563"
-                    Point3="-4,34.2175606898563" />
-                  <mssgle:LineSegment
-                    End="-114.133323498567,34.2175606898563" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-114.133323498567,34.2175606898563"
-                    Point2="-118.133323498567,34.2175606898563"
-                    Point3="-118.133323498567,38.2175606898563" />
-                  <mssgle:LineSegment
-                    End="-118.133323498567,50.233332851198" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <NodeLayout
-          Size="112.8,41.6"
-          Id="Package\Currency\Lookup"
-          TopLeft="267.999993853271,340.966665376955" />
-        <EdgeLayout
-          Id="Package\Currency.Paths[Merge Join Output]"
-          TopLeft="324.433326594697,284.966665847037">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,55.9999995299179"
-              Start="0,0"
-              End="0,48.4999995299179">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,48.4999995299179" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <NodeLayout
-          Size="171.2,41.6"
-          Id="Package\Currency\OLE DB Destination"
-          TopLeft="147.166668761108,461.099998083512" />
-        <EdgeLayout
-          Id="Package\Currency.Paths[Lookup No Match Output]"
-          TopLeft="324.399993853271,382.566665376955">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="-91.6333250921637,78.5333327065574"
-              Start="0,0"
-              End="-91.6333250921637,71.0333327065574">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,35.2666663532787" />
-                  <mssgle:CubicBezierSegment
-                    Point1="0,35.2666663532787"
-                    Point2="0,39.2666663532787"
-                    Point3="-4,39.2666663532787" />
-                  <mssgle:LineSegment
-                    End="-87.6333250921637,39.2666663532787" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-87.6333250921637,39.2666663532787"
-                    Point2="-91.6333250921637,39.2666663532787"
-                    Point3="-91.6333250921637,43.2666663532787" />
-                  <mssgle:LineSegment
-                    End="-91.6333250921637,71.0333327065574" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="-101.623049264832,44.2666663532787,111.6127734375,11.609375"
-              RelativePosition="Any" />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <NodeLayout
-          Size="167.2,41.6"
-          Id="Package\Currency\OLE DB Command"
-          TopLeft="364.666647042666,462.566663532787" />
-        <EdgeLayout
-          Id="Package\Currency.Paths[Lookup Match Output]"
-          TopLeft="341.866660519938,382.566665376955">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="106.399986522728,79.9999981558324"
-              Start="0,0"
-              End="106.399986522728,72.4999981558324">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,28.6713279181861" />
-                  <mssgle:CubicBezierSegment
-                    Point1="0,28.6713279181861"
-                    Point2="0,32.6713279181861"
-                    Point3="4,32.6713279181861" />
-                  <mssgle:LineSegment
-                    End="102.399986522728,32.6713279181861" />
-                  <mssgle:CubicBezierSegment
-                    Point1="102.399986522728,32.6713279181861"
-                    Point2="106.399986522728,32.6713279181861"
-                    Point3="106.399986522728,36.6713279181861" />
-                  <mssgle:LineSegment
-                    End="106.399986522728,72.4999981558324" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="5.00860654261403,37.6713279181861,96.3827734375,11.609375"
-              RelativePosition="Any" />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-      </GraphLayout>
-    </LayoutInfo>
-  </TaskHost>
-  <PipelineComponentMetadata
-    design-time-name="Package\Currency\OLE DB Source CurrencyRate">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q2:string">Table</Value>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\Currency\OLE DB Source Currency">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q2:string">Table</Value>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\Currency\Lookup">
-    <Properties>
-      <Property>
-        <Name>OverwriteParamsSQLProp</Name>
-        <Value
-          type="q2:boolean">false</Value>
-      </Property>
-      <Property>
-        <Name>UsedTableName</Name>
-        <Value
-          type="q3:string"></Value>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q4:int">0</Value>
-      </Property>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\Currency\OLE DB Destination">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q2:string">Table</Value>
       </Property>
     </Properties>
   </PipelineComponentMetadata>

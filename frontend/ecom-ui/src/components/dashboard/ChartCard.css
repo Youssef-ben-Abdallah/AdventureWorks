@@ -1,0 +1,81 @@
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.chart-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.chart-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.chart-hint .material-icons {
+  font-size: 18px;
+  color: var(--text-dim);
+  cursor: help;
+}
+
+.chart-body {
+  flex: 1;
+  min-height: 300px;
+  width: 100%;
+}
+
+.chart-card-compact .chart-body {
+  min-height: 250px;
+}
+
+.chart-tooltip {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .chart-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.tooltip-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.tooltip-value {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.tooltip-dataset {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  font-weight: 400;
+}

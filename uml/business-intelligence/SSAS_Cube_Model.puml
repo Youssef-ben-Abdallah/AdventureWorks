@@ -1,0 +1,144 @@
+@startuml SSAS_Cube_Model
+@startwbs
+title Adventure Works DW2019 - SSAS Cube Model
+caption Complete cube structure: measure groups, measures, dimensions, and hierarchies
+
+<style>
+wbsDiagram {
+    BackgroundColor white
+    RoundCorner 10
+
+    :depth(0) {
+        BackgroundColor #6A1B9A
+        FontColor white
+        FontSize 16
+        FontStyle bold
+        RoundCorner 12
+    }
+    :depth(1) {
+        FontSize 13
+        FontStyle bold
+        RoundCorner 8
+    }
+    :depth(2) {
+        FontSize 11
+        RoundCorner 6
+    }
+    :depth(3) {
+        FontSize 10
+        RoundCorner 4
+    }
+    :depth(4) {
+        FontSize 9
+        RoundCorner 4
+    }
+
+    .measure {
+        BackgroundColor #F3E5F5
+        LineColor #6A1B9A
+    }
+    .calculated {
+        BackgroundColor #FFFDE7
+        LineColor #F9A825
+    }
+    .dimension {
+        BackgroundColor #E3F2FD
+        LineColor #1565C0
+    }
+    .hierarchy {
+        BackgroundColor #E8F5E9
+        LineColor #2E7D32
+    }
+    .roleplay {
+        BackgroundColor #FFCDD2
+        LineColor #C62828
+    }
+    .source {
+        BackgroundColor #C8E6C9
+        LineColor #2E7D32
+    }
+}
+</style>
+
+* Adventure Works DW2019\n(SSAS Multidimensional Cube) <<cube>>
+** Measure Group:\nFact Reseller Sales <<measure>>
+*** Base Measures (12) <<measure>>
+**** Sales Amount
+**** Total Product Cost
+**** Extended Amount
+**** Discount Amount
+**** Tax Amt
+**** Freight
+**** Order Quantity
+**** Unit Price
+**** Unit Price Discount Pct
+**** Product Standard Cost
+**** Revision Number
+**** Fact Reseller Sales Count
+*** Calculated Measures (8) <<calculated>>
+**** Gross Profit Margin\n= (Sales Amount - Total Product Cost)\n  / Sales Amount
+**** AOV (Avg Order Value)\n= Sales Amount\n  / Fact Reseller Sales Count
+**** Discount Ratio\n= Discount Amount / Sales Amount
+**** Effective Tax Rate\n= Tax Amt / Sales Amount
+**** Gross Profit Amount\n= Sales Amount - Total Product Cost
+**** Net Profit Amount\n= Sales Amount - Total Product Cost\n  - Tax Amt - Freight
+**** Sales Target Status
+**** Freight Cost Per Item\n= Freight / Order Quantity
+
+left side
+
+** Dimensions <<dimension>>
+
+*** Order Date <<roleplay>>
+**** Calendar Hierarchy <<hierarchy>>
+***** Year
+***** Quarter
+***** Month
+***** Date
+
+*** Ship Date <<roleplay>>
+**** Calendar Hierarchy <<hierarchy>>
+***** Year
+***** Quarter
+***** Month
+***** Date
+
+*** Due Date <<roleplay>>
+**** Calendar Hierarchy <<hierarchy>>
+***** Year
+***** Quarter
+***** Month
+***** Date
+
+*** Dim Product <<dimension>>
+**** Product Hierarchy <<hierarchy>>
+***** Category
+***** Subcategory
+***** Product
+
+*** Dim Sales Territory <<dimension>>
+**** Territory Hierarchy <<hierarchy>>
+***** Group
+***** Country
+***** Region
+
+*** Dim Employee <<dimension>>
+**** Parent-Child Hierarchy <<hierarchy>>
+***** Manager
+***** Employee
+
+*** Dim Reseller <<dimension>>
+**** Reseller Attributes <<hierarchy>>
+
+*** Dim Promotion <<dimension>>
+**** Promotion Attributes <<hierarchy>>
+
+*** Dim Currency <<dimension>>
+**** Currency Attributes <<hierarchy>>
+
+** Data Source <<source>>
+*** AdventureWorksDW2019\n(SQL Server)
+**** 11 Tables in DSV
+
+@endwbs
+@enduml

@@ -1,17 +1,10 @@
+%%{init: {"theme": "base", "xyChart": {"width": 900, "height": 400, "plotReservedSpacePercent": 50}}}%%
 %% Fact Table Row Count Growth
-%% Line chart showing FactResellerSales row count growing from ~15K (2010) to ~60K (2013).
-%% Demonstrates the transaction volume increase over the analysis period.
+%% Line chart showing FactResellerSales row count growing from ~15K to ~60K over 16 quarters.
+%% Demonstrates the transaction volume increase over the analysis period (2010-2013).
 
----
-config:
-  theme: base
-  themeVariables:
-    xyChart:
-      titleColor: "#333333"
-      backgroundColor: "#ffffff"
----
 xychart-beta
-    title "FactResellerSales Row Count Growth (2010-2013)"
-    x-axis ["2010-Q1", "2010-Q2", "2010-Q3", "2010-Q4", "2011-Q1", "2011-Q2", "2011-Q3", "2011-Q4", "2012-Q1", "2012-Q2", "2012-Q3", "2012-Q4", "2013-Q1", "2013-Q2", "2013-Q3", "2013-Q4"]
-    y-axis "Row Count (thousands)" 0 --> 65
-    line "FactResellerSales" [15, 17, 19, 22, 25, 28, 31, 34, 37, 41, 44, 48, 51, 55, 58, 60]
+    title "FactResellerSales Row Count Growth"
+    x-axis ["Q1-10", "Q2-10", "Q3-10", "Q4-10", "Q1-11", "Q2-11", "Q3-11", "Q4-11", "Q1-12", "Q2-12", "Q3-12", "Q4-12", "Q1-13", "Q2-13", "Q3-13", "Q4-13"]
+    y-axis "Rows (thousands)" 0 --> 65
+    line [15, 18, 22, 26, 29, 33, 36, 39, 42, 45, 48, 51, 54, 57, 59, 60]

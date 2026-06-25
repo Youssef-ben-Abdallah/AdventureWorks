@@ -1,19 +1,10 @@
-%% Cube Processing Time
-%% Bar chart comparing full vs incremental SSAS cube processing times.
-%% Full processing ~45 min; incremental ~8 min.
-%% Shows processing times at different cube sizes to justify incremental strategy.
+%%{init: {"theme": "base", "xyChart": {"width": 700, "height": 400, "plotReservedSpacePercent": 50}}}%%
+%% SSAS Cube Processing Time
+%% Bar = full processing, Line = incremental processing, by cube data volume.
 
----
-config:
-  theme: base
-  themeVariables:
-    xyChart:
-      titleColor: "#333333"
-      backgroundColor: "#ffffff"
----
 xychart-beta
-    title "SSAS Cube Processing Time: Full vs Incremental (minutes)"
-    x-axis ["15K rows", "25K rows", "35K rows", "45K rows", "60K rows"]
-    y-axis "Processing Time (minutes)" 0 --> 55
-    bar "Full Processing" [22, 30, 36, 42, 48]
-    bar "Incremental Processing" [3, 4, 5, 7, 8]
+    title "SSAS Cube Processing Time (minutes)"
+    x-axis ["15K rows", "25K rows", "35K rows", "50K rows", "60K rows"]
+    y-axis "Minutes" 0 --> 50
+    bar [22, 28, 34, 42, 48]
+    line [3, 4, 5, 6, 8]

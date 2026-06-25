@@ -2,15 +2,40 @@
 !theme cerulean-outline
 
 title AdventureWorksDW_Sales\nData Warehouse Star Schema ERD
+caption Star schema with vSalesFact at center and six dimension views
 
 skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam packageStyle rectangle
+
+skinparam entity {
+    BackgroundColor #FAFAFA
+    BorderColor #607D8B
+    HeaderBackgroundColor #ECEFF1
+    FontColor #212121
+    BackgroundColor<<Fact>> #FFF3E0
+    BorderColor<<Fact>> #BF360C
+    HeaderBackgroundColor<<Fact>> #FFCCBC
+    BackgroundColor<<Dimension>> #E1F5FE
+    BorderColor<<Dimension>> #01579B
+    HeaderBackgroundColor<<Dimension>> #B3E5FC
+}
+
+skinparam ArrowColor #37474F
+skinparam ArrowThickness 1.5
+
+hide empty members
 
 ' ─────────────────────────────────────────────
 '  Fact table (center of star)
 ' ─────────────────────────────────────────────
-package "Fact" <<Rectangle>> #FFEDD5 {
+package "Fact" <<Database>> #FFEDD5 {
 
-    entity "vSalesFact" as SalesFact {
+    entity "vSalesFact" as SalesFact <<Fact>> {
         * **SalesOrderDetailID** : int <<PK>>
         --
         SalesOrderID : int <<not null>>
@@ -37,63 +62,69 @@ package "Fact" <<Rectangle>> #FFEDD5 {
 ' ─────────────────────────────────────────────
 '  Dimension tables
 ' ─────────────────────────────────────────────
-package "Dimensions" <<Rectangle>> #E0F2FE {
+package "Dimensions" <<Database>> #E0F2FE {
 
-    entity "vCustomerDim" as CustomerDim {
-        * **CustomerID** : int <<PK>>
-        --
-        FirstName : nvarchar(50)
-        LastName : nvarchar(50)
-        MiddleName : nvarchar(50) <<nullable>>
-        PersonType : nchar(2)
+    together {
+        entity "vCustomerDim" as CustomerDim <<Dimension>> {
+            * **CustomerID** : int <<PK>>
+            --
+            FirstName : nvarchar(50)
+            LastName : nvarchar(50)
+            MiddleName : nvarchar(50) <<nullable>>
+            PersonType : nchar(2)
+        }
+
+        entity "vProductDim" as ProductDim <<Dimension>> {
+            * **ProductID** : int <<PK>>
+            --
+            Name : nvarchar(50) <<not null>>
+            ProductNumber : nvarchar(25) <<not null>>
+            Color : nvarchar(15) <<nullable>>
+            StandardCost : money <<not null>>
+            ListPrice : money <<not null>>
+            SubCategoryName : nvarchar(50) <<nullable>>
+            CategoryName : nvarchar(50) <<nullable>>
+        }
     }
 
-    entity "vProductDim" as ProductDim {
-        * **ProductID** : int <<PK>>
-        --
-        Name : nvarchar(50) <<not null>>
-        ProductNumber : nvarchar(25) <<not null>>
-        Color : nvarchar(15) <<nullable>>
-        StandardCost : money <<not null>>
-        ListPrice : money <<not null>>
-        SubCategoryName : nvarchar(50) <<nullable>>
-        CategoryName : nvarchar(50) <<nullable>>
+    together {
+        entity "vTerritoryDim" as TerritoryDim <<Dimension>> {
+            * **TerritoryID** : int <<PK>>
+            --
+            Name : nvarchar(50) <<not null>>
+            CountryRegionCode : nvarchar(3) <<not null>>
+            "Group" : nvarchar(50) <<not null>>
+        }
+
+        entity "vCurrencyDim" as CurrencyDim <<Dimension>> {
+            * **CurrencyID** : int <<PK>>
+            --
+            CurrencyCode : nchar(3) <<not null>>
+            AverageRate : money <<not null>>
+            EndOfDayRate : money <<not null>>
+            Name : nvarchar(50) <<not null>>
+        }
     }
 
-    entity "vTerritoryDim" as TerritoryDim {
-        * **TerritoryID** : int <<PK>>
-        --
-        Name : nvarchar(50) <<not null>>
-        CountryRegionCode : nvarchar(3) <<not null>>
-        "Group" : nvarchar(50) <<not null>>
-    }
+    together {
+        entity "vSalesPersonDim" as SalesPersonDim <<Dimension>> {
+            * **BusinessEntityID** : int <<PK>>
+            --
+            SalesQuota : money <<nullable>>
+            Bonus : money <<not null>>
+            CommissionPct : smallmoney <<not null>>
+            TerritoryID : int <<nullable>>
+            FirstName : nvarchar(50) <<not null>>
+            LastName : nvarchar(50) <<not null>>
+        }
 
-    entity "vCurrencyDim" as CurrencyDim {
-        * **CurrencyID** : int <<PK>>
-        --
-        CurrencyCode : nchar(3) <<not null>>
-        AverageRate : money <<not null>>
-        EndOfDayRate : money <<not null>>
-        Name : nvarchar(50) <<not null>>
-    }
-
-    entity "vSalesPersonDim" as SalesPersonDim {
-        * **BusinessEntityID** : int <<PK>>
-        --
-        SalesQuota : money <<nullable>>
-        Bonus : money <<not null>>
-        CommissionPct : smallmoney <<not null>>
-        TerritoryID : int <<nullable>>
-        FirstName : nvarchar(50) <<not null>>
-        LastName : nvarchar(50) <<not null>>
-    }
-
-    entity "vShipMethodDim" as ShipMethodDim {
-        * **ShipMethodID** : int <<PK>>
-        --
-        Name : nvarchar(50) <<not null>>
-        ShipBase : money <<not null>>
-        ShipRate : money <<not null>>
+        entity "vShipMethodDim" as ShipMethodDim <<Dimension>> {
+            * **ShipMethodID** : int <<PK>>
+            --
+            Name : nvarchar(50) <<not null>>
+            ShipBase : money <<not null>>
+            ShipRate : money <<not null>>
+        }
     }
 }
 
@@ -106,5 +137,29 @@ TerritoryDim ||--o{ SalesFact : "TerritoryID"
 CurrencyDim |o--o{ SalesFact : "CurrencyRateID\n(nullable)"
 SalesPersonDim |o--o{ SalesFact : "SalesPersonID\n(nullable)"
 ShipMethodDim ||--o{ SalesFact : "ShipMethodID"
+
+' ─────────────────────────────────────────────
+'  Legend
+' ─────────────────────────────────────────────
+note bottom of SalesFact
+    <b>Star Schema Center</b>
+    vSalesFact is a SQL view joining
+    Sales.SalesOrderHeader + Sales.SalesOrderDetail.
+    SalesPersonID (nullable) — online orders have no rep.
+    CurrencyRateID (nullable) — USD orders have no rate.
+end note
+
+legend bottom right
+    |= Symbol |= Meaning |
+    | \|\|--o{ | One-to-many (required dimension FK) |
+    | \|o--o{ | One-to-many (optional/nullable FK) |
+    | <<Fact>> | Fact view (transactional measures) |
+    | <<Dimension>> | Dimension view (descriptive attributes) |
+    | <<PK>> | Primary key |
+    | <<FK>> | Foreign key reference |
+    | * bold | Mandatory / NOT NULL column |
+    | #FFCCBC | Fact entity header color |
+    | #B3E5FC | Dimension entity header color |
+endlegend
 
 @enduml

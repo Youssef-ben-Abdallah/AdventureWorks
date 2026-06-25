@@ -3,13 +3,65 @@
 
 title Create Order Flow\nAdventureWorks Sales BI Platform
 
-actor       "User"               as User
-participant "Browser / React\n(Cart Page)"     as React      #LightBlue
-participant "Axios\napiClient"                  as Axios      #LightCyan
-participant "OrdersController\n[Authorize]"     as Controller  #LightGreen
-participant "ProductRepository"                 as ProdRepo    #LightYellow
-participant "OrderRepository"                   as OrderRepo   #LightYellow
-participant "OltpDbContext\n(SQL Server\nAdventureWorks2019)" as DB #LightPink
+autonumber "<b>[0]"
+hide footbox
+
+skinparam maxMessageSize 160
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBodyBackgroundColor #FAFAFA80
+skinparam sequenceDividerBackgroundColor #ECEFF1
+skinparam sequenceDividerBorderColor #90A4AE
+skinparam sequenceBoxBorderColor #90A4AE
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #37474F
+    FontColor #212121
+}
+skinparam boundary {
+    BackgroundColor #BBDEFB
+    BorderColor #1565C0
+    FontColor #0D47A1
+}
+skinparam participant {
+    BackgroundColor #E8EAF6
+    BorderColor #3949AB
+    FontColor #1A237E
+}
+skinparam control {
+    BackgroundColor #C8E6C9
+    BorderColor #2E7D32
+    FontColor #1B5E20
+}
+skinparam entity {
+    BackgroundColor #FFE0B2
+    BorderColor #E65100
+    FontColor #BF360C
+}
+skinparam database {
+    BackgroundColor #F8BBD0
+    BorderColor #AD1457
+    FontColor #880E4F
+}
+
+box "Client Tier" #EBF5FB
+    actor       "User"                                        as User
+    boundary    "Browser / React\n(Cart Page)"                as React
+end box
+
+box "Transport" #F9FBE7
+    participant "Axios\napiClient"                            as Axios
+end box
+
+box "Backend" #F1F8E9
+    control     "OrdersController\n[Authorize]"               as Controller
+    entity      "ProductRepository"                           as ProdRepo
+    entity      "OrderRepository"                             as OrderRepo
+end box
+
+box "Data Layer" #FFF3E0
+    database    "OltpDbContext\n(SQL Server\nAdventureWorks2019)" as DB
+end box
 
 == User Reviews Cart & Clicks Checkout ==
 
@@ -17,7 +69,7 @@ User -> React : Reviews cart items\n(from CartContext)
 React --> User : Display items, quantities,\nunit prices, total
 
 User -> React : Clicks **"Checkout"** button
-React -> React : Build payload from cart:\n{\n  items: [{ productId, qty }, ...],\n  customerID: 1,\n  billToAddressID: 1,\n  shipToAddressID: 1,\n  shipMethodID: 1\n}
+React -> React : Build payload from cart:\n{\n  items: [{ productId, qty }, ...]\n}
 
 React -> Axios : OrdersService.createOrder(payload)
 Axios -> Axios : Interceptor adds header:\nAuthorization: Bearer {token}
@@ -58,25 +110,25 @@ else Token valid
                     Controller --> Axios : **400 Bad Request**\n"Not enough stock for {name}"
                     Axios --> React : Show error
                 else Stock available
-                    Controller -> Controller : Deduct stock:\np.StockQty -= item.Qty
-                    Controller -> Controller : Create OrderItem:\n{ ProductId, Qty,\n  UnitPrice = product.Price }
+                    Controller -> Controller : Deduct stock:\n  p.StockQty -= item.Qty
+                    Controller -> Controller : Create OrderItem:\n  { ProductId, Qty,\n    UnitPrice = product.Price }
                 end
             end
         end
 
         == Persist Order ==
 
-        Controller -> Controller : Build Order entity:\n{\n  UserId, Status = Pending,\n  Items = orderItems[],\n  Total = sum(LineTotal),\n  CustomerID, BillToAddressID,\n  ShipToAddressID, ShipMethodID\n}
+        Controller -> Controller : Build Order entity:\n{\n  UserId, Status = Pending,\n  Items = orderItems[],\n  Total = sum(LineTotal)\n}
 
         Controller -> OrderRepo : AddAsync(order)
         OrderRepo -> DB : _db.Orders.Add(order)\n_db.SaveChangesAsync()
 
         note over DB
-          SQL Server triggers fire:
-          - uSalesOrderHeader (UPDATE trigger)
-          - iduSalesOrderDetail (INSERT/DELETE/UPDATE trigger)
-          These sync order data to
-          AdventureWorks OLTP tables.
+            SQL Server triggers fire:
+            - uSalesOrderHeader (UPDATE trigger)
+            - iduSalesOrderDetail (INSERT/DELETE/UPDATE)
+            These sync order data to
+            AdventureWorks OLTP tables.
         end note
 
         DB --> OrderRepo : Order (with generated Id)
@@ -106,7 +158,7 @@ else Token valid
 
         React -> React : CartContext.clear()
         React -> React : localStorage.setItem(\n  "ecom_cart_v1", "[]")
-        React -> React : navigate("/orders")\nor navigate("/orders/mine")
+        React -> React : navigate("/orders")
         React --> User : Redirect to My Orders page\nOrder confirmed
     end
 end

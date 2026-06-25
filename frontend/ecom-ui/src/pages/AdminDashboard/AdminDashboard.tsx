@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CatalogService } from '../../services/catalog';
 import { OrdersService } from '../../services/orders';
 import { Category, SubCategory, Product, Order } from '../../types/models';
+import { OrderTicketModal } from '../../components/orders/OrderTicketModal';
 import './AdminDashboard.css';
 
 const STATUSES = [
@@ -33,6 +34,7 @@ export const AdminDashboard = () => {
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedTicket, setSelectedTicket] = useState<Order | null>(null);
 
   // Search Filters
   const [catFilter, setCatFilter] = useState('');
@@ -42,6 +44,16 @@ export const AdminDashboard = () => {
   useEffect(() => {
     reloadAll();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && modal.isOpen) {
+        setModal(prev => ({ ...prev, isOpen: false }));
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [modal.isOpen]);
 
   const reloadAll = async () => {
     setLoading(true);
@@ -312,6 +324,9 @@ export const AdminDashboard = () => {
                           <select className="aw-select admin-select" value={o.status} onChange={e => handleOrderStatus(o, Number(e.target.value))}>
                             {STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
                           </select>
+                          <button className="tbl-btn" style={{ marginLeft: '8px' }} onClick={() => setSelectedTicket(o)}>
+                            <span className="material-icons">receipt_long</span> Ticket
+                          </button>
                         </td>
                       </tr>
                     );
@@ -325,8 +340,8 @@ export const AdminDashboard = () => {
       </div>
 
       {modal.isOpen && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal-content">
+        <div className="admin-modal-overlay" onClick={() => setModal({...modal, isOpen: false})}>
+          <div className="admin-modal-content" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">{modal.title}</div>
             <div className="admin-modal-body">
               {modal.isDelete ? (
@@ -377,6 +392,14 @@ export const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Ticket Modal */}
+      <OrderTicketModal 
+        isOpen={selectedTicket !== null} 
+        order={selectedTicket} 
+        onClose={() => setSelectedTicket(null)} 
+        isAdmin={true} 
+      />
     </div>
   );
 };

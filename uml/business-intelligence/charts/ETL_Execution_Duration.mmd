@@ -1,19 +1,11 @@
-%% ETL Execution Duration Trend
-%% Shows monthly ETL execution times for dimension and fact table loads.
+%%{init: {"theme": "base", "xyChart": {"width": 750, "height": 400, "plotReservedSpacePercent": 50}}}%%
+%% ETL Total Execution Duration per Monthly Run
+%% Bar = total run time (minutes). Line = 3-month rolling average.
 %% Dimension loads range 2-5 min; fact loads range 8-15 min.
-%% Used in internship report to illustrate ETL performance characteristics.
 
----
-config:
-  theme: base
-  themeVariables:
-    xyChart:
-      titleColor: "#333333"
-      backgroundColor: "#ffffff"
----
 xychart-beta
-    title "ETL Execution Duration per Monthly Run (minutes)"
+    title "ETL Total Execution Duration per Monthly Run (minutes)"
     x-axis ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    y-axis "Duration (minutes)" 0 --> 18
-    bar "Dimension Load" [3, 2, 4, 3, 5, 3, 4, 2, 3, 4, 3, 2]
-    bar "Fact Load" [12, 10, 14, 11, 15, 13, 12, 9, 11, 13, 10, 8]
+    y-axis "Duration (minutes)" 0 --> 25
+    bar [15, 12, 18, 14, 20, 16, 16, 11, 14, 17, 13, 10]
+    line [15, 15, 15, 15, 17, 17, 17, 14, 14, 14, 13, 13]

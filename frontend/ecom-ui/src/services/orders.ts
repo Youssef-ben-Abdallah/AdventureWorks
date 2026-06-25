@@ -19,7 +19,7 @@ export const OrdersService = {
     return response.data;
   },
   updateStatus: async (id: number, statusId: number) => {
-    const response = await apiClient.patch(`/api/orders/${id}/status`, { statusId });
+    const response = await apiClient.patch(`/api/orders/${id}/status`, { status: statusId });
     return response.data;
   }
 };

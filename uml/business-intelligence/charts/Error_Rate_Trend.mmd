@@ -1,18 +1,10 @@
-%% Error Rate Trend
-%% Line chart showing ETL error rate percentage declining over 12 months.
-%% Starts at 2.5% and declines to 0.3% as data quality rules and validations improve.
-%% Demonstrates continuous improvement in the ETL pipeline reliability.
+%%{init: {"theme": "base", "xyChart": {"width": 750, "height": 400, "plotReservedSpacePercent": 50}}}%%
+%% ETL Error Rate Trend
+%% Line chart showing ETL error rate declining over 12 months.
+%% Values are in units of 0.1% (e.g., 25 = 2.5%). Demonstrates continuous improvement.
 
----
-config:
-  theme: base
-  themeVariables:
-    xyChart:
-      titleColor: "#333333"
-      backgroundColor: "#ffffff"
----
 xychart-beta
-    title "ETL Error Rate Trend — Monthly Decline (%)"
+    title "ETL Error Rate Trend (x 0.1 %)"
     x-axis ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    y-axis "Error Rate (%)" 0 --> 3
-    line "Error Rate" [2.5, 2.2, 1.9, 1.6, 1.3, 1.1, 0.9, 0.7, 0.6, 0.5, 0.4, 0.3]
+    y-axis "Error Rate (x0.1 %)" 0 --> 30
+    line [25, 21, 18, 15, 12, 9, 8, 7, 5, 4, 3, 3]

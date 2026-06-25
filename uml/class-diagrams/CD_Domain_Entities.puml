@@ -2,19 +2,46 @@
 !theme cerulean-outline
 
 title AdventureWorks Sales BI Platform\nDomain Entities (OLTP)
+caption Core domain entities representing the e-commerce transactional model
 
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #FAFAFA
+    BorderColor #4A90D9
+    HeaderBackgroundColor #E8F0FE
+    FontColor #333333
+    BackgroundColor<<Entity>> #E8F5E9
+    BorderColor<<Entity>> #2E7D32
+    HeaderBackgroundColor<<Entity>> #A5D6A7
+    BackgroundColor<<Enumeration>> #FFF8E1
+    BorderColor<<Enumeration>> #EF6C00
+    HeaderBackgroundColor<<Enumeration>> #FFE082
+    BackgroundColor<<Framework>> #EDE7F6
+    BorderColor<<Framework>> #4527A0
+    HeaderBackgroundColor<<Framework>> #CE93D8
+}
+
+skinparam ArrowColor #424242
+skinparam ArrowThickness 1.5
+
+hide empty members
 
 ' ─────────────────────────────────────────────
 '  Identity base
 ' ─────────────────────────────────────────────
 package "Microsoft.AspNetCore.Identity" <<Framework>> #EEF2FF {
-    abstract class IdentityUser {
+    abstract class IdentityUser <<Framework>> {
         + Id : string
         + UserName : string
         + Email : string
-        + PasswordHash : string
+        - PasswordHash : string
         + PhoneNumber : string
         + EmailConfirmed : bool
     }
@@ -25,31 +52,35 @@ package "Microsoft.AspNetCore.Identity" <<Framework>> #EEF2FF {
 ' ─────────────────────────────────────────────
 package "Ecom.Api.Entities" <<Rectangle>> #F0F9FF {
 
-    class AppUser <<Entity>> {
-        __inherits IdentityUser__
+    together {
+        class AppUser <<Entity>> {
+            __inherits IdentityUser__
+        }
+
+        enum OrderStatus <<Enumeration>> {
+            Pending = 1
+            InProcess = 2
+            Approved = 3
+            Rejected = 4
+            Shipped = 5
+            Cancelled = 6
+        }
     }
 
-    enum OrderStatus <<Enumeration>> {
-        Pending = 1
-        InProcess = 2
-        Approved = 3
-        Rejected = 4
-        Shipped = 5
-        Cancelled = 6
-    }
+    together {
+        class Category <<Entity>> {
+            + Id : int
+            + Name : string
+            + SubCategories : ICollection<SubCategory>
+        }
 
-    class Category <<Entity>> {
-        + Id : int
-        + Name : string
-        + SubCategories : ICollection<SubCategory>
-    }
-
-    class SubCategory <<Entity>> {
-        + Id : int
-        + Name : string
-        + CategoryId : int
-        + Category : Category
-        + Products : ICollection<Product>
+        class SubCategory <<Entity>> {
+            + Id : int
+            + Name : string
+            + CategoryId : int
+            + Category : Category
+            + Products : ICollection<Product>
+        }
     }
 
     class Product <<Entity>> {
@@ -72,33 +103,35 @@ package "Ecom.Api.Entities" <<Rectangle>> #F0F9FF {
         + StockQty : int
     }
 
-    class Order <<Entity>> {
-        + Id : int
-        + CreatedAtUtc : DateTime
-        + Total : decimal
-        + UserId : string
-        + Status : OrderStatus
-        + Items : ICollection<OrderItem>
-        __column mapping__
-        Id -> SalesOrderID
-        CreatedAtUtc -> OrderDate
-        Total -> SubTotal
-        UserId -> Comment
-    }
+    together {
+        class Order <<Entity>> {
+            + Id : int
+            + CreatedAtUtc : DateTime
+            + Total : decimal
+            + UserId : string
+            + Status : OrderStatus
+            + Items : ICollection<OrderItem>
+            __column mapping__
+            Id -> SalesOrderID
+            CreatedAtUtc -> OrderDate
+            Total -> SubTotal
+            UserId -> Comment
+        }
 
-    class OrderItem <<Entity>> {
-        + Id : int
-        + OrderId : int
-        + ProductId : int
-        + Qty : int
-        + UnitPrice : decimal
-        + LineTotal : decimal
-        + Product : Product
-        + Order : Order
-        __column mapping__
-        Id -> SalesOrderDetailID
-        OrderId -> SalesOrderID
-        Qty -> OrderQty
+        class OrderItem <<Entity>> {
+            + Id : int
+            + OrderId : int
+            + ProductId : int
+            + Qty : int
+            + UnitPrice : decimal
+            + LineTotal : decimal
+            + Product : Product
+            + Order : Order
+            __column mapping__
+            Id -> SalesOrderDetailID
+            OrderId -> SalesOrderID
+            Qty -> OrderQty
+        }
     }
 }
 
@@ -114,5 +147,33 @@ Order "1" *-- "1..*" OrderItem : contains >
 Order --> OrderStatus : uses >
 Order "0..*" --> "1" AppUser : placed by >
 Category "1" <-- "0..*" Product : belongs to >
+
+' ─────────────────────────────────────────────
+'  Legend
+' ─────────────────────────────────────────────
+note bottom of Order
+    <b>EF Core Column Mapping (ExcludeFromMigrations)</b>
+    Maps to <i>Sales.SalesOrderHeader</i> — pre-existing AdventureWorks table.
+    Order.UserId is stored in the <i>Comment</i> column (nvarchar FK workaround).
+    Trigger <i>uSalesOrderHeader</i> fires on updates.
+end note
+
+note bottom of Product
+    <b>Static Image Serving</b>
+    ImageFileName maps to files under
+    <i>C:\images\product\</i> served at
+    <i>/images/product/{filename}</i>
+    via ASP.NET Static Files middleware.
+end note
+
+legend bottom right
+    |= Symbol |= Meaning |
+    | <|-- | Inheritance (extends) |
+    | *-- | Composition (owns lifecycle) |
+    | --> | Dependency / reference |
+    | <<Entity>> | Domain entity mapped to DB |
+    | <<Enumeration>> | Enum type |
+    | <<Framework>> | External framework class |
+endlegend
 
 @enduml

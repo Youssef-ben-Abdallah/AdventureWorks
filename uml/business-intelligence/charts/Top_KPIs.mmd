@@ -1,18 +1,10 @@
-%% Top KPIs Dashboard Summary
-%% Bar chart showing key performance indicator values from the AdventureWorks BI platform.
-%% Revenue: $80.5M, Gross Profit: $0.47M, Orders: 60855, AOV: $1322, Freight: $6.4M, Discount: $527K
-%% Values normalized to millions for visual comparability.
+%%{init: {"theme": "base", "xyChart": {"width": 700, "height": 400, "plotReservedSpacePercent": 50}}}%%
+%% AdventureWorks Key Performance Indicators
+%% Bar chart showing KPI values: Revenue, Freight, Orders, AOV, Discount, Profit.
+%% Revenue and Orders dominate; values are rounded for chart compatibility.
 
----
-config:
-  theme: base
-  themeVariables:
-    xyChart:
-      titleColor: "#333333"
-      backgroundColor: "#ffffff"
----
 xychart-beta
-    title "AdventureWorks Key Performance Indicators (values in $M / K units)"
-    x-axis ["Revenue ($M)", "Freight ($M)", "Discount ($M)", "Gross Profit ($M)", "AOV ($K)", "Orders (K)"]
+    title "AdventureWorks Key Performance Indicators"
+    x-axis ["Revenue $M", "Freight $M", "Orders K", "AOV $K", "Discount $M", "Profit $M"]
     y-axis "Value" 0 --> 85
-    bar "KPI Value" [80.5, 6.4, 0.527, 0.47, 1.322, 60.855]
+    bar [81, 6, 61, 1, 1, 1]

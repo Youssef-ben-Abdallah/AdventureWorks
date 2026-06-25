@@ -2,9 +2,42 @@
 !theme cerulean-outline
 
 title AdventureWorks Sales BI Platform\nService Layer
+caption Service interfaces and implementations for business logic and analytics
 
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #FAFAFA
+    BorderColor #4A90D9
+    HeaderBackgroundColor #E8F0FE
+    FontColor #333333
+    BackgroundColor<<Service>> #E8F5E9
+    BorderColor<<Service>> #2E7D32
+    HeaderBackgroundColor<<Service>> #A5D6A7
+    BackgroundColor<<Interface>> #F3E5F5
+    BorderColor<<Interface>> #7B1FA2
+    HeaderBackgroundColor<<Interface>> #CE93D8
+    BackgroundColor<<DbContext>> #FFF3E0
+    BorderColor<<DbContext>> #E65100
+    HeaderBackgroundColor<<DbContext>> #FFCC80
+    BackgroundColor<<External>> #FFF8E1
+    BorderColor<<External>> #F57F17
+    HeaderBackgroundColor<<External>> #FFE082
+    BackgroundColor<<Framework>> #EDE7F6
+    BorderColor<<Framework>> #4527A0
+    HeaderBackgroundColor<<Framework>> #CE93D8
+}
+
+skinparam ArrowColor #424242
+skinparam ArrowThickness 1.5
+
+hide empty members
 
 ' ─────────────────────────────────────────────
 '  External dependencies
@@ -91,20 +124,22 @@ package "Ecom.Api.Services" <<Rectangle>> #EFF6FF {
 ' ─────────────────────────────────────────────
 package "Ecom.Api.Services.Impl" <<Rectangle>> #F0F9FF {
 
-    class JwtTokenService <<Service>> {
-        - _configuration : IConfiguration
-        + GenerateToken(user: AppUser, roles: IList<string>) : string
-    }
+    together {
+        class JwtTokenService <<Service>> {
+            - _configuration : IConfiguration
+            + GenerateToken(user: AppUser, roles: IList<string>) : string
+        }
 
-    class DashboardService <<Service>> {
-        - _context : AnalyticsDbContext
-        + GetFiltersAsync() : Task<DashboardFilters>
-        + GetOverviewAsync(query) : Task<OverviewDto>
-        + GetProductsAsync(query) : Task<ProductsDto>
-        + GetCustomersAsync(query) : Task<CustomersDto>
-        + GetSalesTeamAsync(query) : Task<SalesTeamDto>
-        + GetShippingAsync(query) : Task<ShippingDto>
-        + GetDetailsAsync(query) : Task<DetailsDto>
+        class DashboardService <<Service>> {
+            - _context : AnalyticsDbContext
+            + GetFiltersAsync() : Task<DashboardFilters>
+            + GetOverviewAsync(query) : Task<OverviewDto>
+            + GetProductsAsync(query) : Task<ProductsDto>
+            + GetCustomersAsync(query) : Task<CustomersDto>
+            + GetSalesTeamAsync(query) : Task<SalesTeamDto>
+            + GetShippingAsync(query) : Task<ShippingDto>
+            + GetDetailsAsync(query) : Task<DetailsDto>
+        }
     }
 
     class OlapService <<Service>> {
@@ -129,5 +164,37 @@ IOlapService <|.. OlapService : implements
 DashboardService --> AnalyticsDbContext : queries via EF Core >
 OlapService --> AdomdConnection : queries via ADOMD.NET >
 JwtTokenService --> UserManager : resolves roles >
+
+' ─────────────────────────────────────────────
+'  Legend
+' ─────────────────────────────────────────────
+note right of OlapService
+    <b>SSAS MDX Connectivity</b>
+    Uses <i>ADOMD.NET</i> (Microsoft.AnalysisServices.AdomdClient)
+    to open an XML/A connection to the CubeAW2019 cube.
+    Each query opens/closes AdomdConnection; MDX is
+    executed via <i>AdomdCommand.ExecuteReader()</i>.
+    Connection string sourced from <i>SsasConnection</i>
+    in appsettings.json.
+end note
+
+note right of DashboardService
+    <b>Read-Only Analytics</b>
+    Queries AnalyticsDbContext (AdventureWorksDW_Sales)
+    using EF Core LINQ against read-only view entities.
+    All DbSets use <i>.HasNoKey()</i> since DW views
+    have no EF-managed primary keys.
+end note
+
+legend bottom right
+    |= Symbol |= Meaning |
+    | <|.. | Implementation (implements interface) |
+    | --> | Dependency (injected via DI) |
+    | <<Interface>> | Service contract |
+    | <<Service>> | Concrete service implementation |
+    | <<DbContext>> | Entity Framework database context |
+    | <<External>> | Third-party library class |
+    | <<Framework>> | ASP.NET framework class |
+endlegend
 
 @enduml

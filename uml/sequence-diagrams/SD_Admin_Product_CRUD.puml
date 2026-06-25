@@ -3,17 +3,69 @@
 
 title Admin Product CRUD Lifecycle\nAdventureWorks Sales BI Platform
 
-actor       "Admin"              as Admin
-participant "Browser / React\n(Admin Page)"  as React      #LightBlue
-participant "Axios\napiClient"                as Axios      #LightCyan
-participant "Controllers\n[Authorize(Roles=\"Admin\")]" as Controller #LightGreen
-participant "ProductRepository"               as Repo       #LightYellow
-participant "OltpDbContext\n(SQL Server\nAdventureWorks2019)" as DB #LightPink
+autonumber "<b>[0]"
+hide footbox
+
+skinparam maxMessageSize 160
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBodyBackgroundColor #FAFAFA80
+skinparam sequenceDividerBackgroundColor #ECEFF1
+skinparam sequenceDividerBorderColor #90A4AE
+skinparam sequenceBoxBorderColor #90A4AE
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #37474F
+    FontColor #212121
+}
+skinparam boundary {
+    BackgroundColor #BBDEFB
+    BorderColor #1565C0
+    FontColor #0D47A1
+}
+skinparam participant {
+    BackgroundColor #E8EAF6
+    BorderColor #3949AB
+    FontColor #1A237E
+}
+skinparam control {
+    BackgroundColor #C8E6C9
+    BorderColor #2E7D32
+    FontColor #1B5E20
+}
+skinparam entity {
+    BackgroundColor #FFE0B2
+    BorderColor #E65100
+    FontColor #BF360C
+}
+skinparam database {
+    BackgroundColor #F8BBD0
+    BorderColor #AD1457
+    FontColor #880E4F
+}
+
+box "Client Tier" #EBF5FB
+    actor       "Admin"                                           as Admin
+    boundary    "Browser / React\n(Admin Page)"                  as React
+end box
+
+box "Transport" #F9FBE7
+    participant "Axios\napiClient"                               as Axios
+end box
+
+box "Backend" #F1F8E9
+    control     "Controllers\n[Authorize(Roles=\"Admin\")]"       as Controller
+    entity      "ProductRepository"                              as Repo
+end box
+
+box "Data Layer" #FFF3E0
+    database    "OltpDbContext\n(SQL Server\nAdventureWorks2019)" as DB
+end box
 
 note over Axios
-  All requests include:
-  Authorization: Bearer {token}
-  (via Axios interceptor)
+    All requests include:
+    Authorization: Bearer {token}
+    (via Axios interceptor)
 end note
 
 == Step 1: Load Admin Page Data ==
@@ -66,7 +118,11 @@ else SKU is unique
     Controller -> Controller : Build Product entity
     Controller -> Repo : AddAsync(entity)
     Repo -> DB : INSERT INTO Products\n(CategoryId, Description,\nImageFileName, Name, Price,\nSku, StockQty, SubCategoryId)\nVALUES (...)
-    note right of DB : Uses raw SQL to bypass\nEF Core @@ROWCOUNT issue\nwith INSTEAD OF INSERT trigger
+    note right of DB
+        Uses raw SQL to bypass
+        EF Core @@ROWCOUNT issue
+        with INSTEAD OF INSERT trigger
+    end note
     DB --> Repo : OK
     Repo -> DB : SELECT WHERE Sku = @sku\n(get generated Id)
     DB --> Repo : Product with Id
@@ -89,8 +145,11 @@ Admin -> React : Selects image file\n(PNG, JPG, JPEG, GIF, max 20MB)
 React -> Axios : CatalogService.uploadProductImage(id, file)
 React -> React : Build FormData:\nformData.append("file", file)
 
-Axios -> Controller : **POST /api/products/{id}/image**\nContent-Type: multipart/form-data\nBody: FormData with file
-note right of Controller : [Consumes("multipart/form-data")]\n[RequestSizeLimit(20_000_000)]
+Axios -> Controller : **POST /api/products/{id}/image**\nContent-Type: multipart/form-data
+note right of Controller
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(20_000_000)]
+end note
 
 Controller -> Repo : GetByIdAsync(id)
 Repo -> DB : SELECT Product
@@ -109,8 +168,7 @@ else Product found
         end
 
         Controller -> Controller : Generate filename:\nproduct-{id}-{guid}{ext}
-        Controller -> Controller : Save to disk:\nC:\\images\\product\\{filename}
-        note right of Controller : Directory.CreateDirectory(root)\nensures path exists
+        Controller -> Controller : Save to disk:\nDirectory.CreateDirectory(root)\nC:\images\product\{filename}
 
         Controller -> Repo : UpdateAsync(product)\nproduct.ImageFileName = newFilename
         Repo -> DB : UPDATE Products\nSET ImageFileName = @name\nWHERE Id = @id
@@ -130,7 +188,7 @@ end
 
 Admin -> React : Clicks **"Edit"** on product row
 React -> React : Open edit form\npre-filled with current values
-Admin -> React : Modifies fields\nClicks **"Save"**
+Admin -> React : Modifies fields, Clicks **"Save"**
 
 React -> Axios : CatalogService.updateProduct(id, data)
 Axios -> Controller : **PUT /api/products/{id}**\nBody: CreateProductDto
@@ -185,9 +243,9 @@ else Product found
     alt Foreign key constraint (referenced by OrderItems)
         DB --> Repo : DbUpdateException
         Repo --> Controller : throws DbUpdateException
-        Controller --> Axios : **409 Conflict**\n"Product cannot be deleted because\nit is referenced by existing order items."
+        Controller --> Axios : **409 Conflict**\n"Product cannot be deleted:\nreferenced by existing order items."
         Axios --> React : Show error message
-        React --> Admin : Error: "Cannot delete -\nreferenced by orders"
+        React --> Admin : Error: "Cannot delete —\nreferenced by orders"
     else Delete succeeds
         DB --> Repo : OK
         Repo --> Controller : OK

@@ -2,9 +2,42 @@
 !theme cerulean-outline
 
 title AdventureWorks Sales BI Platform\nData Access Layer
+caption EF Core DbContext hierarchy with OLTP and Analytics contexts and their entity mappings
 
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #FAFAFA
+    BorderColor #4A90D9
+    HeaderBackgroundColor #E8F0FE
+    FontColor #333333
+    BackgroundColor<<DbContext>> #E8F5E9
+    BorderColor<<DbContext>> #2E7D32
+    HeaderBackgroundColor<<DbContext>> #A5D6A7
+    BackgroundColor<<Framework>> #EDE7F6
+    BorderColor<<Framework>> #4527A0
+    HeaderBackgroundColor<<Framework>> #CE93D8
+    BackgroundColor<<Entity>> #FFFDE7
+    BorderColor<<Entity>> #F9A825
+    HeaderBackgroundColor<<Entity>> #FFF176
+    BackgroundColor<<Fact>> #FFCCBC
+    BorderColor<<Fact>> #BF360C
+    HeaderBackgroundColor<<Fact>> #FF8A65
+    BackgroundColor<<Dimension>> #B3E5FC
+    BorderColor<<Dimension>> #01579B
+    HeaderBackgroundColor<<Dimension>> #4FC3F7
+}
+
+skinparam ArrowColor #424242
+skinparam ArrowThickness 1.5
+
+hide empty members
 
 ' ─────────────────────────────────────────────
 '  Framework base classes
@@ -29,7 +62,7 @@ package "Microsoft.AspNetCore.Identity.EntityFrameworkCore" <<Framework>> #EEF2F
 DbContext <|-- IdentityDbContext : extends
 
 ' ─────────────────────────────────────────────
-'  OLTP Context
+'  Application DbContexts
 ' ─────────────────────────────────────────────
 package "Ecom.Api.Data" <<Rectangle>> #F0FDF4 {
 
@@ -56,9 +89,6 @@ package "Ecom.Api.Data" <<Rectangle>> #F0FDF4 {
         OrderItem N:1 Product
     }
 
-    ' ─────────────────────────────────────────
-    '  Analytics Context
-    ' ─────────────────────────────────────────
     class AnalyticsDbContext <<DbContext>> {
         + Sales : DbSet<SalesFact>
         + Customers : DbSet<CustomerDim>
@@ -86,22 +116,30 @@ package "Ecom.Api.Data" <<Rectangle>> #F0FDF4 {
 '  Entity references
 ' ─────────────────────────────────────────────
 package "OLTP Entities" <<Rectangle>> #FFFBEB {
-    class Category <<Entity>>
-    class SubCategory <<Entity>>
-    class Product <<Entity>>
-    class Order <<Entity>>
-    class OrderItem <<Entity>>
-    class AppUser <<Entity>>
+    together {
+        class Category <<Entity>>
+        class SubCategory <<Entity>>
+        class Product <<Entity>>
+    }
+    together {
+        class Order <<Entity>>
+        class OrderItem <<Entity>>
+        class AppUser <<Entity>>
+    }
 }
 
 package "Analytics Entities" <<Rectangle>> #FFF7ED {
-    class SalesFact <<Fact>>
-    class CustomerDim <<Dimension>>
-    class ProductDim <<Dimension>>
-    class TerritoryDim <<Dimension>>
-    class CurrencyDim <<Dimension>>
-    class SalesPersonDim <<Dimension>>
-    class ShipMethodDim <<Dimension>>
+    together {
+        class SalesFact <<Fact>>
+        class CustomerDim <<Dimension>>
+        class ProductDim <<Dimension>>
+    }
+    together {
+        class TerritoryDim <<Dimension>>
+        class CurrencyDim <<Dimension>>
+        class SalesPersonDim <<Dimension>>
+        class ShipMethodDim <<Dimension>>
+    }
 }
 
 ' ─────────────────────────────────────────────
@@ -110,19 +148,50 @@ package "Analytics Entities" <<Rectangle>> #FFF7ED {
 IdentityDbContext <|-- OltpDbContext : extends\n(TUser = AppUser)
 DbContext <|-- AnalyticsDbContext : extends
 
-OltpDbContext --> Category : manages >
-OltpDbContext --> SubCategory : manages >
-OltpDbContext --> Product : manages >
-OltpDbContext --> Order : manages >
-OltpDbContext --> OrderItem : manages >
-OltpDbContext --> AppUser : manages >
+OltpDbContext *-- Category : manages >
+OltpDbContext *-- SubCategory : manages >
+OltpDbContext *-- Product : manages >
+OltpDbContext *-- Order : manages >
+OltpDbContext *-- OrderItem : manages >
+OltpDbContext *-- AppUser : manages >
 
-AnalyticsDbContext --> SalesFact : reads >
-AnalyticsDbContext --> CustomerDim : reads >
-AnalyticsDbContext --> ProductDim : reads >
-AnalyticsDbContext --> TerritoryDim : reads >
-AnalyticsDbContext --> CurrencyDim : reads >
-AnalyticsDbContext --> SalesPersonDim : reads >
-AnalyticsDbContext --> ShipMethodDim : reads >
+AnalyticsDbContext o-- SalesFact : reads >
+AnalyticsDbContext o-- CustomerDim : reads >
+AnalyticsDbContext o-- ProductDim : reads >
+AnalyticsDbContext o-- TerritoryDim : reads >
+AnalyticsDbContext o-- CurrencyDim : reads >
+AnalyticsDbContext o-- SalesPersonDim : reads >
+AnalyticsDbContext o-- ShipMethodDim : reads >
+
+' ─────────────────────────────────────────────
+'  Legend
+' ─────────────────────────────────────────────
+note top of OltpDbContext
+    <b>Two-Database Pattern</b>
+    OltpDbContext → AdventureWorks2019 (OLTP, read-write)
+    AnalyticsDbContext → AdventureWorksDW_Sales (DW, read-only)
+    Both registered in Program.cs with separate connection strings
+    from appsettings.json: <i>OLTPConnection</i> / <i>AnalyticsConnection</i>.
+end note
+
+note right of AnalyticsDbContext
+    <b>View-Based Read-Only Access</b>
+    All entities use <i>.HasNoKey()</i> and
+    <i>.ToView("vXxx")</i> in OnModelCreating.
+    EF Core will not track changes or generate
+    migrations for these entities.
+end note
+
+legend bottom right
+    |= Symbol |= Meaning |
+    | <|-- | Inheritance (extends base context) |
+    | *-- | Composition (OLTP: owns entity lifecycle) |
+    | o-- | Aggregation (Analytics: read-only views) |
+    | <<DbContext>> | EF Core database context |
+    | <<Entity>> | OLTP domain entity |
+    | <<Fact>> | Data warehouse fact table |
+    | <<Dimension>> | Data warehouse dimension table |
+    | <<Framework>> | External framework base class |
+endlegend
 
 @enduml

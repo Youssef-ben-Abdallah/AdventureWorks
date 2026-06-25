@@ -8,61 +8,80 @@ skinparam linetype ortho
 skinparam nodesep 60
 skinparam ranksep 50
 
+skinparam component {
+    BackgroundColor #FAFAFA
+    BorderColor #607D8B
+    FontColor #212121
+    BackgroundColor<<RestController>> #BBDEFB
+    BorderColor<<RestController>> #1565C0
+    BackgroundColor<<Service>> #C8E6C9
+    BorderColor<<Service>> #2E7D32
+    BackgroundColor<<Repository>> #FFE0B2
+    BorderColor<<Repository>> #E65100
+    BackgroundColor<<DbContext>> #E1BEE7
+    BorderColor<<DbContext>> #6A1B9A
+}
+
+skinparam interface {
+    BackgroundColor #F3E5F5
+    BorderColor #7B1FA2
+}
+
 ' ── API Layer ──────────────────────────────────────────────
 package "API Layer\n[ASP.NET Core Controllers]" as API <<Rectangle>> #E3F2FD {
-    component "[AuthController]\n<<RestController>>\n/api/auth" as AuthCtrl #BBDEFB
-    component "[CategoriesController]\n<<RestController>>\n/api/categories\n{Authorize}" as CatCtrl #BBDEFB
-    component "[SubCategoriesController]\n<<RestController>>\n/api/subcategories\n{Authorize}" as SubCatCtrl #BBDEFB
-    component "[ProductsController]\n<<RestController>>\n/api/products" as ProdCtrl #BBDEFB
-    component "[OrdersController]\n<<RestController>>\n/api/orders\n{Authorize}" as OrdCtrl #BBDEFB
-    component "[DashboardController]\n<<RestController>>\n/api/dashboard\n{Authorize(Admin)}" as DashCtrl #BBDEFB
-    component "[CubeInsightsController]\n<<RestController>>\n/api/cubeinsights\n{Authorize}" as CubeCtrl #BBDEFB
+    component "AuthController\n/api/auth" <<RestController>> as AuthCtrl
+    component "CategoriesController\n/api/categories\n{Authorize}" <<RestController>> as CatCtrl
+    component "SubCategoriesController\n/api/subcategories\n{Authorize}" <<RestController>> as SubCatCtrl
+    component "ProductsController\n/api/products" <<RestController>> as ProdCtrl
+    component "OrdersController\n/api/orders\n{Authorize}" <<RestController>> as OrdCtrl
+    component "DashboardController\n/api/dashboard\n{Authorize(Admin)}" <<RestController>> as DashCtrl
+    component "CubeInsightsController\n/api/cubeinsights\n{Authorize(Admin)}" <<RestController>> as CubeCtrl
 
     note right of AuthCtrl
         JWT Bearer Authentication
-        ASP.NET Identity
+        via ASP.NET Identity
     end note
 }
 
 ' ── Service Layer ─────────────────────────────────────────
 package "Service Layer" as SVC <<Rectangle>> #E8F5E9 {
     interface "IJwtTokenService" as IJwt
-    component "[JwtTokenService]" as JwtSvc #C8E6C9
+    component "JwtTokenService" <<Service>> as JwtSvc
     IJwt -- JwtSvc
 
     interface "IDashboardService" as IDash
-    component "[DashboardService]\nServices/Dashboard/" as DashSvc #C8E6C9
+    component "DashboardService" <<Service>> as DashSvc
     IDash -- DashSvc
 
     interface "IOlapService" as IOlap
-    component "[OlapService]\nADOMD.NET" as OlapSvc #C8E6C9
+    component "OlapService\n[ADOMD.NET]" <<Service>> as OlapSvc
     IOlap -- OlapSvc
 }
 
 ' ── Repository Layer ──────────────────────────────────────
 package "Repository Layer" as REPO <<Rectangle>> #FFF3E0 {
     interface "ICategoryRepository" as ICatRepo
-    component "[CategoryRepository]" as CatRepo #FFE0B2
+    component "CategoryRepository" <<Repository>> as CatRepo
     ICatRepo -- CatRepo
 
     interface "ISubCategoryRepository" as ISubCatRepo
-    component "[SubCategoryRepository]" as SubCatRepo #FFE0B2
+    component "SubCategoryRepository" <<Repository>> as SubCatRepo
     ISubCatRepo -- SubCatRepo
 
     interface "IProductRepository" as IProdRepo
-    component "[ProductRepository]" as ProdRepo #FFE0B2
+    component "ProductRepository" <<Repository>> as ProdRepo
     IProdRepo -- ProdRepo
 
     interface "IOrderRepository" as IOrdRepo
-    component "[OrderRepository]" as OrdRepo #FFE0B2
+    component "OrderRepository" <<Repository>> as OrdRepo
     IOrdRepo -- OrdRepo
 }
 
 ' ── Data Layer ────────────────────────────────────────────
 package "Data Layer\n[Entity Framework Core]" as DATA <<Rectangle>> #F3E5F5 {
-    component "[OltpDbContext]\nAdventureWorks2019" as OltpCtx #E1BEE7
-    component "[AnalyticsDbContext]\nAdventureWorksDW_Sales" as DwCtx #E1BEE7
-    component "[DbSeeder]" as Seeder #E1BEE7
+    component "OltpDbContext\nAdventureWorks2019" <<DbContext>> as OltpCtx
+    component "AnalyticsDbContext\nAdventureWorksDW_Sales" <<DbContext>> as DwCtx
+    component "DbSeeder" <<DbContext>> as Seeder
 }
 
 ' ── External Systems ──────────────────────────────────────
@@ -88,7 +107,7 @@ OrdCtrl ..> IOrdRepo : <<inject>>
 
 ' Services -> Data Layer
 DashSvc --> DwCtx : uses
-OlapSvc --> SSAS : XMLA/ADOMD.NET
+OlapSvc --> SSAS : XMLA / ADOMD.NET
 
 ' Repositories -> Data Layer
 CatRepo --> OltpCtx : uses
@@ -97,18 +116,19 @@ ProdRepo --> OltpCtx : uses
 OrdRepo --> OltpCtx : uses
 
 ' Data Layer -> External
-OltpCtx --> OLTP : TDS
-DwCtx --> DW : TDS
-Seeder --> OltpCtx : seeds
+OltpCtx --> OLTP : TDS (EF Core)
+DwCtx --> DW : TDS (EF Core)
+Seeder --> OltpCtx : seeds on startup
 
 ' Static files
 ProdCtrl ..> FS : serves images
 
 note bottom of EXT
-    All database connections use
-    Entity Framework Core with
-    connection strings from
-    appsettings.json
+    All SQL connections use connection strings
+    from appsettings.json:
+    • OLTPConnection → AdventureWorks2019
+    • AnalyticsConnection → AdventureWorksDW_Sales
+    • SsasConnection → CubeAW2019
 end note
 
 @enduml

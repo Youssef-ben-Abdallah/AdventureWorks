@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { OrdersService } from '../../services/orders';
 import { Order } from '../../types/models';
+import { OrderTicketModal } from '../../components/orders/OrderTicketModal';
 import './MyOrders.css';
 
 export const MyOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedTicket, setSelectedTicket] = useState<Order | null>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -130,6 +132,9 @@ export const MyOrders = () => {
                     Order #{o.id}
                   </div>
                   <div className="order-date">{formatDate(o.createdAtUtc)}</div>
+                  <button className="tbl-btn" style={{ marginTop: '8px' }} onClick={() => setSelectedTicket(o)}>
+                    <span className="material-icons">receipt_long</span> Ticket
+                  </button>
                 </div>
 
                 <div className="order-head-right">
@@ -165,6 +170,14 @@ export const MyOrders = () => {
           ))}
         </div>
       )}
+
+      {/* Ticket Modal */}
+      <OrderTicketModal 
+        isOpen={selectedTicket !== null} 
+        order={selectedTicket} 
+        onClose={() => setSelectedTicket(null)} 
+        isAdmin={false} 
+      />
     </div>
   );
 };

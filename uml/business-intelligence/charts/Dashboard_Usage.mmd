@@ -1,21 +1,8 @@
-%% Dashboard Usage Statistics
-%% Pie chart showing page views distribution across the BI platform dashboards.
+%%{init: {"theme": "base", "pie": {"textPosition": 0.5}}}%%
+%% Dashboard Page Views Distribution
 %% Cube Insights Overview is the most visited at 35%.
-%% Used to evaluate dashboard adoption and prioritize feature development.
 
----
-config:
-  theme: base
-  themeVariables:
-    pie1: "#2563eb"
-    pie2: "#3b82f6"
-    pie3: "#60a5fa"
-    pie4: "#93c5fd"
-    pie5: "#bfdbfe"
-    pie6: "#dbeafe"
----
-pie showData
-    title Dashboard Page Views Distribution
+pie title "Dashboard Page Views Distribution"
     "Cube Insights Overview" : 35
     "Territory Map" : 20
     "Product Insights" : 18

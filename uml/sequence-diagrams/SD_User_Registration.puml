@@ -3,13 +3,60 @@
 
 title User Registration Flow\nAdventureWorks Sales BI Platform
 
-actor       "User"               as User
-participant "Browser / React\n(Login Page)"  as React    #LightBlue
-participant "Axios\napiClient"               as Axios    #LightCyan
-participant "AuthController\n[AllowAnonymous]"  as Controller #LightGreen
-participant "UserManager\nSignInManager"        as Service    #LightYellow
-participant "JwtTokenService"                   as JWT        #Gold
-participant "OltpDbContext\n(SQL Server)"        as DB         #LightPink
+autonumber "<b>[0]"
+hide footbox
+
+skinparam maxMessageSize 160
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBodyBackgroundColor #FAFAFA80
+skinparam sequenceDividerBackgroundColor #ECEFF1
+skinparam sequenceDividerBorderColor #90A4AE
+skinparam sequenceBoxBorderColor #90A4AE
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #37474F
+    FontColor #212121
+}
+skinparam boundary {
+    BackgroundColor #BBDEFB
+    BorderColor #1565C0
+    FontColor #0D47A1
+}
+skinparam participant {
+    BackgroundColor #E8EAF6
+    BorderColor #3949AB
+    FontColor #1A237E
+}
+skinparam control {
+    BackgroundColor #C8E6C9
+    BorderColor #2E7D32
+    FontColor #1B5E20
+}
+skinparam database {
+    BackgroundColor #F8BBD0
+    BorderColor #AD1457
+    FontColor #880E4F
+}
+
+box "Client Tier" #EBF5FB
+    actor       "User"                                as User
+    boundary    "Browser / React\n(Login Page)"       as React
+end box
+
+box "Transport" #F9FBE7
+    participant "Axios\napiClient"                    as Axios
+end box
+
+box "Backend" #F1F8E9
+    control     "AuthController\n[AllowAnonymous]"    as Controller
+    control     "UserManager\nSignInManager"           as Service
+    control     "JwtTokenService"                     as JWT
+end box
+
+box "Data Layer" #FFF3E0
+    database    "OltpDbContext\n(SQL Server)"          as DB
+end box
 
 == User Opens Registration Form ==
 
@@ -48,8 +95,7 @@ else Validation passes
         DB --> Service : ["User"]
         Service --> JWT : roles = ["User"]
         JWT -> JWT : Build claims:\n  - ClaimTypes.NameIdentifier = userId\n  - ClaimTypes.Name = username\n  - sub, email, uid, uname\n  - ClaimTypes.Role = "User"
-        JWT -> JWT : Sign with SymmetricSecurityKey\n(HmacSha256, Jwt:Key)
-        JWT -> JWT : Set expiry:\nDateTime.UtcNow + ExpiresMinutes
+        JWT -> JWT : Sign with SymmetricSecurityKey\n(HmacSha256, Jwt:Key)\nSet expiry: UtcNow + ExpiresMinutes
         JWT --> Controller : (token, expiresAtUtc, ["User"])
 
         Controller --> Axios : **200 OK**\nAuthResponseDto {\n  token, expiresAtUtc,\n  username, email,\n  roles: ["User"]\n}
@@ -58,7 +104,7 @@ else Validation passes
         React -> React : const adminStatus =\n  data.roles.includes("Admin") // false
         React -> React : AuthContext.login(\n  token, false, username)
         React -> React : localStorage.setItem("token", token)\nlocalStorage.setItem("role", "User")\nlocalStorage.setItem("username", username)
-        React -> React : Update AuthContext state:\n  isLoggedIn = true\n  isAdmin = false\n  username = data.username
+        React -> React : Update AuthContext state:\n  isLoggedIn = true, isAdmin = false
         React -> React : navigate(returnUrl || "/")
         React --> User : Redirect to Home page
     end

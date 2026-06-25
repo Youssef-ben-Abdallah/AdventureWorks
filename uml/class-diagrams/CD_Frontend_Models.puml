@@ -2,69 +2,97 @@
 !theme cerulean-outline
 
 title AdventureWorks Sales BI Platform\nFrontend Models & Services (React 19 + TypeScript)
+caption TypeScript interfaces and API service classes consumed by React components
 
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #FAFAFA
+    BorderColor #4A90D9
+    HeaderBackgroundColor #E8F0FE
+    FontColor #333333
+    BackgroundColor<<Interface>> #FFFDE7
+    BorderColor<<Interface>> #F9A825
+    HeaderBackgroundColor<<Interface>> #FFF176
+    BackgroundColor<<Service>> #E8F5E9
+    BorderColor<<Service>> #2E7D32
+    HeaderBackgroundColor<<Service>> #A5D6A7
+}
+
+skinparam ArrowColor #424242
+skinparam ArrowThickness 1.5
+
+hide empty members
 
 ' ─────────────────────────────────────────────
 '  TypeScript interfaces (models)
 ' ─────────────────────────────────────────────
 package "types" <<Rectangle>> #FFFBEB {
 
-    interface Product <<interface>> {
-        + id : number
-        + sku : string
-        + name : string
-        + productNumber : string
-        + color : string
-        + price : number
-        + size : string
-        + weight : number | null
-        + categoryId : number
-        + categoryName : string
-        + subCategoryId : number
-        + subCategoryName : string
-        + modelId : number | null
-        + modelName : string
-        + description : string
-        + imageFileName : string
-        + stockQty : number
+    together {
+        interface Product <<Interface>> {
+            + id : number
+            + sku : string
+            + name : string
+            + productNumber : string
+            + color : string
+            + price : number
+            + size : string
+            + weight : number | null
+            + categoryId : number
+            + categoryName : string
+            + subCategoryId : number
+            + subCategoryName : string
+            + modelId : number | null
+            + modelName : string
+            + description : string
+            + imageFileName : string
+            + stockQty : number
+        }
+
+        interface Category <<Interface>> {
+            + id : number
+            + name : string
+        }
+
+        interface SubCategory <<Interface>> {
+            + id : number
+            + categoryId : number
+            + name : string
+        }
     }
 
-    interface Category <<interface>> {
-        + id : number
-        + name : string
-    }
+    together {
+        interface Order <<Interface>> {
+            + id : number
+            + createdAtUtc : string
+            + status : string
+            + total : number
+            + items : OrderItem[]
+        }
 
-    interface SubCategory <<interface>> {
-        + id : number
-        + categoryId : number
-        + name : string
-    }
+        interface OrderItem <<Interface>> {
+            + id : number
+            + productId : number
+            + productName : string
+            + qty : number
+            + unitPrice : number
+            + lineTotal : number
+        }
 
-    interface Order <<interface>> {
-        + id : number
-        + createdAtUtc : string
-        + status : string
-        + total : number
-        + items : OrderItem[]
-    }
-
-    interface OrderItem <<interface>> {
-        + id : number
-        + productId : number
-        + productName : string
-        + qty : number
-        + unitPrice : number
-        + lineTotal : number
-    }
-
-    interface DashboardQuery <<interface>> {
-        + startDate? : string
-        + endDate? : string
-        + territoryId? : number
-        + categoryId? : number
-        + customerId? : number
+        interface DashboardQuery <<Interface>> {
+            + startDate? : string
+            + endDate? : string
+            + territoryId? : number
+            + categoryId? : number
+            + customerId? : number
+        }
     }
 }
 
@@ -75,60 +103,64 @@ Order "1" *-- "1..*" OrderItem : items
 ' ─────────────────────────────────────────────
 package "services" <<Rectangle>> #EFF6FF {
 
-    class AuthService <<Service>> {
-        + {static} login(email, password) : Promise<AuthResponse>
-        + {static} register(email, password, name) : Promise<AuthResponse>
-        + {static} me() : Promise<UserProfile>
+    together {
+        class AuthService <<Service>> {
+            + {static} login(email, password) : Promise<AuthResponse>
+            + {static} register(email, password, name) : Promise<AuthResponse>
+            + {static} me() : Promise<UserProfile>
+        }
+
+        class CatalogService <<Service>> {
+            + {static} getCategories() : Promise<Category[]>
+            + {static} getSubCategories(categoryId?) : Promise<SubCategory[]>
+            + {static} getProducts(query) : Promise<PagedResult<Product>>
+            + {static} getProductById(id) : Promise<Product>
+        }
+
+        class OrdersService <<Service>> {
+            + {static} getMyOrders() : Promise<Order[]>
+            + {static} createOrder(items) : Promise<Order>
+        }
     }
 
-    class CatalogService <<Service>> {
-        + {static} getCategories() : Promise<Category[]>
-        + {static} getSubCategories(categoryId?) : Promise<SubCategory[]>
-        + {static} getProducts(query) : Promise<PagedResult<Product>>
-        + {static} getProductById(id) : Promise<Product>
-    }
+    together {
+        class DashboardService <<Service>> {
+            + {static} getFilters() : Promise<DashboardFilters>
+            + {static} getOverview(query) : Promise<OverviewData>
+            + {static} getProducts(query) : Promise<ProductsData>
+            + {static} getCustomers(query) : Promise<CustomersData>
+            + {static} getSalesTeam(query) : Promise<SalesTeamData>
+            + {static} getShipping(query) : Promise<ShippingData>
+            + {static} getDetails(query) : Promise<DetailsData>
+        }
 
-    class OrdersService <<Service>> {
-        + {static} getMyOrders() : Promise<Order[]>
-        + {static} createOrder(items) : Promise<Order>
-    }
-
-    class DashboardService <<Service>> {
-        + {static} getFilters() : Promise<DashboardFilters>
-        + {static} getOverview(query) : Promise<OverviewData>
-        + {static} getProducts(query) : Promise<ProductsData>
-        + {static} getCustomers(query) : Promise<CustomersData>
-        + {static} getSalesTeam(query) : Promise<SalesTeamData>
-        + {static} getShipping(query) : Promise<ShippingData>
-        + {static} getDetails(query) : Promise<DetailsData>
-    }
-
-    class CubeInsightsService <<Service>> {
-        + {static} getFilters() : Promise<CubeFilters>
-        + {static} getKpis(filters) : Promise<KpiData>
-        + {static} getProfitAnalysis(filters) : Promise<ProfitData>
-        + {static} getSalesTrend(filters) : Promise<TrendData>
-        + {static} getTopProducts(filters) : Promise<TopProductsData>
-        + {static} getTerritorySales(filters) : Promise<TerritorySalesData>
-        + {static} getFreightAnalysis(filters) : Promise<FreightData>
-        + {static} getTargetStatus(filters) : Promise<TargetStatusData>
-        + {static} getProductCostAnalysis(filters) : Promise<CostData>
-        + {static} getDiscountByProduct(filters) : Promise<DiscountData>
-        + {static} getOrderVolumeByProduct(filters) : Promise<VolumeData>
-        + {static} getPriceGapAnalysis(filters) : Promise<PriceGapData>
-        + {static} getTerritoryDetail(filters) : Promise<TerritoryDetailData>
-        + {static} getEmployeeKpis(filters) : Promise<EmployeeKpiData>
-        + {static} getTopEmployees(filters) : Promise<TopEmployeesData>
-        + {static} getEmployeeSalesByTerritory(filters) : Promise<EmpTerritoryData>
-        + {static} getEmployeeAov(filters) : Promise<AovData>
-        + {static} getPromotionKpis(filters) : Promise<PromoKpiData>
-        + {static} getSalesByPromotion(filters) : Promise<PromoSalesData>
-        + {static} getDiscountTrend(filters) : Promise<DiscountTrendData>
-        + {static} getSalesByCurrency(filters) : Promise<CurrencySalesData>
-        + {static} getFulfillmentKpis(filters) : Promise<FulfillmentData>
-        + {static} getShippingVolume(filters) : Promise<ShipVolumeData>
-        + {static} getFreightByTerritory(filters) : Promise<FreightTerritoryData>
-        + {static} getOrderShipLag(filters) : Promise<ShipLagData>
+        class CubeInsightsService <<Service>> {
+            + {static} getFilters() : Promise<CubeFilters>
+            + {static} getKpis(filters) : Promise<KpiData>
+            + {static} getProfitAnalysis(filters) : Promise<ProfitData>
+            + {static} getSalesTrend(filters) : Promise<TrendData>
+            + {static} getTopProducts(filters) : Promise<TopProductsData>
+            + {static} getTerritorySales(filters) : Promise<TerritorySalesData>
+            + {static} getFreightAnalysis(filters) : Promise<FreightData>
+            + {static} getTargetStatus(filters) : Promise<TargetStatusData>
+            + {static} getProductCostAnalysis(filters) : Promise<CostData>
+            + {static} getDiscountByProduct(filters) : Promise<DiscountData>
+            + {static} getOrderVolumeByProduct(filters) : Promise<VolumeData>
+            + {static} getPriceGapAnalysis(filters) : Promise<PriceGapData>
+            + {static} getTerritoryDetail(filters) : Promise<TerritoryDetailData>
+            + {static} getEmployeeKpis(filters) : Promise<EmployeeKpiData>
+            + {static} getTopEmployees(filters) : Promise<TopEmployeesData>
+            + {static} getEmployeeSalesByTerritory(filters) : Promise<EmpTerritoryData>
+            + {static} getEmployeeAov(filters) : Promise<AovData>
+            + {static} getPromotionKpis(filters) : Promise<PromoKpiData>
+            + {static} getSalesByPromotion(filters) : Promise<PromoSalesData>
+            + {static} getDiscountTrend(filters) : Promise<DiscountTrendData>
+            + {static} getSalesByCurrency(filters) : Promise<CurrencySalesData>
+            + {static} getFulfillmentKpis(filters) : Promise<FulfillmentData>
+            + {static} getShippingVolume(filters) : Promise<ShipVolumeData>
+            + {static} getFreightByTerritory(filters) : Promise<FreightTerritoryData>
+            + {static} getOrderShipLag(filters) : Promise<ShipLagData>
+        }
     }
 }
 
@@ -140,5 +172,26 @@ CatalogService ..> Category : returns >
 CatalogService ..> SubCategory : returns >
 OrdersService ..> Order : returns >
 DashboardService ..> DashboardQuery : accepts >
+
+' ─────────────────────────────────────────────
+'  Legend
+' ─────────────────────────────────────────────
+note bottom of CubeInsightsService
+    <b>Axios Instance (src/config/api.ts)</b>
+    All services share a single Axios instance with:
+    • baseURL: http://localhost:57241
+    • Request interceptor: reads JWT from localStorage
+      and injects <i>Authorization: Bearer {token}</i>
+    • 401 responses redirect to /login automatically.
+end note
+
+legend bottom right
+    |= Symbol |= Meaning |
+    | *-- | Composition (Order owns OrderItems) |
+    | ..> | Dependency (service returns/accepts type) |
+    | <<Interface>> | TypeScript interface (data model) |
+    | <<Service>> | API service class (axios-based) |
+    | {static} | Static method (module-level function) |
+endlegend
 
 @enduml

@@ -84,10 +84,19 @@
   letter-spacing: -0.02em;
 }
 
+[data-theme="light"] .brand-name {
+  color: #0f172a;
+}
+
 .brand-sub {
   font-size: 0.65rem;
   font-weight: 500;
   color: #6366f1;
+}
+
+[data-theme="light"] .brand-sub {
+  color: #312e81;
+}
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }

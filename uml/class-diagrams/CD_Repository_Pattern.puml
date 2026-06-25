@@ -2,9 +2,36 @@
 !theme cerulean-outline
 
 title AdventureWorks Sales BI Platform\nRepository Pattern
+caption Repository interfaces and their EF Core implementations for OLTP data access
 
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #FAFAFA
+    BorderColor #4A90D9
+    HeaderBackgroundColor #E8F0FE
+    FontColor #333333
+    BackgroundColor<<Repository>> #FFF3E0
+    BorderColor<<Repository>> #E65100
+    HeaderBackgroundColor<<Repository>> #FFCC80
+    BackgroundColor<<Interface>> #F3E5F5
+    BorderColor<<Interface>> #7B1FA2
+    HeaderBackgroundColor<<Interface>> #CE93D8
+    BackgroundColor<<DbContext>> #E8F5E9
+    BorderColor<<DbContext>> #2E7D32
+    HeaderBackgroundColor<<DbContext>> #A5D6A7
+}
+
+skinparam ArrowColor #424242
+skinparam ArrowThickness 1.5
+
+hide empty members
 
 ' ─────────────────────────────────────────────
 '  DbContext
@@ -25,36 +52,40 @@ package "Data Access" <<Database>> #F0FDF4 {
 ' ─────────────────────────────────────────────
 package "Ecom.Api.Repositories" <<Rectangle>> #EFF6FF {
 
-    interface ICategoryRepository <<Interface>> {
-        + GetAllAsync() : Task<IEnumerable<Category>>
-        + GetByIdAsync(id: int) : Task<Category?>
-        + CreateAsync(category: Category) : Task<Category>
-        + UpdateAsync(category: Category) : Task<Category>
-        + DeleteAsync(id: int) : Task<bool>
+    together {
+        interface ICategoryRepository <<Interface>> {
+            + GetAllAsync() : Task<IEnumerable<Category>>
+            + GetByIdAsync(id: int) : Task<Category?>
+            + CreateAsync(category: Category) : Task<Category>
+            + UpdateAsync(category: Category) : Task<Category>
+            + DeleteAsync(id: int) : Task<bool>
+        }
+
+        interface ISubCategoryRepository <<Interface>> {
+            + GetAllAsync() : Task<IEnumerable<SubCategory>>
+            + GetByIdAsync(id: int) : Task<SubCategory?>
+            + GetByCategoryIdAsync(categoryId: int) : Task<IEnumerable<SubCategory>>
+            + CreateAsync(subCategory: SubCategory) : Task<SubCategory>
+            + UpdateAsync(subCategory: SubCategory) : Task<SubCategory>
+            + DeleteAsync(id: int) : Task<bool>
+        }
     }
 
-    interface ISubCategoryRepository <<Interface>> {
-        + GetAllAsync() : Task<IEnumerable<SubCategory>>
-        + GetByIdAsync(id: int) : Task<SubCategory?>
-        + GetByCategoryIdAsync(categoryId: int) : Task<IEnumerable<SubCategory>>
-        + CreateAsync(subCategory: SubCategory) : Task<SubCategory>
-        + UpdateAsync(subCategory: SubCategory) : Task<SubCategory>
-        + DeleteAsync(id: int) : Task<bool>
-    }
+    together {
+        interface IProductRepository <<Interface>> {
+            + GetAllAsync() : Task<IEnumerable<Product>>
+            + GetByIdAsync(id: int) : Task<Product?>
+            + GetPagedAsync(query) : Task<PagedResult<Product>>
+            + CreateAsync(product: Product) : Task<Product>
+            + UpdateAsync(product: Product) : Task<Product>
+            + DeleteAsync(id: int) : Task<bool>
+        }
 
-    interface IProductRepository <<Interface>> {
-        + GetAllAsync() : Task<IEnumerable<Product>>
-        + GetByIdAsync(id: int) : Task<Product?>
-        + GetPagedAsync(query) : Task<PagedResult<Product>>
-        + CreateAsync(product: Product) : Task<Product>
-        + UpdateAsync(product: Product) : Task<Product>
-        + DeleteAsync(id: int) : Task<bool>
-    }
-
-    interface IOrderRepository <<Interface>> {
-        + GetByUserIdAsync(userId: string) : Task<IEnumerable<Order>>
-        + GetByIdAsync(id: int) : Task<Order?>
-        + CreateAsync(order: Order) : Task<Order>
+        interface IOrderRepository <<Interface>> {
+            + GetByUserIdAsync(userId: string) : Task<IEnumerable<Order>>
+            + GetByIdAsync(id: int) : Task<Order?>
+            + CreateAsync(order: Order) : Task<Order>
+        }
     }
 }
 
@@ -63,40 +94,44 @@ package "Ecom.Api.Repositories" <<Rectangle>> #EFF6FF {
 ' ─────────────────────────────────────────────
 package "Ecom.Api.Repositories.Impl" <<Rectangle>> #F0F9FF {
 
-    class CategoryRepository <<Repository>> {
-        - _context : OltpDbContext
-        + GetAllAsync() : Task<IEnumerable<Category>>
-        + GetByIdAsync(id: int) : Task<Category?>
-        + CreateAsync(category: Category) : Task<Category>
-        + UpdateAsync(category: Category) : Task<Category>
-        + DeleteAsync(id: int) : Task<bool>
+    together {
+        class CategoryRepository <<Repository>> {
+            - _context : OltpDbContext
+            + GetAllAsync() : Task<IEnumerable<Category>>
+            + GetByIdAsync(id: int) : Task<Category?>
+            + CreateAsync(category: Category) : Task<Category>
+            + UpdateAsync(category: Category) : Task<Category>
+            + DeleteAsync(id: int) : Task<bool>
+        }
+
+        class SubCategoryRepository <<Repository>> {
+            - _context : OltpDbContext
+            + GetAllAsync() : Task<IEnumerable<SubCategory>>
+            + GetByIdAsync(id: int) : Task<SubCategory?>
+            + GetByCategoryIdAsync(categoryId: int) : Task<IEnumerable<SubCategory>>
+            + CreateAsync(subCategory: SubCategory) : Task<SubCategory>
+            + UpdateAsync(subCategory: SubCategory) : Task<SubCategory>
+            + DeleteAsync(id: int) : Task<bool>
+        }
     }
 
-    class SubCategoryRepository <<Repository>> {
-        - _context : OltpDbContext
-        + GetAllAsync() : Task<IEnumerable<SubCategory>>
-        + GetByIdAsync(id: int) : Task<SubCategory?>
-        + GetByCategoryIdAsync(categoryId: int) : Task<IEnumerable<SubCategory>>
-        + CreateAsync(subCategory: SubCategory) : Task<SubCategory>
-        + UpdateAsync(subCategory: SubCategory) : Task<SubCategory>
-        + DeleteAsync(id: int) : Task<bool>
-    }
+    together {
+        class ProductRepository <<Repository>> {
+            - _context : OltpDbContext
+            + GetAllAsync() : Task<IEnumerable<Product>>
+            + GetByIdAsync(id: int) : Task<Product?>
+            + GetPagedAsync(query) : Task<PagedResult<Product>>
+            + CreateAsync(product: Product) : Task<Product>
+            + UpdateAsync(product: Product) : Task<Product>
+            + DeleteAsync(id: int) : Task<bool>
+        }
 
-    class ProductRepository <<Repository>> {
-        - _context : OltpDbContext
-        + GetAllAsync() : Task<IEnumerable<Product>>
-        + GetByIdAsync(id: int) : Task<Product?>
-        + GetPagedAsync(query) : Task<PagedResult<Product>>
-        + CreateAsync(product: Product) : Task<Product>
-        + UpdateAsync(product: Product) : Task<Product>
-        + DeleteAsync(id: int) : Task<bool>
-    }
-
-    class OrderRepository <<Repository>> {
-        - _context : OltpDbContext
-        + GetByUserIdAsync(userId: string) : Task<IEnumerable<Order>>
-        + GetByIdAsync(id: int) : Task<Order?>
-        + CreateAsync(order: Order) : Task<Order>
+        class OrderRepository <<Repository>> {
+            - _context : OltpDbContext
+            + GetByUserIdAsync(userId: string) : Task<IEnumerable<Order>>
+            + GetByIdAsync(id: int) : Task<Order?>
+            + CreateAsync(order: Order) : Task<Order>
+        }
     }
 }
 
@@ -112,5 +147,26 @@ CategoryRepository --> OltpDbContext : depends on >
 SubCategoryRepository --> OltpDbContext : depends on >
 ProductRepository --> OltpDbContext : depends on >
 OrderRepository --> OltpDbContext : depends on >
+
+' ─────────────────────────────────────────────
+'  Legend
+' ─────────────────────────────────────────────
+note bottom of OltpDbContext
+    <b>Shared DbContext via DI</b>
+    OltpDbContext is registered as <i>Scoped</i> in DI.
+    All four repositories receive the same instance
+    per HTTP request, enabling transactional consistency.
+    SaveChangesAsync() is called inside each mutation
+    method on the repository, not at the controller level.
+end note
+
+legend bottom right
+    |= Symbol |= Meaning |
+    | <|.. | Implementation (implements interface) |
+    | --> | Dependency (injected via DI) |
+    | <<Interface>> | Repository contract |
+    | <<Repository>> | Concrete EF Core implementation |
+    | <<DbContext>> | Entity Framework database context |
+endlegend
 
 @enduml

@@ -2,15 +2,37 @@
 !theme cerulean-outline
 
 title AdventureWorks Sales BI Platform\nOLTP Database ERD
+caption Entity-relationship diagram for the transactional database schema
 
 skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam packageStyle rectangle
+
+skinparam entity {
+    BackgroundColor #FAFAFA
+    BorderColor #607D8B
+    HeaderBackgroundColor #ECEFF1
+    FontColor #212121
+    BackgroundColor<<Entity>> #FAFAFA
+    BorderColor<<Entity>> #546E7A
+    HeaderBackgroundColor<<Entity>> #CFD8DC
+}
+
+skinparam ArrowColor #37474F
+skinparam ArrowThickness 1.5
+
+hide empty members
 
 ' ─────────────────────────────────────────────
 '  ASP.NET Identity tables
 ' ─────────────────────────────────────────────
-package "dbo (ASP.NET Identity)" <<Rectangle>> #EEF2FF {
+package "dbo (ASP.NET Identity)" <<Database>> #EEF2FF {
 
-    entity "AspNetUsers" as Users {
+    entity "AspNetUsers" as Users <<Entity>> {
         * **Id** : nvarchar(450) <<PK>>
         --
         UserName : nvarchar(256)
@@ -29,7 +51,7 @@ package "dbo (ASP.NET Identity)" <<Rectangle>> #EEF2FF {
         AccessFailedCount : int
     }
 
-    entity "AspNetRoles" as Roles {
+    entity "AspNetRoles" as Roles <<Entity>> {
         * **Id** : nvarchar(450) <<PK>>
         --
         Name : nvarchar(256)
@@ -37,7 +59,7 @@ package "dbo (ASP.NET Identity)" <<Rectangle>> #EEF2FF {
         ConcurrencyStamp : nvarchar(max)
     }
 
-    entity "AspNetUserRoles" as UserRoles {
+    entity "AspNetUserRoles" as UserRoles <<Entity>> {
         * **UserId** : nvarchar(450) <<PK, FK>>
         * **RoleId** : nvarchar(450) <<PK, FK>>
     }
@@ -46,22 +68,22 @@ package "dbo (ASP.NET Identity)" <<Rectangle>> #EEF2FF {
 ' ─────────────────────────────────────────────
 '  Product catalog tables
 ' ─────────────────────────────────────────────
-package "dbo (Catalog)" <<Rectangle>> #F0FDF4 {
+package "dbo (Catalog)" <<Database>> #F0FDF4 {
 
-    entity "Categories" as Categories {
+    entity "Categories" as Categories <<Entity>> {
         * **Id** : int <<PK, Identity>>
         --
         Name : nvarchar(100) <<not null>>
     }
 
-    entity "SubCategories" as SubCategories {
+    entity "SubCategories" as SubCategories <<Entity>> {
         * **Id** : int <<PK, Identity>>
         --
         Name : nvarchar(100) <<not null>>
         CategoryId : int <<FK, not null>>
     }
 
-    entity "Products" as Products {
+    entity "Products" as Products <<Entity>> {
         * **Id** : int <<PK, Identity>>
         --
         Sku : nvarchar(50)
@@ -84,9 +106,9 @@ package "dbo (Catalog)" <<Rectangle>> #F0FDF4 {
 ' ─────────────────────────────────────────────
 '  Sales order tables (mapped to Sales schema)
 ' ─────────────────────────────────────────────
-package "Sales" <<Rectangle>> #FFF7ED {
+package "Sales" <<Database>> #FFF7ED {
 
-    entity "SalesOrderHeader" as OrderHeader {
+    entity "SalesOrderHeader" as OrderHeader <<Entity>> {
         * **SalesOrderID** : int <<PK>>
         --
         OrderDate : datetime2 <<not null>>
@@ -101,7 +123,7 @@ package "Sales" <<Rectangle>> #FFF7ED {
         <i>Order.UserId -> Comment</i>
     }
 
-    entity "SalesOrderDetail" as OrderDetail {
+    entity "SalesOrderDetail" as OrderDetail <<Entity>> {
         * **SalesOrderDetailID** : int <<PK>>
         --
         SalesOrderID : int <<FK, not null>>
@@ -130,5 +152,29 @@ Categories ||--o{ Products : CategoryId
 Users ||--o{ OrderHeader : "Comment (UserId)"
 OrderHeader ||--|{ OrderDetail : SalesOrderID
 Products ||--o{ OrderDetail : ProductID
+
+' ─────────────────────────────────────────────
+'  Legend
+' ─────────────────────────────────────────────
+note bottom of OrderHeader
+    <b>EF Core Mapping Quirk</b>
+    Order.UserId stored in <i>Comment</i> column (nvarchar FK workaround).
+    Trigger <i>uSalesOrderHeader</i> fires on UPDATE.
+    Table is marked <i>ExcludeFromMigrations()</i> — pre-exists in AdventureWorks.
+    SalesOrderDetail similarly uses existing AW trigger <i>iduSalesOrderDetail</i>.
+end note
+
+legend bottom right
+    |= Symbol |= Meaning |
+    | \|\|--o{ | One-to-many (zero or more on right) |
+    | \|\|--\|{ | One-to-many (one or more on right) |
+    | <<PK>> | Primary key |
+    | <<FK>> | Foreign key reference |
+    | <<Identity>> | SQL Server IDENTITY auto-increment |
+    | * bold | Mandatory / NOT NULL column |
+    | #EEF2FF | ASP.NET Identity schema (dbo) |
+    | #F0FDF4 | Product catalog schema (dbo) |
+    | #FFF7ED | Sales order schema (Sales.*) |
+endlegend
 
 @enduml

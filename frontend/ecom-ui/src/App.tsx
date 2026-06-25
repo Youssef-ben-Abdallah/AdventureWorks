@@ -10,6 +10,8 @@ import { MyOrders } from './pages/MyOrders/MyOrders';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { CubeInsights } from './pages/CubeInsights/CubeInsights';
 import { AdminDashboard } from './pages/AdminDashboard/AdminDashboard';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { NotFound } from './pages/NotFound/NotFound';
 
 function App() {
   return (
@@ -20,12 +22,22 @@ function App() {
           <Route path="products" element={<Products />} />
           <Route path="products/:id" element={<ProductDetails />} />
           <Route path="login" element={<Login />} />
-          <Route path="cart" element={<Cart />} />
-          <Route path="orders" element={<MyOrders />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="cube-insights" element={<CubeInsights />} />
-          <Route path="admin" element={<AdminDashboard />} />
-          {/* Add other routes here as they are built */}
+          
+          {/* Protected user routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="cart" element={<Cart />} />
+            <Route path="orders" element={<MyOrders />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="cube-insights" element={<CubeInsights />} />
+          </Route>
+
+          {/* Protected admin route */}
+          <Route element={<ProtectedRoute requireAdmin={true} />}>
+            <Route path="admin" element={<AdminDashboard />} />
+          </Route>
+
+          {/* Catch-all Not Found */}
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>

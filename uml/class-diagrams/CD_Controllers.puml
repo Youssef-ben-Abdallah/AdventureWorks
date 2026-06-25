@@ -2,9 +2,36 @@
 !theme cerulean-outline
 
 title AdventureWorks Sales BI Platform\nAPI Controllers
+caption ASP.NET Core Web API controllers with JWT authorization and role-based access
 
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #FAFAFA
+    BorderColor #4A90D9
+    HeaderBackgroundColor #E8F0FE
+    FontColor #333333
+    BackgroundColor<<Controller>> #E3F2FD
+    BorderColor<<Controller>> #1565C0
+    HeaderBackgroundColor<<Controller>> #90CAF9
+    BackgroundColor<<Framework>> #EDE7F6
+    BorderColor<<Framework>> #4527A0
+    HeaderBackgroundColor<<Framework>> #CE93D8
+    BackgroundColor<<Interface>> #F3E5F5
+    BorderColor<<Interface>> #7B1FA2
+    HeaderBackgroundColor<<Interface>> #CE93D8
+}
+
+skinparam ArrowColor #424242
+skinparam ArrowThickness 1.5
+
+hide empty members
 
 ' ─────────────────────────────────────────────
 '  Base
@@ -21,15 +48,21 @@ abstract class ControllerBase <<Framework>> #EEF2FF {
 '  Dependencies (compact)
 ' ─────────────────────────────────────────────
 package "Services & Repositories" <<Rectangle>> #F0FDF4 {
-    interface ICategoryRepository <<Interface>>
-    interface ISubCategoryRepository <<Interface>>
-    interface IProductRepository <<Interface>>
-    interface IOrderRepository <<Interface>>
-    interface IJwtTokenService <<Interface>>
-    interface IDashboardService <<Interface>>
-    interface IOlapService <<Interface>>
-    class "UserManager<AppUser>" as UserManager <<Framework>>
-    class "SignInManager<AppUser>" as SignInManager <<Framework>>
+    together {
+        interface ICategoryRepository <<Interface>>
+        interface ISubCategoryRepository <<Interface>>
+        interface IProductRepository <<Interface>>
+        interface IOrderRepository <<Interface>>
+    }
+    together {
+        interface IJwtTokenService <<Interface>>
+        interface IDashboardService <<Interface>>
+        interface IOlapService <<Interface>>
+    }
+    together {
+        class "UserManager<AppUser>" as UserManager <<Framework>>
+        class "SignInManager<AppUser>" as SignInManager <<Framework>>
+    }
 }
 
 ' ─────────────────────────────────────────────
@@ -37,38 +70,49 @@ package "Services & Repositories" <<Rectangle>> #F0FDF4 {
 ' ─────────────────────────────────────────────
 package "Ecom.Api.Controllers" <<Rectangle>> #EFF6FF {
 
-    class AuthController <<ApiController>> {
-        - _userManager : UserManager<AppUser>
-        - _signInManager : SignInManager<AppUser>
-        - _jwtTokenService : IJwtTokenService
-        __
-        + {method} <<AllowAnonymous>> Register(dto) : Task<IActionResult>
-        + {method} <<AllowAnonymous>> Login(dto) : Task<IActionResult>
-        + {method} <<Authorize>> Me() : Task<IActionResult>
+    together {
+        class AuthController <<Controller>> {
+            - _userManager : UserManager<AppUser>
+            - _signInManager : SignInManager<AppUser>
+            - _jwtTokenService : IJwtTokenService
+            __
+            + {method} <<AllowAnonymous>> Register(dto) : Task<IActionResult>
+            + {method} <<AllowAnonymous>> Login(dto) : Task<IActionResult>
+            + {method} <<Authorize>> Me() : Task<IActionResult>
+        }
+
+        class OrdersController <<Controller>> {
+            - _repository : IOrderRepository
+            __
+            + {method} <<Authorize>> GetMyOrders() : Task<IActionResult>
+            + {method} <<Authorize>> CreateOrder(dto) : Task<IActionResult>
+        }
     }
 
-    class CategoriesController <<ApiController>> {
-        - _repository : ICategoryRepository
-        __
-        + {method} <<Authorize>> GetAll() : Task<IActionResult>
-        + {method} <<Authorize>> GetById(id) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Create(dto) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Update(id, dto) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Delete(id) : Task<IActionResult>
+    together {
+        class CategoriesController <<Controller>> {
+            - _repository : ICategoryRepository
+            __
+            + {method} <<Authorize>> GetAll() : Task<IActionResult>
+            + {method} <<Authorize>> GetById(id) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Create(dto) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Update(id, dto) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Delete(id) : Task<IActionResult>
+        }
+
+        class SubCategoriesController <<Controller>> {
+            - _repository : ISubCategoryRepository
+            __
+            + {method} <<Authorize>> GetAll() : Task<IActionResult>
+            + {method} <<Authorize>> GetById(id) : Task<IActionResult>
+            + {method} <<Authorize>> GetByCategoryId(categoryId) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Create(dto) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Update(id, dto) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Delete(id) : Task<IActionResult>
+        }
     }
 
-    class SubCategoriesController <<ApiController>> {
-        - _repository : ISubCategoryRepository
-        __
-        + {method} <<Authorize>> GetAll() : Task<IActionResult>
-        + {method} <<Authorize>> GetById(id) : Task<IActionResult>
-        + {method} <<Authorize>> GetByCategoryId(categoryId) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Create(dto) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Update(id, dto) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Delete(id) : Task<IActionResult>
-    }
-
-    class ProductsController <<ApiController>> {
+    class ProductsController <<Controller>> {
         - _repository : IProductRepository
         __
         + {method} <<Authorize>> GetAll() : Task<IActionResult>
@@ -80,53 +124,48 @@ package "Ecom.Api.Controllers" <<Rectangle>> #EFF6FF {
         + {method} <<Authorize(Admin)>> UploadImage(id, file) : Task<IActionResult>
     }
 
-    class OrdersController <<ApiController>> {
-        - _repository : IOrderRepository
-        __
-        + {method} <<Authorize>> GetMyOrders() : Task<IActionResult>
-        + {method} <<Authorize>> CreateOrder(dto) : Task<IActionResult>
-    }
+    together {
+        class DashboardController <<Controller>> {
+            - _dashboardService : IDashboardService
+            __
+            + {method} <<Authorize(Admin)>> Filters() : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Overview(query) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Products(query) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Customers(query) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> SalesTeam(query) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Shipping(query) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Details(query) : Task<IActionResult>
+        }
 
-    class DashboardController <<ApiController>> {
-        - _dashboardService : IDashboardService
-        __
-        + {method} <<Authorize(Admin)>> Filters() : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Overview(query) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Products(query) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Customers(query) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> SalesTeam(query) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Shipping(query) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Details(query) : Task<IActionResult>
-    }
-
-    class CubeInsightsController <<ApiController>> {
-        - _olapService : IOlapService
-        __
-        + {method} <<Authorize(Admin)>> Filters() : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> Kpis(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> ProfitAnalysis(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> SalesTrend(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> TopProducts(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> TerritorySales(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> FreightAnalysis(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> TargetStatus(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> ProductCostAnalysis(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> DiscountByProduct(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> OrderVolumeByProduct(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> PriceGapAnalysis(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> TerritoryDetail(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> EmployeeKpis(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> TopEmployees(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> EmployeeSalesByTerritory(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> EmployeeAov(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> PromotionKpis(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> SalesByPromotion(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> DiscountTrend(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> SalesByCurrency(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> FulfillmentKpis(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> ShippingVolume(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> FreightByTerritory(filters) : Task<IActionResult>
-        + {method} <<Authorize(Admin)>> OrderShipLag(filters) : Task<IActionResult>
+        class CubeInsightsController <<Controller>> {
+            - _olapService : IOlapService
+            __
+            + {method} <<Authorize(Admin)>> Filters() : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> Kpis(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> ProfitAnalysis(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> SalesTrend(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> TopProducts(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> TerritorySales(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> FreightAnalysis(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> TargetStatus(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> ProductCostAnalysis(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> DiscountByProduct(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> OrderVolumeByProduct(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> PriceGapAnalysis(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> TerritoryDetail(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> EmployeeKpis(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> TopEmployees(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> EmployeeSalesByTerritory(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> EmployeeAov(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> PromotionKpis(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> SalesByPromotion(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> DiscountTrend(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> SalesByCurrency(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> FulfillmentKpis(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> ShippingVolume(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> FreightByTerritory(filters) : Task<IActionResult>
+            + {method} <<Authorize(Admin)>> OrderShipLag(filters) : Task<IActionResult>
+        }
     }
 }
 
@@ -153,5 +192,39 @@ ProductsController --> IProductRepository : injects >
 OrdersController --> IOrderRepository : injects >
 DashboardController --> IDashboardService : injects >
 CubeInsightsController --> IOlapService : injects >
+
+' ─────────────────────────────────────────────
+'  Legend
+' ─────────────────────────────────────────────
+note right of AuthController
+    <b>JWT Authentication Flow</b>
+    1. POST /api/auth/login → validates credentials
+       via SignInManager.CheckPasswordSignInAsync()
+    2. IJwtTokenService.GenerateToken() creates
+       a signed HS256 token (exp: configurable)
+    3. Token stored in browser localStorage and
+       sent as <i>Authorization: Bearer {token}</i>
+       on every subsequent request.
+end note
+
+note right of CubeInsightsController
+    <b>Note on Authorization</b>
+    Originally <<AllowAnonymous>> in some endpoints.
+    All CubeInsights endpoints are now
+    <<Authorize(Admin)>> — only Admin role
+    can access SSAS MDX analytics.
+end note
+
+legend bottom right
+    |= Symbol |= Meaning |
+    | <|-- | Inheritance (extends ControllerBase) |
+    | --> | Dependency injection |
+    | <<Controller>> | ASP.NET Web API controller |
+    | <<Interface>> | Service/repository contract |
+    | <<Framework>> | ASP.NET framework class |
+    | <<Authorize>> | Requires authenticated user |
+    | <<Authorize(Admin)>> | Requires Admin role |
+    | <<AllowAnonymous>> | No authentication required |
+endlegend
 
 @enduml

@@ -9,11 +9,12 @@ export const Navbar = () => {
   const { isLoggedIn, isAdmin, username, logout } = useAuth();
   const { count } = useCart();
   const { isLightMode, toggleTheme } = useTheme();
-  
+  const navigate = useNavigate();
+
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  
+
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export const Navbar = () => {
             </div>
             <div className="brand-text">
               <span className="brand-name">AdventureWorks</span>
-              <span className="brand-sub">Bike Store</span>
+              <span className="brand-name">Bike Store</span>
             </div>
           </Link>
 
@@ -121,7 +122,7 @@ export const Navbar = () => {
                   <span className="account-name">{username || 'Account'}</span>
                   <span className="material-icons chevron">expand_more</span>
                 </button>
-                
+
                 {accountMenuOpen && (
                   <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-card ring-1 ring-black ring-opacity-5 z-50 overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-glow)' }}>
                     <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
@@ -133,7 +134,7 @@ export const Navbar = () => {
                         <span className="material-icons mr-2 text-sm">receipt_long</span>
                         My Orders
                       </Link>
-                      <button onClick={() => { logout(); setAccountMenuOpen(false); }} className="flex w-full items-center px-4 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors text-left">
+                      <button onClick={() => { logout(); setAccountMenuOpen(false); navigate('/'); }} className="flex w-full items-center px-4 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors text-left">
                         <span className="material-icons mr-2 text-sm">logout</span>
                         Sign Out
                       </button>
@@ -194,7 +195,7 @@ export const Navbar = () => {
           )}
           <div className="mobile-divider"></div>
           {isLoggedIn ? (
-            <button className="mobile-nav-link mobile-logout" onClick={() => { logout(); closeMenu(); }}>
+            <button className="mobile-nav-link mobile-logout" onClick={() => { logout(); closeMenu(); navigate('/'); }}>
               <span className="material-icons">logout</span> Sign Out
             </button>
           ) : (

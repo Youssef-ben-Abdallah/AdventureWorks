@@ -8,9 +8,36 @@ skinparam linetype ortho
 skinparam nodesep 50
 skinparam ranksep 40
 
+skinparam component {
+    BackgroundColor #FAFAFA
+    BorderColor #607D8B
+    FontColor #212121
+    BackgroundColor<<Router>> #F8BBD0
+    BorderColor<<Router>> #AD1457
+    BackgroundColor<<Context>> #C5CAE9
+    BorderColor<<Context>> #283593
+    BackgroundColor<<Layout>> #B2DFDB
+    BorderColor<<Layout>> #00695C
+    BackgroundColor<<Page>> #BBDEFB
+    BorderColor<<Page>> #1565C0
+    BackgroundColor<<Component>> #DCEDC8
+    BorderColor<<Component>> #33691E
+    BackgroundColor<<Service>> #FFE0B2
+    BorderColor<<Service>> #E65100
+    BackgroundColor<<Config>> #E1BEE7
+    BorderColor<<Config>> #6A1B9A
+    BackgroundColor<<Types>> #CFD8DC
+    BorderColor<<Types>> #37474F
+}
+
+skinparam interface {
+    BackgroundColor #F3E5F5
+    BorderColor #7B1FA2
+}
+
 ' ── Routing ───────────────────────────────────────────────
 package "Routing\n[react-router-dom]" as ROUTING <<Rectangle>> #FCE4EC {
-    component "[BrowserRouter]\nNested Routes" as Router #F8BBD0
+    component "BrowserRouter\nNested Routes" <<Router>> as Router
     note right of Router
         Route tree:
         / -> Layout (Outlet)
@@ -28,9 +55,9 @@ package "Routing\n[react-router-dom]" as ROUTING <<Rectangle>> #FCE4EC {
 
 ' ── Context Providers ─────────────────────────────────────
 package "Context Providers\n[React Context API]" as CTX <<Rectangle>> #E8EAF6 {
-    component "[ThemeProvider]\nThemeContext" as ThemeProv #C5CAE9
-    component "[AuthProvider]\nAuthContext\n(JWT token, user state)" as AuthProv #C5CAE9
-    component "[CartProvider]\nCartContext\n(cart items, quantities)" as CartProv #C5CAE9
+    component "ThemeProvider\nThemeContext" <<Context>> as ThemeProv
+    component "AuthProvider\nAuthContext\n(JWT token, user state)" <<Context>> as AuthProv
+    component "CartProvider\nCartContext\n(cart items, quantities)" <<Context>> as CartProv
 
     note bottom of CTX
         Wrapping order in main.tsx:
@@ -38,54 +65,54 @@ package "Context Providers\n[React Context API]" as CTX <<Rectangle>> #E8EAF6 {
           > ThemeProvider
             > AuthProvider
               > CartProvider
-                > <Routes>
+                > Routes
     end note
 }
 
 ' ── Layout Components ─────────────────────────────────────
 package "Layout Components" as LAYOUT <<Rectangle>> #E0F2F1 {
-    component "[Layout]\n<Navbar />\n<Outlet />\n<Footer />" as LayoutComp #B2DFDB
-    component "[Navbar]\nNavigation + Theme Toggle\n+ Auth Status" as Navbar #B2DFDB
-    component "[Footer]" as Footer #B2DFDB
+    component "Layout\n<Navbar /> + <Outlet /> + <Footer />" <<Layout>> as LayoutComp
+    component "Navbar\nNavigation + Theme Toggle\n+ Auth Status" <<Layout>> as Navbar
+    component "Footer" <<Layout>> as Footer
 }
 
 ' ── Pages ─────────────────────────────────────────────────
 package "Pages" as PAGES <<Rectangle>> #E3F2FD {
-    component "[Home]\nLanding page" as HomePage #BBDEFB
-    component "[Products]\nProduct listing\n+ search/filter" as ProductsPage #BBDEFB
-    component "[ProductDetails]\nSingle product view\n+ add to cart" as ProductDetailPage #BBDEFB
-    component "[Login]\nSign in / Register" as LoginPage #BBDEFB
-    component "[Cart]\nShopping cart\n+ checkout" as CartPage #BBDEFB
-    component "[MyOrders]\nOrder history\n+ status tracking" as MyOrdersPage #BBDEFB
-    component "[Dashboard]\nSales analytics\n(DW queries)" as DashboardPage #BBDEFB
-    component "[CubeInsights]\nOLAP analytics\n(SSAS MDX)" as CubeInsightsPage #BBDEFB
-    component "[AdminDashboard]\nAdmin analytics\n+ management" as AdminPage #BBDEFB
+    component "Home\nLanding page" <<Page>> as HomePage
+    component "Products\nProduct listing + search/filter" <<Page>> as ProductsPage
+    component "ProductDetails\nSingle product + add to cart" <<Page>> as ProductDetailPage
+    component "Login\nSign in / Register" <<Page>> as LoginPage
+    component "Cart\nShopping cart + checkout" <<Page>> as CartPage
+    component "MyOrders\nOrder history + status" <<Page>> as MyOrdersPage
+    component "Dashboard\nSales analytics (DW queries)" <<Page>> as DashboardPage
+    component "CubeInsights\nOLAP analytics (SSAS MDX)" <<Page>> as CubeInsightsPage
+    component "AdminDashboard\nAdmin analytics + management" <<Page>> as AdminPage
 }
 
 ' ── Dashboard Components ──────────────────────────────────
 package "Dashboard Components" as DASHCOMP <<Rectangle>> #F1F8E9 {
-    component "[ChartCard]\nRecharts wrapper\n(Bar, Pie, Line)" as ChartCard #DCEDC8
-    component "[KpiCards]\nMetric display cards" as KpiCards #DCEDC8
-    component "[NotesPanel]\nAnnotations panel" as NotesPanel #DCEDC8
+    component "ChartCard\nRecharts wrapper\n(Bar, Pie, Line, Area)" <<Component>> as ChartCard
+    component "KpiCards\nMetric display cards" <<Component>> as KpiCards
+    component "NotesPanel\nAnnotations panel" <<Component>> as NotesPanel
 }
 
 ' ── Services ──────────────────────────────────────────────
 package "API Services\n[Axios-based]" as SERVICES <<Rectangle>> #FFF3E0 {
-    component "[AuthService]\nauth.ts\nlogin, register, logout" as AuthSvc #FFE0B2
-    component "[CatalogService]\ncatalog.ts\nproducts, categories" as CatSvc #FFE0B2
-    component "[OrdersService]\norders.ts\ncreate, list orders" as OrdSvc #FFE0B2
-    component "[DashboardService]\ndashboard.ts\nDW analytics data" as DashSvc #FFE0B2
-    component "[CubeInsightsService]\ncubeInsights.ts\nSSAS OLAP data" as CubeSvc #FFE0B2
+    component "AuthService\nauth.ts\nlogin, register, logout" <<Service>> as AuthSvc
+    component "CatalogService\ncatalog.ts\nproducts, categories" <<Service>> as CatSvc
+    component "OrdersService\norders.ts\ncreate, list orders" <<Service>> as OrdSvc
+    component "DashboardService\ndashboard.ts\nDW analytics data" <<Service>> as DashSvc
+    component "CubeInsightsService\ncubeInsights.ts\nSSAS OLAP data" <<Service>> as CubeSvc
 }
 
 ' ── Config ────────────────────────────────────────────────
 package "Config" as CONFIG <<Rectangle>> #F3E5F5 {
-    component "[apiClient]\napi.ts\nAxios instance\nbaseURL: localhost:57241\nJWT interceptor" as ApiClient #E1BEE7
+    component "apiClient\napi.ts\nAxios instance\nbaseURL: localhost:57241\nJWT interceptor" <<Config>> as ApiClient
 }
 
 ' ── Types ─────────────────────────────────────────────────
 package "Types" as TYPES <<Rectangle>> #ECEFF1 {
-    component "[models.ts]\nTypeScript interfaces\n& type definitions" as Models #CFD8DC
+    component "models.ts\nTypeScript interfaces\n& type definitions" <<Types>> as Models
 }
 
 ' ── External ──────────────────────────────────────────────

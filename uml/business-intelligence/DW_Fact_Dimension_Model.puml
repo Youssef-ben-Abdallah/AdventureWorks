@@ -143,12 +143,35 @@ TERRDIM .[#6A1B9A,dashed].> SPDIM : SalesPerson.TerritoryID\n(shared)
 
 FACT -[#1565C0,dotted]-> VIEW : materializes into
 
+note right of FACT
+    Measures organized by
+    business category:
+    Revenue, Cost/Tax, Quantity,
+    and Date Attributes.
+    All numeric measures support
+    SUM aggregation in SSAS.
+end note
+
+note bottom of TERRDIM
+    Conformed dimension shared
+    between Territory hierarchy
+    and SalesPerson TerritoryID
+    foreign key linkage.
+end note
+
 legend bottom
   |= Color |= Meaning |
-  | <back:#E3F2FD>Blue</back> | Fact table & measures |
+  | <back:#E3F2FD>Blue</back> | Fact table & numeric measures |
   | <back:#E8F5E9>Green</back> | Standard dimensions |
   | <back:#F3E5F5>Purple</back> | Shared / conformed dimensions |
-  | <back:#FFF8E1>Yellow</back> | Hierarchies & drill paths |
+  | <back:#FFF8E1>Yellow</back> | Dimension hierarchies & drill paths |
+  |= Arrow Style |= Meaning |
+  | -[#2E7D32,bold]--> | Standard dimension FK join |
+  | -[#6A1B9A,bold]--> | Shared/conformed dimension join |
+  | -[#F9A825,bold]-> | Drill-down hierarchy path |
+  | -[#1565C0,dotted]-> | Materialized view dependency |
 endlegend
+
+footer AdventureWorks Sales BI Platform | DW Fact & Dimension Model | Page %page% of %lastpage%
 
 @enduml

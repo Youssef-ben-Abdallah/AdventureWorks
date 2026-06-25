@@ -137,6 +137,25 @@ legend bottom
   | <back:#FFE0B2>Transform</back> | Validate, apply business rules, map keys |
   | <back:#FFCDD2>Error</back> | Rejected records, alerts, data quality reports |
   | <back:#BBDEFB>Load</back> | Execute stored procedures into DW tables |
+  |= Stored Procedure |= Target Table |
+  | updateCurrency | Currency (Dim) |
+  | updateCustomer | Customer (Dim) |
+  | UpdateProduct | Products (Dim) |
+  | updateSalesPerson | SalesPerson (Dim) |
+  | updateShipMethod | ShipMethod (Dim) |
+  | updateTerritory | Territory (Dim) |
+  | updateSales | Sales (Fact) |
 endlegend
+
+note right of AUDITLOG
+    Log entries include:
+    - Rows inserted/updated
+    - Execution duration
+    - Rejected record count
+    - Error details (if any)
+    - Package name & run ID
+end note
+
+footer AdventureWorks Sales BI Platform | ETL Process Flow | Page %page% of %lastpage%
 
 @enduml

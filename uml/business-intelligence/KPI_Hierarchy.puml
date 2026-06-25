@@ -157,6 +157,6 @@ legend right
   | <#E8F5E9> Source | Physical data source (fact/dim tables) |
 endlegend
 
-footer AdventureWorks Sales BI Platform | KPI Hierarchy Diagram
+footer AdventureWorks Sales BI Platform | KPI Hierarchy Diagram | Page %page% of %lastpage%
 
 @enduml

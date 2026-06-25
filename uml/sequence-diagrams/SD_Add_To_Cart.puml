@@ -51,20 +51,25 @@ end note
 == User Views Product ==
 
 User -> React : Viewing ProductDetails page\nProduct: { id, name, price, stockQty, ... }
+activate React
 React --> User : Shows product info,\nquantity selector,\n"Add to Cart" button
+deactivate React
 
 == Add to Cart ==
 
 User -> React : Sets quantity (e.g. qty = 2)\nClicks **"Add to Cart"**
+activate React
 
 React -> CartCtx : cart.add(product, qty)
+deactivate React
+activate CartCtx
 
 CartCtx -> CartCtx : const q = Math.max(1, qty)
 
 alt Product already in cart
     CartCtx -> CartCtx : Find existing CartItem\nwhere item.product.id === product.id
     CartCtx -> CartCtx : Update qty:\nMath.min(\n  existingQty + q,\n  product.stockQty\n)
-    note right of CartCtx : Caps at stockQty\nto prevent over-ordering
+    note over CartCtx : Caps at stockQty\nto prevent over-ordering
 else Product not in cart
     CartCtx -> CartCtx : Push new CartItem:\n{ product, qty: Math.min(q, stockQty) }
 end
@@ -76,8 +81,9 @@ CartCtx -> CartCtx : setItems(updatedItems)\nTriggers React re-render
 CartCtx -> CartCtx : useEffect detects\nitems state change
 
 CartCtx -> Storage : localStorage.setItem(\n  "ecom_cart_v1",\n  JSON.stringify(items)\n)
+activate Storage
 
-note right of Storage
+note over Storage
     Stored as JSON array:
     [
       {
@@ -87,16 +93,24 @@ note right of Storage
     ]
 end note
 
+Storage --> CartCtx : OK
+deactivate Storage
+
 == UI Updates (via React Context) ==
 
 CartCtx -> CartCtx : Recompute derived state:\n  count = items.reduce(sum + qty)\n  total = items.reduce(sum + qty * price)
 
 CartCtx -> Navbar : Context re-render propagates\nto all CartContext consumers
+deactivate CartCtx
+activate Navbar
 Navbar -> Navbar : Update cart badge\ncount = {cart.count}
 Navbar --> User : Badge shows updated\nitem count (e.g. "2")
+deactivate Navbar
 
+activate React
 CartCtx -> React : Re-render ProductDetails\nif cart state referenced
 React --> User : Visual feedback:\n"Added to cart" confirmation
+deactivate React
 
 == Cart Restoration on Page Reload ==
 
@@ -105,12 +119,20 @@ note over CartCtx, Storage
 end note
 
 User -> React : Refreshes page / reopens app
+activate React
 React -> CartCtx : CartProvider initializes
+deactivate React
+activate CartCtx
 CartCtx -> Storage : localStorage.getItem("ecom_cart_v1")
+activate Storage
 Storage --> CartCtx : JSON string
+deactivate Storage
 CartCtx -> CartCtx : JSON.parse(raw)\nFilter valid items:\n  x.product exists\n  x.product.id is number
 CartCtx -> CartCtx : useState initialized\nwith restored items
 CartCtx -> Navbar : Badge shows persisted count
+deactivate CartCtx
+activate Navbar
 Navbar --> User : Cart badge reflects\nprevious session items
+deactivate Navbar
 
 @enduml

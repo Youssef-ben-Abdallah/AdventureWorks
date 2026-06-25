@@ -26,7 +26,7 @@ start
 
 |React Frontend (CartContext)|
 if (items.length === 0?) then (yes)
-  :Show "Your cart is empty"\nwith link to Products;
+  #LightCoral:Show "Your cart is empty"\nwith link to Products;
   stop
 else (no)
   :Render cart items\nwith qty controls;
@@ -42,97 +42,108 @@ endif
 :Review Order Summary\n(item count + total)\nand click **Checkout**;
 
 |React Frontend (CartContext)|
-:Check auth token\nin localStorage;
+#LightYellow:Check auth token\nin localStorage;
 
 if (JWT token exists?) then (no)
-  :Redirect to **/login**\n(Axios 401 interceptor);
-  stop
+  #LightCoral:Redirect to **/login**\n(Axios 401 interceptor);
+  detach
 else (yes)
   :Proceed with checkout;
 endif
 
 :Build CreateOrderDto payload\n{ items: [{ productId, qty }],\n  customerID: 1,\n  billToAddressID: 1,\n  shipToAddressID: 1,\n  shipMethodID: 1 };
 
-:POST /api/orders\nwith Authorization: Bearer <JWT>;
+#LightBlue:POST /api/orders\nwith Authorization: Bearer <JWT>;
 
 |ASP.NET Core Backend|
 :OrdersController.Create()\nextracts userId from JWT claims;
 
 if (userId is empty?) then (yes)
-  :Return **401 Unauthorized**;
+  #LightCoral:Return **401 Unauthorized**;
   |React Frontend (CartContext)|
-  :Show error message;
-  stop
+  #LightCoral:Show error message;
+  detach
 else (no)
 endif
 
 if (dto.Items.Count === 0?) then (yes)
-  :Return **400 BadRequest**\n"Order must contain at\nleast 1 item";
+  #LightCoral:Return **400 BadRequest**\n"Order must contain at\nleast 1 item";
   |React Frontend (CartContext)|
-  :Show error, preserve cart;
-  stop
+  #LightCoral:Show error, preserve cart;
+  detach
 else (no)
 endif
 
 :Loop through each item;
 
+note right
+  Stock is deducted eagerly
+  per item. On any failure,
+  previous deductions are
+  rolled back by EF Core
+  transaction scope.
+end note
+
 repeat
-  :Fetch product by ID;
+  #LightBlue:Fetch product by ID;
   if (Product not found?) then (yes)
-    :Return **400 BadRequest**\n"Product {id} not found";
+    #LightCoral:Return **400 BadRequest**\n"Product {id} not found";
     |React Frontend (CartContext)|
-    :Show error, preserve cart;
-    stop
+    #LightCoral:Show error, preserve cart;
+    detach
   else (no)
   endif
 
   if (Qty <= 0?) then (yes)
-    :Return **400 BadRequest**\n"Qty must be > 0";
+    #LightCoral:Return **400 BadRequest**\n"Qty must be > 0";
     |React Frontend (CartContext)|
-    :Show error, preserve cart;
-    stop
+    #LightCoral:Show error, preserve cart;
+    detach
   else (no)
   endif
 
   if (product.StockQty < qty?) then (yes)
-    :Return **400 BadRequest**\n"Not enough stock for {name}";
+    #LightCoral:Return **400 BadRequest**\n"Not enough stock for {name}";
     |React Frontend (CartContext)|
-    :Show error, preserve cart;
-    stop
+    #LightCoral:Show error, preserve cart;
+    detach
   else (no)
     :Deduct stock:\nproduct.StockQty -= qty;
     :Create OrderItem\n{ ProductId, Qty, UnitPrice };
   endif
+backward :Advance to next cart item;
 repeat while (more items?) is (yes)
 
 :Create **Order** entity\n{ UserId, Status = **Pending (0)**,\n  Items, Total,\n  CustomerID, BillToAddressID,\n  ShipToAddressID, ShipMethodID };
 
 |Database (EF Core)|
-:repo.AddAsync(order)\ninserts Order + OrderItems;
+#LightBlue:repo.AddAsync(order)\ninserts Order + OrderItems;
 
 if (DB error / constraint\nviolation?) then (yes)
   :Throw DbUpdateException;
   |ASP.NET Core Backend|
-  :Return **500** error;
+  #LightCoral:Return **500** error;
   |React Frontend (CartContext)|
-  :Show "Checkout failed"\nerror, cart items preserved;
-  stop
+  #LightCoral:Show "Checkout failed"\nerror, cart items preserved;
+  detach
 else (no)
-  :SaveChanges succeeds;
+  #LightGreen:SaveChanges succeeds;
 endif
 
 :Update stock for each\ntouched product;
 
 |ASP.NET Core Backend|
-:Return **201 Created**\nwith OrderDto;
+#LightGreen:Return **201 Created**\nwith OrderDto;
 
 |React Frontend (CartContext)|
 :Call CartContext.clear()\nsets items = []\nclears localStorage;
 
-:navigate('/orders')\nredirect to **My Orders** page;
+#LightGreen:navigate('/orders')\nredirect to **My Orders** page;
 
 |User (Browser)|
 :View order in My Orders\nwith Status = "Pending";
 
 stop
+
+caption Checkout — POST /api/orders — CartContext → EF Core stock validation → Order creation
 @enduml

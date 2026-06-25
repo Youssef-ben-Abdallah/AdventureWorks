@@ -130,14 +130,41 @@ DSV_FACT -[#6A1B9A,bold]-> MGROUP : populates
 ' ════════════════════════════════════════
 BASEM .[#F9A825,dashed].> CALCM : MDX\ncalculations
 
+note right of SRCDB
+    Source database for SSAS.
+    SSAS reads directly from
+    AdventureWorksDW2019 tables
+    during cube processing.
+    Not the same as the custom
+    AdventureWorksDW_Sales DW.
+end note
+
+note bottom of MGROUP
+    Fact table: FactResellerSales
+    Grain: one row per
+    SalesOrderDetail line item.
+    12 base measures + 8 MDX
+    calculated members.
+    Queried via ADOMD.NET using
+    the WITH clause for calcs.
+end note
+
 legend bottom
   |= Component |= Description |
   | <back:#C8E6C9>Data Source</back> | AdventureWorksDW2019 SQL Server database |
-  | <back:#FFE0B2>DSV</back> | Data Source View with 11 tables |
+  | <back:#FFE0B2>DSV</back> | Data Source View — 11 tables exposed to cube |
   | <back:#FFCDD2>Role-Playing</back> | DimDate used as Order Date, Ship Date, Due Date |
-  | <back:#E3F2FD>Dimensions</back> | Standard cube dimensions with hierarchies |
+  | <back:#E3F2FD>Dimensions</back> | Standard cube dimensions with named hierarchies |
   | <back:#F3E5F5>Measures</back> | 12 base measures from FactResellerSales |
-  | <back:#FFFDE7>Calculated</back> | 8 MDX calculated members |
+  | <back:#FFFDE7>Calculated</back> | 8 MDX calculated members (WITH clause) |
+  |= Arrow Color |= Meaning |
+  | <#2E7D32> Green | Source to DSV (11 tables) |
+  | <#C62828> Red | DimDate role-playing (3 aliases) |
+  | <#1565C0> Blue | DSV to standard dimensions |
+  | <#6A1B9A> Purple | DSV to measure group |
+  | <#F9A825> Yellow | Base to calculated measures |
 endlegend
+
+footer AdventureWorks Sales BI Platform | SSAS Cube Architecture | Page %page% of %lastpage%
 
 @enduml

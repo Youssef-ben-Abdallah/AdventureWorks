@@ -17,7 +17,7 @@ skinparam class {
 
 skinparam classAttributeIconSize 0
 skinparam shadowing true
-skinparam roundCorner 5
+skinparam roundCorner 8
 
 ' ════════════════════════════════════════
 ' FACT TABLE
@@ -130,12 +130,31 @@ ShipMethod "1" -[#2E7D32,bold]- "*" Sales : ShipMethodID
 
 Sales .[#1565C0,dashed].> SalesView : feeds
 
+note right of Sales
+    Fact table is append-only
+    during ETL loads.
+    No updates to existing
+    fact records (immutable).
+    Maps to updateSales SP.
+end note
+
+note bottom of SalesView
+    Pre-joined view combining
+    Sales fact with all 6 dimensions.
+    Used by DashboardService LINQ
+    queries for fast aggregation.
+end note
+
 legend bottom right
   |= Symbol |= Meaning |
   | <b>PK</b> | Primary Key |
   | <b>FK</b> | Foreign Key |
-  | 1 --- * | One-to-Many |
-  | Database | AdventureWorksDW_Sales |
+  | 1 --- * | One-to-Many relationship |
+  | <back:#BBDEFB>Blue</back> | Fact table |
+  | <back:#C8E6C9>Green</back> | Dimension tables |
+  | Database | AdventureWorksDW_Sales (SQL Server) |
 endlegend
+
+footer AdventureWorks Sales BI Platform | DW Star Schema | Page %page% of %lastpage%
 
 @enduml

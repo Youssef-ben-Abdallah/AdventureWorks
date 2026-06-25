@@ -95,6 +95,6 @@ legend right
   | <#FCE4EC> Visuals | React Dashboard / Cube Insights | End-user reporting |
 endlegend
 
-footer AdventureWorks Sales BI Platform | Data Lineage Diagram
+footer AdventureWorks Sales BI Platform | Data Lineage Diagram | Page %page% of %lastpage%
 
 @enduml

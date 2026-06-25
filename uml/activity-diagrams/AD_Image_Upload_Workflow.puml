@@ -15,9 +15,9 @@ start
 :Select **Products** tab;
 
 |React Frontend|
-:Load all products via\nGET /api/products;
+#LightBlue:Load all products via\nGET /api/products;
 
-:Render product list with\nimage upload controls;
+#LightGreen:Render product list with\nimage upload controls;
 
 |Admin (Browser)|
 :Click **upload image** button\nfor a specific product;
@@ -27,32 +27,39 @@ start
 |React Frontend|
 :Create **FormData** object\nwith IFormFile (multipart/form-data);
 
-:POST /api/products/{id}/image\nContent-Type: multipart/form-data\nAuthorization: Bearer <JWT>;
+#LightBlue:POST /api/products/{id}/image\nContent-Type: multipart/form-data\nAuthorization: Bearer <JWT>;
 
 |ASP.NET Core Backend|
 :ProductsController.UploadImage()\nreceives id and IFormFile;
 
 if (file is null or empty?) then (yes)
-  :Return **400 BadRequest**\n"File is required.";
+  #LightCoral:Return **400 BadRequest**\n"File is required.";
   |React Frontend|
-  :Show error message;
-  stop
+  #LightCoral:Show error message;
+  detach
 else (no)
 endif
 
-:Fetch product by ID\nfrom repository;
+note right
+  Product existence check and
+  configuration read run in
+  parallel — both must succeed
+  before writing the file.
+end note
 
-if (Product not found?) then (yes)
-  :Return **404 NotFound**;
-  |React Frontend|
-  :Show error message;
-  stop
-else (no)
-endif
-
-:Read Images:ProductsPath\nfrom configuration\n(default: C:\\images\\product);
-
-:Ensure directory exists\n(Directory.CreateDirectory);
+fork
+  #LightBlue:Fetch product by ID\nfrom repository;
+  if (Product not found?) then (yes)
+    #LightCoral:Return **404 NotFound**;
+    |React Frontend|
+    #LightCoral:Show error message;
+    detach
+  else (no)
+  endif
+fork again
+  :Read Images:ProductsPath\nfrom configuration\n(default: C:\\images\\product);
+  :Ensure directory exists\n(Directory.CreateDirectory);
+end fork
 
 if (Product has existing\nImageFileName?) then (yes)
   :Build old file path\nand delete old image file\nfrom disk (if exists);
@@ -61,13 +68,13 @@ endif
 
 :Extract file extension\n(e.g. .png, .jpg);
 
-:Validate file extension;
+#LightYellow:Validate file extension;
 
 if (Extension in\n{.png, .jpg, .jpeg, .gif}?) then (no)
-  :Return **400 BadRequest**\n"Invalid file type.";
+  #LightCoral:Return **400 BadRequest**\n"Invalid file type.";
   |React Frontend|
-  :Show "Invalid file type" error;
-  stop
+  #LightCoral:Show "Invalid file type" error;
+  detach
 else (yes)
 endif
 
@@ -76,21 +83,21 @@ endif
 :Build full path:\nC:\\images\\product\\{filename};
 
 |File System / Database|
-:Create file on disk\nand copy uploaded stream\n(file.CopyToAsync);
+#LightBlue:Create file on disk\nand copy uploaded stream\n(file.CopyToAsync);
 
 :Update product.ImageFileName\n= generated filename;
 
-:repo.UpdateAsync(product)\npersists to database;
+#LightBlue:repo.UpdateAsync(product)\npersists to database;
 
 |ASP.NET Core Backend|
 :Fetch updated product;
 
-:Return **200 OK**\nwith updated ProductDto\n(includes new ImageFileName);
+#LightGreen:Return **200 OK**\nwith updated ProductDto\n(includes new ImageFileName);
 
 |React Frontend|
 :Receive updated ProductDto;
 
-:Refresh product image via\nstatic file serving:\n**/images/product/{filename}**;
+#LightGreen:Refresh product image via\nstatic file serving:\n**/images/product/{filename}**;
 
 note right
   Static file middleware
@@ -103,4 +110,6 @@ end note
 :New product image\ndisplayed in the UI;
 
 stop
+
+caption Image Upload — POST /api/products/{id}/image — multipart → disk write + EF Core update → static file serving
 @enduml

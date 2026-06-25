@@ -15,18 +15,18 @@ start
 |React Frontend|
 :useEffect triggers\n**loadFilters()** on mount;
 
-:GET /api/dashboard/filters;
+#LightBlue:GET /api/dashboard/filters;
 
 |ASP.NET Core Backend|
 :DashboardService.GetFiltersAsync();
 
 |Database (AnalyticsDbContext)|
-:Query Territories, TerritoryGroups,\nSalesPeople, ShipMethods,\nProductCategories, ProductSubCategories,\nCurrencies;
+#LightBlue:Query Territories, TerritoryGroups,\nSalesPeople, ShipMethods,\nProductCategories, ProductSubCategories,\nCurrencies;
 
 :Return DashboardFiltersDto;
 
 |React Frontend|
-:Populate filter dropdowns:\nDate From/To, Territory,\nTerritory Group, Salesperson,\nShip Method, Category,\nSubcategory, Currency, Online;
+#LightGreen:Populate filter dropdowns:\nDate From/To, Territory,\nTerritory Group, Salesperson,\nShip Method, Category,\nSubcategory, Currency, Online;
 
 :Set initial defaults:\nfrom = "2011-01-01"\nto = "2014-12-30";
 
@@ -36,7 +36,7 @@ start
 :Select filters\n(date range, territory,\ncategory, etc.);
 
 |React Frontend|
-:Filter change triggers\nhandleApply() -- clears\nall cached tab data;
+#LightYellow:Filter change triggers\nhandleApply() -- clears\nall cached tab data;
 
 :useEffect triggers\nloadActiveTab();
 
@@ -48,63 +48,63 @@ end note
 
 fork
   :=== Tab 0: Overview ===;
-  :GET /api/dashboard/overview\nwith DashboardQuery params;
+  #LightBlue:GET /api/dashboard/overview\nwith DashboardQuery params;
   |ASP.NET Core Backend|
   :DashboardService.GetOverviewAsync();
   :ApplyFilters() builds\nIQueryable<SalesFact>;
   |Database (AnalyticsDbContext)|
-  :Execute LINQ queries:\n- Revenue, Orders, Units, AOV\n- On-Time %, Freight %\n- Revenue trend (monthly)\n- Revenue by Category\n- Revenue by Territory\n- Top 10 Products;
+  #LightBlue:Execute LINQ queries:\n- Revenue, Orders, Units, AOV\n- On-Time %, Freight %\n- Revenue trend (monthly)\n- Revenue by Category\n- Revenue by Territory\n- Top 10 Products;
   :Return **OverviewDto**\n{ kpis, revenueTrend,\n  revenueByCategory,\n  revenueByTerritory,\n  topProducts };
   |React Frontend|
-  :Render **KpiCards**\n(Revenue, Orders, Units,\nAOV, On-Time%, Freight%);
-  :Render **ChartCards**:\n- Revenue trend (line)\n- Revenue by territory (bar)\n- Revenue by category (doughnut)\n- Top products (bar);
+  #LightGreen:Render **KpiCards**\n(Revenue, Orders, Units,\nAOV, On-Time%, Freight%);
+  #LightGreen:Render **ChartCards**:\n- Revenue trend (line)\n- Revenue by territory (bar)\n- Revenue by category (doughnut)\n- Top products (bar);
 fork again
   :=== Tab 1: Products ===;
-  :GET /api/dashboard/products;
+  #LightBlue:GET /api/dashboard/products;
   |ASP.NET Core Backend|
   :DashboardService.GetProductsAsync();
   |Database (AnalyticsDbContext)|
-  :Query:\n- Revenue, Units, ASP, Margin %\n- Category/Subcategory matrix\n- Product scatter (Top 10)\n- Discount bands;
+  #LightBlue:Query:\n- Revenue, Units, ASP, Margin %\n- Category/Subcategory matrix\n- Product scatter (Top 10)\n- Discount bands;
   :Return **ProductsDto**;
   |React Frontend|
-  :Render KPIs + charts:\n- Category/Subcategory bar\n- Discount bands doughnut\n- Product performance table;
+  #LightGreen:Render KPIs + charts:\n- Category/Subcategory bar\n- Discount bands doughnut\n- Product performance table;
 fork again
   :=== Tab 2: Customers ===;
-  :GET /api/dashboard/customers;
+  #LightBlue:GET /api/dashboard/customers;
   |ASP.NET Core Backend|
   :DashboardService.GetCustomersAsync();
   |Database (AnalyticsDbContext)|
-  :Query:\n- Active Customers, Rev/Cust\n- Revenue distribution (bins)\n- Top 10 customers\n- Customer trend (monthly);
+  #LightBlue:Query:\n- Active Customers, Rev/Cust\n- Revenue distribution (bins)\n- Top 10 customers\n- Customer trend (monthly);
   :Return **CustomersDto**;
   |React Frontend|
-  :Render KPIs + charts:\n- Revenue per customer (bar)\n- Active customers trend (line)\n- Top customers table;
+  #LightGreen:Render KPIs + charts:\n- Revenue per customer (bar)\n- Active customers trend (line)\n- Top customers table;
 fork again
   :=== Tab 3: Sales Team ===;
-  :GET /api/dashboard/salesteam;
+  #LightBlue:GET /api/dashboard/salesteam;
   |ASP.NET Core Backend|
   :DashboardService.GetSalesTeamAsync();
   |Database (AnalyticsDbContext)|
-  :Query:\n- Revenue, Orders, AOV\n- Leaderboard (Top 20)\n- Quota vs Actual (Top 10)\n- Territory heat map;
+  #LightBlue:Query:\n- Revenue, Orders, AOV\n- Leaderboard (Top 20)\n- Quota vs Actual (Top 10)\n- Territory heat map;
   :Return **SalesTeamDto**;
   |React Frontend|
-  :Render KPIs + charts:\n- Leaderboard bar\n- Quota vs Actual table;
+  #LightGreen:Render KPIs + charts:\n- Leaderboard bar\n- Quota vs Actual table;
 fork again
   :=== Tab 4: Shipping ===;
-  :GET /api/dashboard/shipping;
+  #LightBlue:GET /api/dashboard/shipping;
   |ASP.NET Core Backend|
   :DashboardService.GetShippingAsync();
   |Database (AnalyticsDbContext)|
-  :Query:\n- Avg Lead Time, On-Time %,\n  Freight %\n- Lead time by ship method\n- Freight by ship method\n- Lead time by territory;
+  #LightBlue:Query:\n- Avg Lead Time, On-Time %,\n  Freight %\n- Lead time by ship method\n- Freight by ship method\n- Lead time by territory;
   :Return **ShippingDto**;
   |React Frontend|
-  :Render KPIs + charts:\n- Lead time by method (bar)\n- Freight by method (doughnut)\n- Lead time by territory (bar);
+  #LightGreen:Render KPIs + charts:\n- Lead time by method (bar)\n- Freight by method (doughnut)\n- Lead time by territory (bar);
 end fork
 
 |Admin (Browser)|
 :Switch tabs to view\ndifferent analytics perspectives;
 
 |React Frontend|
-:Lazy-load tab data\nonly when tab is first visited\n(and cache is null);
+#LightYellow:Lazy-load tab data\nonly when tab is first visited\n(and cache is null);
 
 note right
   Tab data is loaded lazily:
@@ -114,4 +114,6 @@ note right
 end note
 
 stop
+
+caption Dashboard — 5-tab analytics powered by DashboardService + AnalyticsDbContext (AdventureWorksDW_Sales)
 @enduml

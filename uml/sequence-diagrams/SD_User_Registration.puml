@@ -66,47 +66,78 @@ React -> React : setMode("register")\nShow email field
 == User Submits Registration ==
 
 User -> React : Fills Username, Email, Password\nClicks **"Create Account"**
+activate React
 React -> React : Validate: username >= 3 chars,\npassword >= 6 chars
 
 alt Validation fails (client-side)
     React --> User : Show field-level error messages
+    deactivate React
 else Validation passes
     React -> Axios : AuthService.register(\n  { username, email, password })
+    deactivate React
+    activate Axios
     Axios -> Controller : **POST /api/auth/register**\nBody: RegisterDto { Username, Email, Password }
+    deactivate Axios
+    activate Controller
 
     Controller -> Service : new AppUser { UserName, Email,\n  EmailConfirmed = true }
     Controller -> Service : UserManager.CreateAsync(user, password)
+    activate Service
+
+    note over Service : Validates constraints,\nhashes password, INSERTs\ninto AspNetUsers
 
     alt CreateAsync fails (duplicate email/username, weak password)
         Service --> Controller : IdentityResult { Succeeded = false, Errors[] }
+        deactivate Service
         Controller --> Axios : **400 Bad Request**\n[ "error descriptions..." ]
+        deactivate Controller
+        activate Axios
         Axios --> React : catch(err)
+        deactivate Axios
+        activate React
         React --> User : Display error message\n(e.g. "Username already taken")
+        deactivate React
     else CreateAsync succeeds
         Service --> Controller : IdentityResult { Succeeded = true }
+        deactivate Service
+
         Controller -> Service : UserManager.AddToRoleAsync(user, **"User"**)
+        activate Service
         Service -> DB : INSERT INTO AspNetUserRoles
+        activate DB
         DB --> Service : OK
+        deactivate DB
         Service --> Controller : OK
+        deactivate Service
 
         Controller -> JWT : CreateTokenAsync(user)
+        activate JWT
         JWT -> Service : UserManager.GetRolesAsync(user)
+        activate Service
         Service -> DB : SELECT roles for user
+        activate DB
         DB --> Service : ["User"]
+        deactivate DB
         Service --> JWT : roles = ["User"]
+        deactivate Service
         JWT -> JWT : Build claims:\n  - ClaimTypes.NameIdentifier = userId\n  - ClaimTypes.Name = username\n  - sub, email, uid, uname\n  - ClaimTypes.Role = "User"
         JWT -> JWT : Sign with SymmetricSecurityKey\n(HmacSha256, Jwt:Key)\nSet expiry: UtcNow + ExpiresMinutes
         JWT --> Controller : (token, expiresAtUtc, ["User"])
+        deactivate JWT
 
         Controller --> Axios : **200 OK**\nAuthResponseDto {\n  token, expiresAtUtc,\n  username, email,\n  roles: ["User"]\n}
-
+        deactivate Controller
+        activate Axios
         Axios --> React : response.data
+        deactivate Axios
+        activate React
         React -> React : const adminStatus =\n  data.roles.includes("Admin") // false
         React -> React : AuthContext.login(\n  token, false, username)
         React -> React : localStorage.setItem("token", token)\nlocalStorage.setItem("role", "User")\nlocalStorage.setItem("username", username)
         React -> React : Update AuthContext state:\n  isLoggedIn = true, isAdmin = false
         React -> React : navigate(returnUrl || "/")
         React --> User : Redirect to Home page
+        deactivate React
     end
 end
 

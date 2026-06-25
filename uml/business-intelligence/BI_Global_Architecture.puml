@@ -130,6 +130,27 @@ legend right
   | OLAP | SSAS Multidimensional |
   | API | ASP.NET Core .NET 9 |
   | Frontend | React + Vite (TypeScript) |
+  |= Arrow Color |= Flow Direction |
+  | <#2E7D32> Green | OLTP -> ETL (Extract) |
+  | <#E65100> Orange | ETL -> DW (Load) |
+  | <#1565C0> Blue | DW -> API (Query) |
+  | <#6A1B9A> Purple | Cube processing & MDX |
+  | <#F9A825> Yellow | API -> Frontend (REST) |
 endlegend
+
+note bottom of OLTP
+    Source schemas:
+    Sales, Production,
+    Person, Purchasing,
+    HumanResources
+end note
+
+note bottom of DW
+    Star schema target:
+    1 Fact + 6 Dimensions
+    + vwSalesDashboard view
+end note
+
+footer AdventureWorks Sales BI Platform | Global BI Architecture | Page %page% of %lastpage%
 
 @enduml

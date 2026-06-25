@@ -1,118 +1,105 @@
 @startuml C4_Component
-!theme cerulean-outline
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+
 title C4 Component Diagram (Level 3) - ASP.NET Core API Container
 caption Internal components of the Ecom.Api and their external connections
 
-skinparam linetype ortho
-skinparam nodesep 50
-skinparam ranksep 50
-skinparam componentStyle rectangle
+' ── External Containers ───────────────────────────────────
+Container_Ext(SPA, "React SPA", "React 19 / TypeScript 6", "Sends REST requests via Axios with JWT Bearer token.")
 
-' ── External Systems ──────────────────────────────────────
-rectangle "React SPA\n<<Container>>" as SPA #BBDEFB
-
-database "SQL Server\nAdventureWorks2019\n<<OLTP>>" as OLTP #FFE0B2
-database "SQL Server\nAdventureWorksDW_Sales\n<<Data Warehouse>>" as DW #FFE0B2
-database "SSAS\nCubeAW2019\n<<OLAP>>" as SSAS #E1BEE7
-storage "File System\nC:\\images\\product\\\n<<Static Files>>" as FS #FFF9C4
+ContainerDb_Ext(OLTP, "SQL Server AdventureWorks2019", "SQL Server", "OLTP database with Sales, Production, Person, and Identity schemas.")
+ContainerDb_Ext(DW, "SQL Server AdventureWorksDW_Sales", "SQL Server", "Star-schema data warehouse for sales analytics.")
+ContainerDb_Ext(SSAS, "SSAS CubeAW2019", "Analysis Services", "Multidimensional OLAP cube exposing MDX measures and dimensions.")
+Container_Ext(FS, "File System C:\\images\\product\\", "File System", "Product JPEG/PNG images served as static assets.")
 
 ' ── API Container ─────────────────────────────────────────
-rectangle "ASP.NET Core API\n<<Container: .NET 9>>" as API {
+Container_Boundary(API, "ASP.NET Core API (.NET 9) — Ecom.Api") {
 
     ' ── Auth Component ────────────────────────────────────
-    rectangle "Auth Component\n<<Component>>" as AUTH #C8E6C9 {
-        component "[AuthController]\n/api/auth\nlogin, register" as AuthCtrl #E8F5E9
-        component "[JwtTokenService]\n<<IJwtTokenService>>\nToken generation\n& validation" as JwtSvc #E8F5E9
-        component "[ASP.NET Identity]\n<<IdentityFramework>>\nUserManager,\nSignInManager" as Identity #E8F5E9
-
-        AuthCtrl --> JwtSvc : generates token
-        AuthCtrl --> Identity : authenticates
-    }
+    Component(AuthCtrl, "AuthController", "ASP.NET Core Controller", "POST /api/auth/login, /api/auth/register. Returns JWT Bearer token on success.")
+    Component(JwtSvc, "JwtTokenService", "C# Service (IJwtTokenService)", "Generates and validates JWT tokens with configurable expiry and signing key.")
+    Component(Identity, "ASP.NET Identity", "Identity Framework", "UserManager and SignInManager for credential validation and role management.")
 
     ' ── Catalog Component ─────────────────────────────────
-    rectangle "Catalog Component\n<<Component>>" as CATALOG #BBDEFB {
-        component "[CategoriesController]\n/api/categories\n{Authorize}" as CatCtrl #E3F2FD
-        component "[SubCategoriesController]\n/api/subcategories\n{Authorize}" as SubCatCtrl #E3F2FD
-        component "[ProductsController]\n/api/products" as ProdCtrl #E3F2FD
-        component "[CategoryRepository]\n<<ICategoryRepository>>" as CatRepo #E3F2FD
-        component "[SubCategoryRepository]\n<<ISubCategoryRepository>>" as SubCatRepo #E3F2FD
-        component "[ProductRepository]\n<<IProductRepository>>" as ProdRepo #E3F2FD
-
-        CatCtrl --> CatRepo : queries
-        SubCatCtrl --> SubCatRepo : queries
-        ProdCtrl --> ProdRepo : queries
-    }
+    Component(CatCtrl, "CategoriesController", "ASP.NET Core Controller", "GET/POST/PUT/DELETE /api/categories. Requires [Authorize(Admin)].")
+    Component(SubCatCtrl, "SubCategoriesController", "ASP.NET Core Controller", "GET/POST/PUT/DELETE /api/subcategories. Requires [Authorize].")
+    Component(ProdCtrl, "ProductsController", "ASP.NET Core Controller", "GET /api/products (public). POST/PUT/DELETE require [Authorize(Admin)].")
+    Component(CatRepo, "CategoryRepository", "C# Repository (ICategoryRepository)", "EF Core queries for categories via OltpDbContext.")
+    Component(SubCatRepo, "SubCategoryRepository", "C# Repository (ISubCategoryRepository)", "EF Core queries for subcategories via OltpDbContext.")
+    Component(ProdRepo, "ProductRepository", "C# Repository (IProductRepository)", "EF Core queries for products with category/subcategory joins.")
 
     ' ── Orders Component ──────────────────────────────────
-    rectangle "Orders Component\n<<Component>>" as ORDERS #FFE0B2 {
-        component "[OrdersController]\n/api/orders\n{Authorize}" as OrdCtrl #FFF3E0
-        component "[OrderRepository]\n<<IOrderRepository>>" as OrdRepo #FFF3E0
-
-        OrdCtrl --> OrdRepo : creates, queries
-    }
+    Component(OrdCtrl, "OrdersController", "ASP.NET Core Controller", "GET/POST /api/orders. Requires [Authorize]. Maps to Sales.SalesOrderHeader.")
+    Component(OrdRepo, "OrderRepository", "C# Repository (IOrderRepository)", "Creates and queries orders mapped to Sales.SalesOrderHeader/Detail.")
 
     ' ── DW Analytics Component ────────────────────────────
-    rectangle "DW Analytics Component\n<<Component>>" as DWANALYTICS #E1BEE7 {
-        component "[DashboardController]\n/api/dashboard\n{Authorize(Admin)}" as DashCtrl #F3E5F5
-        component "[DashboardService]\n<<IDashboardService>>\nServices/Dashboard/" as DashSvc #F3E5F5
-        component "[AnalyticsDbContext]\n<<DbContext>>\nStar schema entities" as DwCtx #F3E5F5
-
-        DashCtrl --> DashSvc : delegates
-        DashSvc --> DwCtx : queries
-    }
+    Component(DashCtrl, "DashboardController", "ASP.NET Core Controller", "GET /api/dashboard/{overview,products,customers,sales-team,shipping,details}. Requires [Authorize(Admin)].")
+    Component(DashSvc, "DashboardService", "C# Service (IDashboardService)", "Executes EF Core LINQ aggregations against AnalyticsDbContext. Located in Services/Dashboard/.")
+    Component(DwCtx, "AnalyticsDbContext", "EF Core DbContext", "Maps star-schema entities: SalesFact, CustomerDim, ProductDim, TerritoryDim, CurrencyDim, SalesPersonDim, ShipMethodDim.")
 
     ' ── OLAP Analytics Component ──────────────────────────
-    rectangle "OLAP Analytics Component\n<<Component>>" as OLAPANALYTICS #FFCDD2 {
-        component "[CubeInsightsController]\n/api/cubeinsights\n{Authorize}" as CubeCtrl #FFEBEE
-        component "[OlapService]\n<<IOlapService>>\nADOMD.NET client" as OlapSvc #FFEBEE
-
-        CubeCtrl --> OlapSvc : delegates
-    }
+    Component(CubeCtrl, "CubeInsightsController", "ASP.NET Core Controller", "22 endpoints at /api/cubeinsights/*. No auth required (public analytics).")
+    Component(OlapSvc, "OlapService", "C# Service (IOlapService)", "Builds and executes MDX queries via ADOMD.NET AdomdCommand. Resolves dimension IDs to human-readable names.")
 
     ' ── Static Files ──────────────────────────────────────
-    rectangle "Static Files Middleware\n<<Component>>" as STATICFILES #FFF9C4 {
-        component "[UseStaticFiles]\nMaps /images/product/\nto physical path" as StaticMw #FFFDE7
-    }
+    Component(StaticMw, "Static Files Middleware", "ASP.NET Core Middleware", "Maps /images/product/ URL path to C:\\images\\product\\ physical path via UseStaticFiles().")
 
     ' ── Cross-cutting ─────────────────────────────────────
-    rectangle "Cross-cutting Concerns\n<<Component>>" as CROSSCUT #CFD8DC {
-        component "[OltpDbContext]\n<<DbContext>>\nEF Core OLTP" as OltpCtx #ECEFF1
-        component "[DTOs]\nAuthDtos, CatalogDtos\nDashboardDtos, OrderDtos" as DTOs #ECEFF1
-        component "[JWT Middleware]\nBearer token validation\n[Authorize] attribute" as JwtMw #ECEFF1
-    }
+    Component(OltpCtx, "OltpDbContext", "EF Core DbContext (IdentityDbContext<AppUser>)", "Maps OLTP entities to existing AdventureWorks tables using explicit column renames. ExcludeFromMigrations() for pre-existing tables.")
+    Component(DTOs, "DTO Records", "C# Records", "AuthDtos, CatalogDtos, DashboardDtos, OrderDtos. Controllers return DTOs, not entities.")
+    Component(JwtMw, "JWT Bearer Middleware", "ASP.NET Core Middleware", "Validates Bearer tokens on every request. [Authorize] attribute enforces role-based access.")
 }
 
-' ── External Connections ──────────────────────────────────
+' ── External Connections: SPA -> API ──────────────────────
+Rel(SPA, AuthCtrl, "POST /api/auth/login, /register", "HTTP / JSON")
+Rel(SPA, CatCtrl, "GET/POST/PUT/DELETE /api/categories", "HTTP / JSON / JWT")
+Rel(SPA, SubCatCtrl, "GET /api/subcategories", "HTTP / JSON / JWT")
+Rel(SPA, ProdCtrl, "GET/POST/PUT/DELETE /api/products", "HTTP / JSON")
+Rel(SPA, OrdCtrl, "POST/GET /api/orders", "HTTP / JSON / JWT")
+Rel(SPA, DashCtrl, "GET /api/dashboard/*", "HTTP / JSON / JWT (Admin)")
+Rel(SPA, CubeCtrl, "GET /api/cubeinsights/*", "HTTP / JSON")
+Rel(SPA, StaticMw, "GET /images/product/{filename}", "HTTP")
 
-' SPA -> API components
-SPA --> AuthCtrl : "POST /api/auth\n[HTTP, JSON]"
-SPA --> CatCtrl : "GET /api/categories\n[HTTP, JSON, JWT]"
-SPA --> SubCatCtrl : "GET /api/subcategories\n[HTTP, JSON, JWT]"
-SPA --> ProdCtrl : "GET /api/products\n[HTTP, JSON]"
-SPA --> OrdCtrl : "POST/GET /api/orders\n[HTTP, JSON, JWT]"
-SPA --> DashCtrl : "GET /api/dashboard\n[HTTP, JSON, JWT]"
-SPA --> CubeCtrl : "GET /api/cubeinsights\n[HTTP, JSON, JWT]"
-SPA --> StaticMw : "GET /images/product/*\n[HTTP]"
+' ── Internal component relationships ──────────────────────
+Rel(AuthCtrl, JwtSvc, "Requests token generation")
+Rel(AuthCtrl, Identity, "Authenticates credentials")
 
-' Components -> External data stores
-CatRepo --> OltpCtx : uses
-SubCatRepo --> OltpCtx : uses
-ProdRepo --> OltpCtx : uses
-OrdRepo --> OltpCtx : uses
-Identity --> OltpCtx : uses
+Rel(CatCtrl, CatRepo, "Queries categories")
+Rel(SubCatCtrl, SubCatRepo, "Queries subcategories")
+Rel(ProdCtrl, ProdRepo, "Queries products")
 
-OltpCtx --> OLTP : "TDS\nEF Core"
-DwCtx --> DW : "TDS\nEF Core"
-OlapSvc --> SSAS : "XMLA\nADOMD.NET\nMDX Queries"
-StaticMw --> FS : "File I/O"
+Rel(OrdCtrl, OrdRepo, "Creates and queries orders")
+
+Rel(DashCtrl, DashSvc, "Delegates analytics queries")
+Rel(DashSvc, DwCtx, "Runs LINQ aggregations")
+
+Rel(CubeCtrl, OlapSvc, "Delegates MDX queries")
+
+Rel(CatRepo, OltpCtx, "Uses DbContext")
+Rel(SubCatRepo, OltpCtx, "Uses DbContext")
+Rel(ProdRepo, OltpCtx, "Uses DbContext")
+Rel(OrdRepo, OltpCtx, "Uses DbContext")
+Rel(Identity, OltpCtx, "Uses Identity tables")
+
+' ── Components -> External data stores ────────────────────
+Rel(OltpCtx, OLTP, "Queries/updates OLTP tables", "TDS / EF Core")
+Rel(DwCtx, DW, "Queries DW star schema", "TDS / EF Core")
+Rel(OlapSvc, SSAS, "Executes MDX queries", "XMLA / ADOMD.NET")
+Rel(StaticMw, FS, "Reads product image files", "File I/O")
 
 note bottom of API
-    All controllers return DTOs (not entities).
-    Dependency Injection via Program.cs:
-    - AddScoped<IRepo, Repo>
-    - AddScoped<IService, Service>
-    - AddDbContext<OltpDbContext>
-    - AddDbContext<AnalyticsDbContext>
+    All controllers return DTOs — never raw entities.
+    DI configured in Program.cs:
+    - AddScoped<IRepo, Repo> for all repositories
+    - AddScoped<IService, Service> for all services
+    - AddDbContext<OltpDbContext>(OLTPConnection)
+    - AddDbContext<AnalyticsDbContext>(AnalyticsConnection)
+    - AddSingleton / AddScoped for JWT services
+    Roles seeded on startup: "Admin", "User"
 end note
+
+footer AdventureWorks Sales BI Platform | C4 Component Diagram (Level 3) | Page %page% of %lastpage%
 
 @enduml

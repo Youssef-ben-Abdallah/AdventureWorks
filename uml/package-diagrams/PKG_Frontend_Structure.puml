@@ -3,118 +3,173 @@
 title Frontend Package Structure - ecom-ui
 caption React 19 + TypeScript 6 + Vite 8
 
+scale 1.5
+
 skinparam packageStyle rectangle
+skinparam packageFontStyle bold
+skinparam packageFontSize 13
 skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 40
 
-package "ecom-ui/src" as ROOT #E3F2FD {
+package "ecom-ui/src <<module>>" as ROOT #E3F2FD {
 
-    package "pages" as PAGES #BBDEFB {
-        class Home <<FunctionComponent>>
-        class Products <<FunctionComponent>>
-        class ProductDetails <<FunctionComponent>>
-        class Login <<FunctionComponent>>
-        class Cart <<FunctionComponent>>
-        class MyOrders <<FunctionComponent>>
-        class Dashboard <<FunctionComponent>>
-        class CubeInsights <<FunctionComponent>>
-        class AdminDashboard <<FunctionComponent>>
+    together {
+        package "pages <<layer>>" as PAGES #BBDEFB {
+            class Home <<FunctionComponent>>
+            class Products <<FunctionComponent>>
+            class ProductDetails <<FunctionComponent>>
+            class Login <<FunctionComponent>>
+            class Cart <<FunctionComponent>>
+            class MyOrders <<FunctionComponent>>
+            class Dashboard <<FunctionComponent>>
+            class CubeInsights <<FunctionComponent>>
+            class AdminDashboard <<FunctionComponent>>
+        }
+
+        package "components <<layer>>" as COMP #C8E6C9 {
+            package "layout <<module>>" as COMP_LAYOUT #A5D6A7 {
+                class Navbar <<FunctionComponent>>
+                class Footer <<FunctionComponent>>
+                class Layout <<FunctionComponent>>
+                note bottom of Layout
+                    Uses <Outlet /> for
+                    nested route rendering
+                    (React Router v6)
+                end note
+            }
+
+            package "dashboard <<module>>" as COMP_DASH #81C784 {
+                class ChartCard <<FunctionComponent>>
+                class KpiCards <<FunctionComponent>>
+                class NotesPanel <<FunctionComponent>>
+            }
+        }
     }
 
-    package "components" as COMP #C8E6C9 {
-        package "layout" as COMP_LAYOUT #A5D6A7 {
-            class Navbar <<FunctionComponent>>
-            class Footer <<FunctionComponent>>
-            class Layout <<FunctionComponent>>
-            note bottom of Layout
-                Uses <Outlet /> for
-                nested route rendering
+    together {
+        package "context <<module>>" as CTX #FFE0B2 {
+            class AuthContext <<ReactContext>>
+            class CartContext <<ReactContext>>
+            class ThemeContext <<ReactContext>>
+            note bottom of CTX
+                Provider wrapping order in main.tsx:
+                ThemeProvider
+                  > AuthProvider
+                    > CartProvider
             end note
         }
 
-        package "dashboard" as COMP_DASH #81C784 {
-            class ChartCard <<FunctionComponent>>
-            class KpiCards <<FunctionComponent>>
-            class NotesPanel <<FunctionComponent>>
+        package "services <<layer>>" as SVC #E1BEE7 {
+            class "auth.ts" as AuthSvc <<module>>
+            class "catalog.ts" as CatSvc <<module>>
+            class "orders.ts" as OrdSvc <<module>>
+            class "dashboard.ts" as DashSvc <<module>>
+            class "cubeInsights.ts" as CubeSvc <<module>>
         }
-    }
 
-    package "context" as CTX #FFE0B2 {
-        class AuthContext <<ReactContext>>
-        class CartContext <<ReactContext>>
-        class ThemeContext <<ReactContext>>
-        note bottom of CTX
-            Provider wrapping order:
-            ThemeProvider > AuthProvider > CartProvider
-        end note
-    }
+        package "config <<module>>" as CFG #FFCDD2 {
+            class "api.ts" as ApiConfig <<module>>
+            note bottom of ApiConfig
+                Axios instance
+                baseURL: http://localhost:57241
+                JWT Bearer interceptor
+                (reads token from localStorage)
+            end note
+        }
 
-    package "services" as SVC #E1BEE7 {
-        class "auth.ts" as AuthSvc <<module>>
-        class "catalog.ts" as CatSvc <<module>>
-        class "orders.ts" as OrdSvc <<module>>
-        class "dashboard.ts" as DashSvc <<module>>
-        class "cubeInsights.ts" as CubeSvc <<module>>
-    }
-
-    package "config" as CFG #FFCDD2 {
-        class "api.ts" as ApiConfig <<module>>
-        note bottom of ApiConfig
-            Axios instance
-            baseURL: localhost:57241
-            JWT Bearer interceptor
-        end note
-    }
-
-    package "types" as TYPES #B3E5FC {
-        class "models.ts" as Models <<TypeDefinitions>>
-        note bottom of Models
-            Shared TypeScript interfaces
-            for API response types
-        end note
+        package "types <<namespace>>" as TYPES #B3E5FC {
+            class "models.ts" as Models <<TypeDefinitions>>
+            note bottom of Models
+                Shared TypeScript interfaces
+                for all API response shapes:
+                Product, Order, Dashboard,
+                CubeInsights, Auth DTOs
+            end note
+        }
     }
 }
 
-' Entry point
+' ── Entry point ───────────────────────────────────────────
 component "[main.tsx]\nReact entry point\nProvider wrapping\nBrowserRouter setup" as Main #FFF9C4
+
+note right of Main
+    Root entry point.
+    Wraps entire app with:
+      ThemeProvider
+      AuthProvider
+      CartProvider
+      BrowserRouter
+    Registers all <Route> paths.
+end note
 
 ' ── Import Dependencies ───────────────────────────────────
 
-' main.tsx -> Context & Routing
-Main --> CTX : wraps providers
-Main --> COMP_LAYOUT : renders Layout
+Main -[#E65100,bold]-> CTX : "wraps providers"
+Main -[#E65100,bold]-> COMP_LAYOUT : "renders Layout shell"
 
-' Pages -> Components
-Dashboard --> COMP_DASH : imports
-CubeInsights --> COMP_DASH : imports
-AdminDashboard --> COMP_DASH : imports
+Dashboard -[#2E7D32,dashed]-> COMP_DASH : "imports charts/KPIs"
+CubeInsights -[#2E7D32,dashed]-> COMP_DASH : "imports charts/KPIs"
+AdminDashboard -[#2E7D32,dashed]-> COMP_DASH : "imports charts/KPIs"
 
-' Pages -> Services
-Login --> AuthSvc : imports
-Products --> CatSvc : imports
-ProductDetails --> CatSvc : imports
-Cart --> OrdSvc : imports
-MyOrders --> OrdSvc : imports
-Dashboard --> DashSvc : imports
-CubeInsights --> CubeSvc : imports
-AdminDashboard --> DashSvc : imports
+Login -[#1565C0,dashed]-> AuthSvc : "login/register calls"
+Products -[#1565C0,dashed]-> CatSvc : "getProducts()"
+ProductDetails -[#1565C0,dashed]-> CatSvc : "getProductById()"
+Cart -[#1565C0,dashed]-> OrdSvc : "placeOrder()"
+MyOrders -[#1565C0,dashed]-> OrdSvc : "getOrders()"
+Dashboard -[#1565C0,dashed]-> DashSvc : "getDashboard*()"
+CubeInsights -[#1565C0,dashed]-> CubeSvc : "getKpis(), getTrend()..."
+AdminDashboard -[#1565C0,dashed]-> DashSvc : "getDashboard*()"
 
-' Pages -> Context
-Login ..> AuthContext : useAuth()
-Cart ..> CartContext : useCart()
-Navbar ..> AuthContext : useAuth()
-Navbar ..> CartContext : useCart()
-Navbar ..> ThemeContext : useTheme()
+Login -[#F9A825,dotted]-> AuthContext : "useAuth()"
+Cart -[#F9A825,dotted]-> CartContext : "useCart()"
+Navbar -[#F9A825,dotted]-> AuthContext : "useAuth()"
+Navbar -[#F9A825,dotted]-> CartContext : "useCart()"
+Navbar -[#F9A825,dotted]-> ThemeContext : "useTheme()"
 
-' Context -> Services
-AuthContext --> AuthSvc : delegates to
+AuthContext -[#9C27B0,bold]-> AuthSvc : "delegates login/register"
 
-' Services -> Config
-SVC --> ApiConfig : imports apiClient
+SVC -[#607D8B,bold]-> ApiConfig : "imports apiClient"
 
-' Services & Pages -> Types
-SVC ..> Models : uses interfaces
-PAGES ..> Models : uses interfaces
+SVC -[#9E9E9E,dotted]-> Models : "uses response interfaces"
+PAGES -[#9E9E9E,dotted]-> Models : "uses type definitions"
+
+note right of SVC
+    All service modules call
+    apiClient (Axios instance),
+    which auto-attaches
+    JWT Bearer token from
+    localStorage on every request.
+    cubeInsights.ts maps to
+    /api/cubeinsights/* (22 endpoints).
+    dashboard.ts maps to
+    /api/dashboard/* (6 endpoints).
+end note
+
+note right of PAGES
+    9 route-level page components.
+    Analytics pages (Dashboard,
+    CubeInsights, AdminDashboard)
+    guarded by PrivateRoute checking
+    AuthContext.isAuthenticated.
+end note
+
+legend bottom left
+    |= Arrow Style |= Meaning |
+    | -[#E65100,bold]-> | Critical bootstrap dependency |
+    | -[#1565C0,dashed]-> | Service import / API call |
+    | -[#F9A825,dotted]-> | React Context hook usage |
+    | -[#2E7D32,dashed]-> | Reusable component import |
+    | -[#9C27B0,bold]-> | Context delegates to service |
+    | -[#9E9E9E,dotted]-> | TypeScript type reference |
+    |= Stereotype |= Meaning |
+    | <<module>> | ES module / directory |
+    | <<layer>> | Architectural design layer |
+    | <<namespace>> | TypeScript namespace / types |
+    | <<ReactContext>> | React Context + Provider + Hook |
+    | <<FunctionComponent>> | React functional component |
+endlegend
+
+footer AdventureWorks Sales BI Platform | Frontend Package Structure | Page %page% of %lastpage%
 
 @enduml

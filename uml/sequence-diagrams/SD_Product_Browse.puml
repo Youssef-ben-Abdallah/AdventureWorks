@@ -69,24 +69,42 @@ User -> React : Navigates to /products
 React -> React : useEffect triggers\ndata fetch on mount
 
 React -> Axios : CatalogService.getCategories()
+activate Axios
 Axios -> CatCtrl : **GET /api/categories**
+deactivate Axios
+activate CatCtrl
 CatCtrl -> DB : _db.Categories\n.AsNoTracking()\n.OrderBy(c => c.Name)
+activate DB
 DB --> CatCtrl : Category[]
+deactivate DB
 CatCtrl --> Axios : **200 OK** Category[]
+deactivate CatCtrl
+activate Axios
 Axios --> React : categories
+deactivate Axios
 
 React -> Axios : CatalogService.getProducts()
+activate Axios
 Axios -> ProdCtrl : **GET /api/products**
+deactivate Axios
+activate ProdCtrl
 
 ProdCtrl -> Repo : _repo.GetAllAsync()
+activate Repo
 Repo -> DB : _db.Products\n  .Include(x => x.Category)\n  .Include(x => x.SubCategory)\n  .AsNoTracking()\n  .OrderBy(x => x.Name)
+activate DB
 DB --> Repo : List<Product>
+deactivate DB
 Repo --> ProdCtrl : List<Product>
+deactivate Repo
 
 ProdCtrl -> ProdCtrl : Map to ProductDto[]\n(Id, Sku, Name, Description,\n Price, StockQty, ImageFileName,\n CategoryId, CategoryName,\n SubCategoryId, SubCategoryName)
 
 ProdCtrl --> Axios : **200 OK**\nProductDto[]
+deactivate ProdCtrl
+activate Axios
 Axios --> React : products[]
+deactivate Axios
 
 React -> React : Render product grid\nwith category filter sidebar
 
@@ -95,44 +113,70 @@ React -> React : Render product grid\nwith category filter sidebar
 loop For each product with ImageFileName
     React -> React : CatalogService.imgUrl(filename)\n=> http://localhost:57241/images/product/{filename}
     React -> Axios : <img src={imgUrl} />
+    activate Axios
     Axios -> ProdCtrl : **GET /images/product/{filename}**
-    note right of ProdCtrl
+    deactivate Axios
+    activate ProdCtrl
+    note over ProdCtrl
         StaticFiles middleware
         PhysicalFileProvider
         => C:\images\product\
     end note
     ProdCtrl --> Axios : Image binary (PNG/JPG)
+    deactivate ProdCtrl
+    activate Axios
     Axios --> React : Rendered product image
+    deactivate Axios
 end
 
 == Category Filtering ==
 
 User -> React : Selects a category\nfrom filter sidebar
+activate React
 React -> React : Filter products client-side\nby selected categoryId
 React -> React : Re-render product grid\nshowing filtered results
 React --> User : Filtered product list displayed
+deactivate React
 
 == Product Detail Navigation ==
 
 User -> React : Clicks on a product card
+activate React
 React -> React : navigate(`/products/${id}`)
 React -> Axios : CatalogService.getProduct(id)
+deactivate React
+activate Axios
 Axios -> ProdCtrl : **GET /api/products/{id}**
+deactivate Axios
+activate ProdCtrl
 
 ProdCtrl -> Repo : _repo.GetByIdAsync(id)
+activate Repo
 Repo -> DB : _db.Products\n  .Include(Category)\n  .Include(SubCategory)\n  .FirstOrDefaultAsync(x => x.Id == id)
+activate DB
 DB --> Repo : Product | null
+deactivate DB
 
 alt Product not found
     Repo --> ProdCtrl : null
+    deactivate Repo
     ProdCtrl --> Axios : **404 Not Found**
+    deactivate ProdCtrl
+    activate Axios
     Axios --> React : Error displayed
+    deactivate Axios
 else Product found
     Repo --> ProdCtrl : Product
+    deactivate Repo
     ProdCtrl -> ProdCtrl : Map to ProductDto
     ProdCtrl --> Axios : **200 OK** ProductDto
+    deactivate ProdCtrl
+    activate Axios
     Axios --> React : product
+    deactivate Axios
+    activate React
     React --> User : Render ProductDetails page\nwith image, description,\nprice, stock, Add to Cart
+    deactivate React
 end
 
 @enduml

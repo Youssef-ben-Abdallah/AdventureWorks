@@ -154,6 +154,6 @@ legend right
   | ecom-ui | React + Vite + TS | |
 endlegend
 
-footer AdventureWorks Sales BI Platform | Deployment Architecture Diagram
+footer AdventureWorks Sales BI Platform | Deployment Architecture Diagram | Page %page% of %lastpage%
 
 @enduml

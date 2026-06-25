@@ -122,6 +122,6 @@ legend right
   | <#F3E5F5> Processing | Full & incremental cube refresh |
 endlegend
 
-footer AdventureWorks Sales BI Platform | Cube Performance Architecture Diagram
+footer AdventureWorks Sales BI Platform | Cube Performance Architecture Diagram | Page %page% of %lastpage%
 
 @enduml

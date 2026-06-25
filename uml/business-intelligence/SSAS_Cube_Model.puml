@@ -140,5 +140,17 @@ left side
 *** AdventureWorksDW2019\n(SQL Server)
 **** 11 Tables in DSV
 
+legend right
+  |= Node Color |= Meaning |
+  | <back:#F3E5F5>Purple</back> | Measure group & base measures |
+  | <back:#FFFDE7>Yellow</back> | MDX calculated measures |
+  | <back:#E3F2FD>Blue</back> | Cube dimensions |
+  | <back:#E8F5E9>Green</back> | Dimension hierarchies |
+  | <back:#FFCDD2>Red</back> | Role-playing dimensions (from DimDate) |
+  | <back:#C8E6C9>Light Green</back> | Data source (SQL Server) |
+endlegend
+
+footer AdventureWorks Sales BI Platform | SSAS Cube Model (WBS) | Page %page% of %lastpage%
+
 @endwbs
 @enduml

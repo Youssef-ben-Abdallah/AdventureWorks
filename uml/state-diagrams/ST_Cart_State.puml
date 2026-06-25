@@ -15,6 +15,9 @@ skinparam state {
 [*] --> Empty : App initializes\nCartProvider reads\nlocalStorage('ecom_cart_v1')
 
 state "Empty" as Empty <<empty>> {
+  Empty : entry / render "Your cart is empty" with Products link
+  Empty : do / await add() call from any product page
+  Empty : exit / update Navbar badge count
   Empty : items = []
   Empty : count = 0
   Empty : total = 0
@@ -24,6 +27,9 @@ state "Empty" as Empty <<empty>> {
 }
 
 state "HasItems" as HasItems <<hasitems>> {
+  HasItems : entry / sync items[] to localStorage via useEffect
+  HasItems : do / keep Navbar badge and Order Summary in sync
+  HasItems : exit / either clear (checkout) or reduce to empty
   HasItems : items.length > 0
   HasItems : count = sum of qty
   HasItems : total = sum of (qty * price)
@@ -49,7 +55,12 @@ state "HasItems" as HasItems <<hasitems>> {
   }
 }
 
+state authCheck #LightYellow <<choice>>
+
 state "CheckingOut" as CheckingOut <<checkingout>> {
+  CheckingOut : entry / set loading = true, disable Checkout button
+  CheckingOut : do / await POST /api/orders response
+  CheckingOut : exit / set loading = false
   CheckingOut : Checkout button clicked
   CheckingOut : loading = true
   CheckingOut : POST /api/orders in progress
@@ -68,7 +79,10 @@ HasItems --> Empty : [remove(productId)]\nRemove last remaining item\n[items.len
 
 HasItems --> Empty : [clear()]\nClear all button clicked\nitems = []\nlocalStorage cleared
 
-HasItems --> CheckingOut : [handleCheckout()]\n[items.length > 0]\nBuild CreateOrderDto\nPOST /api/orders
+HasItems --> authCheck : [handleCheckout()]\n[items.length > 0]
+
+authCheck --> CheckingOut : [JWT token present]\nBuild CreateOrderDto\nPOST /api/orders
+authCheck --> Empty : [No JWT token]\nRedirect to /login\n(Axios 401 interceptor)
 
 CheckingOut --> Empty : [Order created successfully]\nclear() called\nnavigateate('/orders')\nCart fully emptied
 
@@ -89,6 +103,13 @@ note bottom of HasItems
 
   Cart state survives page
   refreshes and browser restarts.
+end note
+
+note right of authCheck
+  Choice pseudostate checks
+  for a valid JWT in localStorage
+  before allowing checkout.
+  Missing token redirects to /login.
 end note
 
 note right of CheckingOut

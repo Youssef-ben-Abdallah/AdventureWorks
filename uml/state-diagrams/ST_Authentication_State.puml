@@ -21,6 +21,8 @@ skinparam state {
 [*] --> Anonymous : App loads,\ncheck localStorage
 
 state "Anonymous" as Anonymous <<anonymous>> {
+  Anonymous : entry / clear any stale localStorage keys
+  Anonymous : do / show public routes (Products, Login, Register)
   Anonymous : No token in localStorage
   Anonymous : Can browse Products (public)
   Anonymous : Can access Login / Register
@@ -29,6 +31,9 @@ state "Anonymous" as Anonymous <<anonymous>> {
 }
 
 state "Authenticating" as Authenticating <<authenticating>> {
+  Authenticating : entry / set loading = true, disable submit button
+  Authenticating : do / await server response
+  Authenticating : exit / set loading = false
   Authenticating : Login or Register form submitted
   Authenticating : POST /api/auth/login
   Authenticating : or POST /api/auth/register
@@ -36,11 +41,18 @@ state "Authenticating" as Authenticating <<authenticating>> {
 }
 
 state "Authenticated" as Authenticated <<authenticated>> {
+  Authenticated : entry / store token + user in localStorage
+  Authenticated : do / attach Bearer token to every Axios request
+  Authenticated : exit / clear localStorage on logout or 401
   Authenticated : JWT stored in localStorage
   Authenticated : Axios interceptor attaches
   Authenticated : Authorization: Bearer <token>
 
+  state roleChoice #LightYellow <<choice>>
+
   state "User Role" as UserRole <<user>> {
+    UserRole : entry / hide admin nav items
+    UserRole : do / allow browse, cart, orders
     UserRole : roles = ["User"]
     UserRole : Can browse, add to cart
     UserRole : Can checkout orders
@@ -48,6 +60,8 @@ state "Authenticated" as Authenticated <<authenticated>> {
   }
 
   state "Admin Role" as AdminRole <<admin>> {
+    AdminRole : entry / show admin nav items
+    AdminRole : do / allow all user + admin routes
     AdminRole : roles = ["Admin"]
     AdminRole : All User capabilities
     AdminRole : + Admin Dashboard (CRUD)
@@ -57,11 +71,16 @@ state "Authenticated" as Authenticated <<authenticated>> {
     AdminRole : + Upload product images
   }
 
-  [*] --> UserRole : [role === "User"]
-  [*] --> AdminRole : [role === "Admin"]
+  [*] --> roleChoice : [JWT decoded,\nroles[] extracted]
+  roleChoice --> UserRole : [role === "User"]
+  roleChoice --> AdminRole : [role === "Admin"]
+  [H] --> roleChoice
 }
 
 state "Token Expired" as TokenExpired <<expired>> {
+  TokenExpired : entry / flag token as invalid
+  TokenExpired : do / any in-flight API call returns 401
+  TokenExpired : exit / Axios interceptor clears localStorage
   TokenExpired : JWT ExpiresAtUtc exceeded
   TokenExpired : Server returns 401 Unauthorized
   TokenExpired : on any authenticated API call
@@ -87,6 +106,15 @@ note right of Authenticated
 
   Token is created by
   JwtTokenService.CreateTokenAsync()
+end note
+
+note right of roleChoice
+  Role decision is derived
+  from the roles[] array in
+  the decoded JWT. The [H]
+  history pseudostate restores
+  the last active sub-role
+  if auth state is re-entered.
 end note
 
 note left of Anonymous

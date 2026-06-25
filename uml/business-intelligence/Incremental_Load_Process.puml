@@ -139,6 +139,6 @@ legend right
   | Type 1 | Overwrite | Update in place, no history |
 endlegend
 
-footer AdventureWorks Sales BI Platform | Incremental Load Process Diagram
+footer AdventureWorks Sales BI Platform | Incremental Load Process Diagram | Page %page% of %lastpage%
 
 @enduml

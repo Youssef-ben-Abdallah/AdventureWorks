@@ -3,125 +3,194 @@
 title Repository Module Structure - AdventureWorks Sales BI Platform
 caption Full project organization at the repository root level
 
+scale 1.5
+
 skinparam packageStyle rectangle
+skinparam packageFontStyle bold
+skinparam packageFontSize 13
 skinparam linetype ortho
 skinparam nodesep 50
 skinparam ranksep 50
 
-package "AdventureWorks/" as ROOT #E3F2FD {
+package "AdventureWorks/ <<root>>" as ROOT #E3F2FD {
 
-    package "backend/Ecom.Api" as BACKEND #C8E6C9 {
-        package "Controllers" as B_CTRL #A5D6A7 {
-            note as B_CTRL_N
-                7 REST API controllers
-                Auth, Categories, SubCategories,
-                Products, Orders, Dashboard,
-                CubeInsights
+    together {
+        package "backend/Ecom.Api <<namespace>>" as BACKEND #C8E6C9 {
+            package "Controllers <<layer>>" as B_CTRL #A5D6A7 {
+                note as B_CTRL_N
+                    7 REST API controllers:
+                    Auth, Categories, SubCategories,
+                    Products, Orders, Dashboard,
+                    CubeInsights
+                end note
+            }
+            package "Services <<layer>>" as B_SVC #A5D6A7 {
+                note as B_SVC_N
+                    JwtTokenService (IJwtTokenService)
+                    DashboardService (IDashboardService)
+                    OlapService (IOlapService)
+                    + interfaces
+                end note
+            }
+            package "Repositories <<layer>>" as B_REPO #A5D6A7 {
+                note as B_REPO_N
+                    4 repositories + 4 interfaces:
+                    Category, SubCategory,
+                    Product, Order
+                end note
+            }
+            package "Entities <<namespace>>" as B_ENT #A5D6A7
+            package "Data <<namespace>>" as B_DATA #A5D6A7
+            package "DTOs <<module>>" as B_DTO #A5D6A7
+            package "Migrations <<module>>" as B_MIG #A5D6A7
+        }
+
+        package "frontend/ecom-ui <<module>>" as FRONTEND #BBDEFB {
+            package "src/pages <<layer>>" as F_PAGES #90CAF9 {
+                note as F_PAGES_N
+                    9 page components:
+                    Home, Products, ProductDetails,
+                    Login, Cart, MyOrders,
+                    Dashboard, CubeInsights,
+                    AdminDashboard
+                end note
+            }
+            package "src/components <<layer>>" as F_COMP #90CAF9
+            package "src/context <<module>>" as F_CTX #90CAF9
+            package "src/services <<layer>>" as F_SVC #90CAF9
+            package "src/config <<module>>" as F_CFG #90CAF9
+            package "src/types <<namespace>>" as F_TYPES #90CAF9
+        }
+    }
+
+    together {
+        package "AW_Sales_DW_ETL <<module>>" as ETL #FFE0B2 {
+            note as ETL_N
+                SSIS Packages:
+                01_Load_Dimension.dtsx
+                  (6 stored proc tasks)
+                02_Load_FactSales.dtsx
+                  (1 stored proc task)
             end note
         }
-        package "Services" as B_SVC #A5D6A7 {
-            note as B_SVC_N
-                JwtTokenService
-                DashboardService
-                OlapService
-                + interfaces
+
+        package "MultdimCubeAW2019 <<module>>" as SSAS #E1BEE7 {
+            note as SSAS_N
+                SSAS Multidimensional Project (.dwproj):
+                Adventure Works DW2019.cube
+                8 dimension files (.dim):
+                  Date, Product, Currency,
+                  Sales Territory, Employee,
+                  Promotion, Reseller,
+                  Fact Reseller Sales
             end note
         }
-        package "Repositories" as B_REPO #A5D6A7 {
-            note as B_REPO_N
-                4 repositories
-                + 4 interfaces
+
+        package "Database <<module>>" as DB #FFCDD2 {
+            note as DB_N
+                SQL Scripts:
+                DW table definitions
+                Stored procedures (7)
+                vwSalesDashboard view
             end note
         }
-        package "Entities" as B_ENT #A5D6A7
-        package "Data" as B_DATA #A5D6A7
-        package "DTOs" as B_DTO #A5D6A7
-        package "Migrations" as B_MIG #A5D6A7
     }
 
-    package "frontend/ecom-ui" as FRONTEND #BBDEFB {
-        package "src/pages" as F_PAGES #90CAF9 {
-            note as F_PAGES_N
-                9 page components
-                Home, Products, ProductDetails,
-                Login, Cart, MyOrders,
-                Dashboard, CubeInsights,
-                AdminDashboard
+    together {
+        package "quality-assurance <<module>>" as QA #B3E5FC {
+            note as QA_N
+                Selenium/Pytest test suite
+                Page Object Model (POM)
+                Test plans, test cases,
+                traceability matrix
             end note
         }
-        package "src/components" as F_COMP #90CAF9
-        package "src/context" as F_CTX #90CAF9
-        package "src/services" as F_SVC #90CAF9
-        package "src/config" as F_CFG #90CAF9
-        package "src/types" as F_TYPES #90CAF9
-    }
 
-    package "AW_Sales_DW_ETL" as ETL #FFE0B2 {
-        note as ETL_N
-            SSIS Packages:
-            01_Load_Dimension.dtsx
-            02_Load_FactSales.dtsx
-        end note
-    }
+        package "docs <<module>>" as DOCS #CFD8DC {
+            note as DOCS_N
+                Project documentation:
+                Architecture docs,
+                API references,
+                BI design documents
+            end note
+        }
 
-    package "MultdimCubeAW2019" as SSAS #E1BEE7 {
-        note as SSAS_N
-            SSAS Multidimensional Project:
-            Adventure Works DW2019.cube
-            8 dimension files (.dim):
-            Date, Product, Currency,
-            Sales Territory, Employee,
-            Promotion, Reseller,
-            Fact Reseller Sales
-        end note
-    }
-
-    package "Database" as DB #FFCDD2 {
-        note as DB_N
-            SQL Scripts:
-            DW table definitions
-            Stored procedures
-            Views
-        end note
-    }
-
-    package "quality-assurance" as QA #B3E5FC {
-        note as QA_N
-            QA documentation
-            and test artifacts
-        end note
-    }
-
-    package "docs" as DOCS #CFD8DC {
-        note as DOCS_N
-            Project documentation
-        end note
-    }
-
-    package "uml" as UML #FFF9C4 {
-        note as UML_N
-            PlantUML diagrams:
-            component-diagrams/
-            package-diagrams/
-            deployment-diagrams/
-            architecture/
-        end note
+        package "uml <<module>>" as UML #FFF9C4 {
+            note as UML_N
+                PlantUML diagrams:
+                architecture/
+                package-diagrams/
+                business-intelligence/
+                component-diagrams/
+                deployment-diagrams/
+            end note
+        }
     }
 }
 
 ' ── Inter-module Relationships ────────────────────────────
 
-FRONTEND -[#2196F3]-> BACKEND : "HTTP REST\nAPI calls"
-ETL -[#FF9800]-> DB : "ETL target\nDW tables"
-SSAS -[#9C27B0]-> DB : "Cube source\nDW data"
-BACKEND -[#4CAF50]-> DB : "EF Core\nqueries"
-BACKEND -[#9C27B0]--> SSAS : "ADOMD.NET\nMDX queries"
+FRONTEND -[#2196F3,bold]-> BACKEND : "HTTP REST JSON\nAPI calls via Axios"
+ETL -[#FF9800,bold]-> DB : "ETL target\nDW tables & views"
+SSAS -[#9C27B0,bold]-> DB : "Cube source\nAdventureWorksDW2019"
+BACKEND -[#4CAF50,bold]-> DB : "EF Core LINQ\nOLTP + DW queries"
+BACKEND -[#9C27B0,bold]--> SSAS : "ADOMD.NET\nMDX queries via XMLA"
+
+note right of BACKEND
+    ASP.NET Core .NET 9
+    JWT Bearer authentication
+    Ports: HTTP :57241 | HTTPS :57240
+    Swagger: :57241/swagger
+    DI: Program.cs
+end note
+
+note right of FRONTEND
+    React 19 + Vite 8
+    TypeScript 6 + Tailwind CSS 4
+    Dev server: :5173
+    Build: npm run build
+    Lint: oxlint
+end note
+
+note right of ETL
+    Execution order is critical:
+    1. Run 01_Load_Dimension.dtsx
+       (loads all 6 dimensions)
+    2. Run 02_Load_FactSales.dtsx
+       (loads fact table with FK refs)
+    Scheduled via SQL Server Agent.
+end note
+
+note right of SSAS
+    Process after ETL completes.
+    ProcessFull: initial deploy.
+    ProcessUpdate: incremental refresh.
+    MDX queries return pre-aggregated
+    measures for fast dashboard loads.
+end note
 
 note bottom of ROOT
     Version Control: Git
-    Branch: react-migration
-    CI/CD: GitHub Actions
-    (.github/workflows/ci.yml)
+    Active branch: react-migration
+    CI/CD: GitHub Actions (.github/workflows/ci.yml)
+    Runs: dotnet build --configuration Release
+    Runs: npm run build (frontend)
 end note
+
+legend bottom left
+    |= Arrow Style |= Relationship |
+    | -[#2196F3,bold]-> | HTTP REST API calls (Frontend -> Backend) |
+    | -[#4CAF50,bold]-> | EF Core database queries (Backend -> DB Scripts) |
+    | -[#9C27B0,bold]-> | MDX / XMLA cube queries (Backend -> SSAS) |
+    | -[#FF9800,bold]-> | ETL data load pipeline (SSIS -> DB) |
+    | -[#9C27B0,bold]-> | Cube data source (SSAS -> DB) |
+    |= Stereotype |= Meaning |
+    | <<root>> | Repository root directory |
+    | <<namespace>> | .NET / TypeScript namespace |
+    | <<layer>> | Architectural design layer |
+    | <<module>> | Functional module / project |
+endlegend
+
+footer AdventureWorks Sales BI Platform | Repository Module Structure | Page %page% of %lastpage%
 
 @enduml

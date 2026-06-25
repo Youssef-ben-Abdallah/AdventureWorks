@@ -23,6 +23,8 @@ skinparam state {
 [*] --> Unprocessed : Cube deployed\nor schema changed
 
 state "Unprocessed" as Unprocessed <<unprocessed>> {
+  Unprocessed : entry / invalidate all cached MDX results
+  Unprocessed : do / block OlapService from executing queries
   Unprocessed : Cube has no data
   Unprocessed : All dimensions empty
   Unprocessed : Measure groups empty
@@ -30,8 +32,13 @@ state "Unprocessed" as Unprocessed <<unprocessed>> {
 }
 
 state "Processing Dimensions" as ProcessingDimensions <<procdim>> {
-  ProcessingDimensions : Processing all 7 dimensions
-  ProcessingDimensions : in dependency order
+  ProcessingDimensions : entry / open ADOMD connection to Analysis Services
+  ProcessingDimensions : do / process each dimension partition in parallel
+  ProcessingDimensions : exit / verify all dimension keys are consistent
+  ProcessingDimensions : Processing all 7 dimensions in parallel
+
+  state forkDims #LightGray <<fork>>
+  state joinDims #LightGray <<join>>
 
   state "Dim Date" as DimDate
   state "Dim Product" as DimProduct
@@ -51,9 +58,31 @@ state "Processing Dimensions" as ProcessingDimensions <<procdim>> {
   DimPromotion : [Promotion].[Promotion]
   DimCurrency : [Currency].[Currency]
   DimReseller : [Reseller].[Reseller]
+
+  [*] --> forkDims
+
+  forkDims --> DimDate
+  forkDims --> DimProduct
+  forkDims --> DimTerritory
+  forkDims --> DimEmployee
+  forkDims --> DimPromotion
+  forkDims --> DimCurrency
+  forkDims --> DimReseller
+
+  DimDate --> joinDims
+  DimProduct --> joinDims
+  DimTerritory --> joinDims
+  DimEmployee --> joinDims
+  DimPromotion --> joinDims
+  DimCurrency --> joinDims
+  DimReseller --> joinDims
+
+  joinDims --> [*]
 }
 
 state "Dimensions Ready" as DimensionsReady <<dimready>> {
+  DimensionsReady : entry / confirm all 7 dimension member counts > 0
+  DimensionsReady : do / await measure group processing trigger
   DimensionsReady : All 7 dimensions processed
   DimensionsReady : Hierarchies populated:
   DimensionsReady : - Date: Year/Month/Day
@@ -64,6 +93,9 @@ state "Dimensions Ready" as DimensionsReady <<dimready>> {
 }
 
 state "Processing Measure Group" as ProcessingMeasureGroup <<procmg>> {
+  ProcessingMeasureGroup : entry / open partition scan on FactResellerSales
+  ProcessingMeasureGroup : do / aggregate measures and build B-tree indexes
+  ProcessingMeasureGroup : exit / validate row counts match DWH staging
   ProcessingMeasureGroup : Processing Fact Reseller Sales
   ProcessingMeasureGroup : partition(s)
   ProcessingMeasureGroup : Building aggregations
@@ -81,6 +113,8 @@ state "Processing Measure Group" as ProcessingMeasureGroup <<procmg>> {
 }
 
 state "Fully Processed" as FullyProcessed <<ready>> {
+  FullyProcessed : entry / signal OlapService that cube is queryable
+  FullyProcessed : do / serve MDX queries via AdomdConnection
   FullyProcessed : Cube ready for MDX queries
   FullyProcessed : All KPIs available:
   FullyProcessed : - Gross Profit Margin
@@ -95,6 +129,9 @@ state "Fully Processed" as FullyProcessed <<ready>> {
 }
 
 state "Incremental Update" as IncrementalUpdate <<incremental>> {
+  IncrementalUpdate : entry / detect new partition data in DWH staging
+  IncrementalUpdate : do / apply delta dimension + fact updates
+  IncrementalUpdate : exit / refresh aggregations for changed partitions
   IncrementalUpdate : New data loaded via SSIS ETL
   IncrementalUpdate : into DWH staging tables
   IncrementalUpdate : Delta processing applies
@@ -103,6 +140,8 @@ state "Incremental Update" as IncrementalUpdate <<incremental>> {
 }
 
 state "Processing Error" as ProcessingError <<error>> {
+  ProcessingError : entry / log error details to Windows Event Log
+  ProcessingError : do / surface error in SSMS Processing dialog
   ProcessingError : Dimension or measure group
   ProcessingError : processing failed
   ProcessingError : Possible causes:
@@ -153,6 +192,16 @@ note right of FullyProcessed
   - [Promotion]
   - [Currency]
   - [Reseller]
+end note
+
+note right of ProcessingDimensions
+  The fork/join pseudostates
+  model SSAS parallel dimension
+  processing: all 7 dimensions
+  are submitted concurrently
+  and the join gate waits for
+  every one to complete before
+  the cube moves to DimensionsReady.
 end note
 
 note bottom of IncrementalUpdate

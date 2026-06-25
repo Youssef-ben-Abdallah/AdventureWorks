@@ -15,43 +15,44 @@ start
 :Enter **username**, **email**,\nand **password**;
 
 |React Frontend|
-:Validate input fields;
+#LightYellow:Validate input fields;
 
-if (Password length >= 6?) then (no)
-  :Show error:\n"Password must be at least\n6 characters";
-  |User (Browser)|
-  :Correct password;
-  |React Frontend|
-  :Re-validate;
-endif
+note right
+  All four password rules are
+  evaluated in parallel on submit.
+  Any single failure blocks the
+  POST request from being sent.
+end note
 
-if (Password contains digit?) then (no)
-  :Show error:\n"Password requires a digit";
-  |User (Browser)|
-  :Correct password;
-  |React Frontend|
-  :Re-validate;
-endif
+fork
+  if (Password length >= 6?) then (no)
+    #LightCoral:Show error:\n"Password must be at least\n6 characters";
+    detach
+  else (yes)
+  endif
+fork again
+  if (Password contains digit?) then (no)
+    #LightCoral:Show error:\n"Password requires a digit";
+    detach
+  else (yes)
+  endif
+fork again
+  if (Password contains uppercase?) then (no)
+    #LightCoral:Show error:\n"Password requires\nan uppercase letter";
+    detach
+  else (yes)
+  endif
+fork again
+  if (Password contains lowercase?) then (no)
+    #LightCoral:Show error:\n"Password requires\na lowercase letter";
+    detach
+  else (yes)
+  endif
+end fork
 
-if (Password contains uppercase?) then (no)
-  :Show error:\n"Password requires\nan uppercase letter";
-  |User (Browser)|
-  :Correct password;
-  |React Frontend|
-  :Re-validate;
-endif
+#LightGreen:All frontend validations pass;
 
-if (Password contains lowercase?) then (no)
-  :Show error:\n"Password requires\na lowercase letter";
-  |User (Browser)|
-  :Correct password;
-  |React Frontend|
-  :Re-validate;
-endif
-
-:All frontend validations pass;
-
-:POST /api/auth/register\n{ username, email, password }\n(RegisterDto);
+#LightBlue:POST /api/auth/register\n{ username, email, password }\n(RegisterDto);
 
 |ASP.NET Core Backend|
 :AuthController.Register()\nreceives RegisterDto;
@@ -59,37 +60,45 @@ endif
 :Create AppUser\n{ UserName, Email,\n  EmailConfirmed = true };
 
 |Identity / Database|
-:UserManager.CreateAsync(user, password);
+#LightBlue:UserManager.CreateAsync(user, password);
 
 if (Email already exists\nor Identity rules fail?) then (yes)
   :Return IdentityResult.Errors;
   |ASP.NET Core Backend|
-  :Return **400 BadRequest**\nwith error descriptions;
+  #LightCoral:Return **400 BadRequest**\nwith error descriptions;
   |React Frontend|
-  :Display server errors\n(e.g. "Duplicate email");
-  |User (Browser)|
-  :Review and correct input;
-  stop
+  #LightCoral:Display server errors\n(e.g. "Duplicate email");
+  detach
 else (no)
-  :User created successfully;
+  #LightGreen:User created successfully;
 endif
 
 |ASP.NET Core Backend|
 :AddToRoleAsync(user, **"User"**);
 
-:JwtTokenService.CreateTokenAsync(user)\ngenerates JWT with claims\n(uid, username, email, roles);
+note right
+  JwtTokenService signs the token
+  with the HMAC key from config.
+  Claims embedded: uid
+  (NameIdentifier), username,
+  email, and roles[].
+end note
 
-:Return **200 OK**\nAuthResponseDto {\n  Token, ExpiresAtUtc,\n  Username, Email, Roles };
+#LightBlue:JwtTokenService.CreateTokenAsync(user)\ngenerates JWT with claims\n(uid, username, email, roles);
+
+#LightGreen:Return **200 OK**\nAuthResponseDto {\n  Token, ExpiresAtUtc,\n  Username, Email, Roles };
 
 |React Frontend|
 :Receive AuthResponseDto;
 
 :Store **token** in localStorage\nStore user info (username,\nemail, roles);
 
-:Redirect to **Home** page;
+#LightGreen:Redirect to **Home** page;
 
 |User (Browser)|
 :User sees Home page\nas authenticated user;
 
 stop
+
+caption Registration — POST /api/auth/register — ASP.NET Identity validation + JWT issuance
 @enduml

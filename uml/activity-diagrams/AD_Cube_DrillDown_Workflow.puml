@@ -15,13 +15,13 @@ start
 |React Frontend|
 :useEffect triggers\n**loadFilters()**;
 
-:GET /api/cubeinsights/filters;
+#LightBlue:GET /api/cubeinsights/filters;
 
 |ASP.NET Core Backend (OlapService)|
-:Execute MDX to fetch\navailable Years and Territories\nfrom [Order Date] and\n[Sales Territory] dimensions;
+#LightBlue:Execute MDX to fetch\navailable Years and Territories\nfrom [Order Date] and\n[Sales Territory] dimensions;
 
 |React Frontend|
-:Populate Year and Territory\ndropdown filters;
+#LightGreen:Populate Year and Territory\ndropdown filters;
 
 |User (Browser)|
 :Select **Year** filter\n(e.g. "2013")\nand **Territory** filter\n(e.g. "North America");
@@ -29,24 +29,32 @@ start
 |React Frontend|
 :All drill states reset to null\n(drillCategory, drillMonth,\ndrillSubcategory, etc.);
 
-:useEffect triggers **loadData()**;
+#LightYellow:useEffect triggers **loadData()**;
 
 :=== Overview Tab (7 Parallel API Calls) ===;
 
+note right
+  All 7 calls are fired via
+  Promise.allSettled() so a
+  single failed MDX query does
+  not block the other charts
+  from rendering.
+end note
+
 fork
-  :getKpis(params);
+  #LightBlue:getKpis(params);
 fork again
-  :getProfitAnalysis(params);
+  #LightBlue:getProfitAnalysis(params);
 fork again
-  :getSalesTrend(params);
+  #LightBlue:getSalesTrend(params);
 fork again
-  :getTopProducts(params);
+  #LightBlue:getTopProducts(params);
 fork again
-  :getTerritorySales(params);
+  #LightBlue:getTerritorySales(params);
 fork again
-  :getFreightAnalysis(params);
+  #LightBlue:getFreightAnalysis(params);
 fork again
-  :getTargetStatus(params);
+  #LightBlue:getTargetStatus(params);
 end fork
 
 :All calls via\n**Promise.allSettled()**\n-- partial failures tolerated;
@@ -55,12 +63,12 @@ end fork
 :OlapService executes MDX queries\nagainst SSAS cube\n[Adventure Works DW2019];
 
 |SSAS Cube (MDX)|
-:Return KPIs:\nGross Profit Margin, AOV,\nDiscount Ratio, Effective Tax Rate;
+#LightGreen:Return KPIs:\nGross Profit Margin, AOV,\nDiscount Ratio, Effective Tax Rate;
 
-:Return charts:\nSales & Profit Trend (monthly),\nProfitability by Category,\nTop 10 Subcategories,\nTerritory Sales, Freight,\nTarget Status;
+#LightGreen:Return charts:\nSales & Profit Trend (monthly),\nProfitability by Category,\nTop 10 Subcategories,\nTerritory Sales, Freight,\nTarget Status;
 
 |React Frontend|
-:Render 4 KPI cards\n+ 4 charts on Overview tab;
+#LightGreen:Render 4 KPI cards\n+ 4 charts on Overview tab;
 
 note right
   Charts are interactive:
@@ -69,97 +77,102 @@ note right
 end note
 
 |User (Browser)|
-:=== Trend Drill-Down ===\nClick a **month** on the\nSales & Profit Trend chart;
+:Choose a drill-down dimension;
 
-|React Frontend|
-:handleTrendClick()\nsets **drillMonth** = clicked month\n(e.g. "2013-06");
+split
+  :=== Trend Drill-Down ===\nClick a **month** on the\nSales & Profit Trend chart;
 
-:Reload with trendParams\n{ ...params, month: "2013-06" };
+  |React Frontend|
+  #LightYellow:handleTrendClick()\nsets **drillMonth** = clicked month\n(e.g. "2013-06");
 
-|ASP.NET Core Backend (OlapService)|
-:MDX uses FILTER on\n[Order Date].[Date].MEMBERS\nfor the selected month;
+  :Reload with trendParams\n{ ...params, month: "2013-06" };
 
-:Return **daily** sales data\ninstead of monthly;
+  |ASP.NET Core Backend (OlapService)|
+  #LightBlue:MDX uses FILTER on\n[Order Date].[Date].MEMBERS\nfor the selected month;
 
-|React Frontend|
-:Chart title changes to\n"Daily Sales & Profit (2013-06)";
+  :Return **daily** sales data\ninstead of monthly;
 
-:Show "Roll up" button;
+  |React Frontend|
+  #LightGreen:Chart title changes to\n"Daily Sales & Profit (2013-06)";
 
-|User (Browser)|
-:Click **"Roll up"** button;
+  :Show "Roll up" button;
 
-|React Frontend|
-:setDrillMonth(null);
-:Reloads with monthly view;
+  |User (Browser)|
+  :Click **"Roll up"** button;
 
-|User (Browser)|
-:=== Category Drill-Down ===\n(Category -> Subcategory)\nClick a **category** on the\nProfitability by Category chart;
+  |React Frontend|
+  :setDrillMonth(null);
+  :Reloads with monthly view;
 
-|React Frontend|
-:handleCategoryClick()\nsets **drillCategory** = clicked\n(e.g. "Bikes");
+split again
+  :=== Category Drill-Down ===\n(Category -> Subcategory)\nClick a **category** on the\nProfitability by Category chart;
 
-:Reload with profitParams\n{ ...params, category: "Bikes" };
+  |React Frontend|
+  #LightYellow:handleCategoryClick()\nsets **drillCategory** = clicked\n(e.g. "Bikes");
 
-|ASP.NET Core Backend (OlapService)|
-:MDX drills into subcategories\nunder the selected category;
+  :Reload with profitParams\n{ ...params, category: "Bikes" };
 
-:Return profitability data\nfor subcategories\n(e.g. Mountain Bikes, Road Bikes);
+  |ASP.NET Core Backend (OlapService)|
+  #LightBlue:MDX drills into subcategories\nunder the selected category;
 
-|React Frontend|
-:Chart title changes to\n"Profitability (Bikes)"\nwith Roll up button;
+  :Return profitability data\nfor subcategories\n(e.g. Mountain Bikes, Road Bikes);
 
-|User (Browser)|
-:=== Product Drill-Down ===\n(Subcategory -> Product)\nClick a **subcategory** on the\nTop Products chart;
+  |React Frontend|
+  #LightGreen:Chart title changes to\n"Profitability (Bikes)"\nwith Roll up button;
 
-|React Frontend|
-:handleProductClick()\nsets **drillSubcategory** = clicked\n(e.g. "Mountain Bikes");
+split again
+  :=== Product Drill-Down ===\n(Subcategory -> Product)\nClick a **subcategory** on the\nTop Products chart;
 
-:Reload with productParams\n{ ...params, subcategory:\n"Mountain Bikes" };
+  |React Frontend|
+  #LightYellow:handleProductClick()\nsets **drillSubcategory** = clicked\n(e.g. "Mountain Bikes");
 
-|ASP.NET Core Backend (OlapService)|
-:MDX drills into individual\nproducts within subcategory;
+  :Reload with productParams\n{ ...params, subcategory:\n"Mountain Bikes" };
 
-:Return Top 10 Products\nwith Sales and Profit;
+  |ASP.NET Core Backend (OlapService)|
+  #LightBlue:MDX drills into individual\nproducts within subcategory;
 
-|React Frontend|
-:Chart title changes to\n"Top 10 Products (Mountain Bikes)"\nwith Roll up button;
+  :Return Top 10 Products\nwith Sales and Profit;
 
-|User (Browser)|
-:=== Territory Drill-Down ===\n(Group -> Country -> Region)\nClick a **territory group** on\nthe map (e.g. "North America");
+  |React Frontend|
+  #LightGreen:Chart title changes to\n"Top 10 Products (Mountain Bikes)"\nwith Roll up button;
 
-|React Frontend|
-:handleMapClick()\nsets **drillTerritoryGroup**\n= "North America";
+split again
+  :=== Territory Drill-Down ===\n(Group -> Country -> Region)\nClick a **territory group** on\nthe map (e.g. "North America");
 
-:Reload with territoryParams\n{ ...params, territoryGroup:\n"North America" };
+  |React Frontend|
+  #LightYellow:handleMapClick()\nsets **drillTerritoryGroup**\n= "North America";
 
-|ASP.NET Core Backend (OlapService)|
-:MDX drills from Groups\nto Countries within\nNorth America;
+  :Reload with territoryParams\n{ ...params, territoryGroup:\n"North America" };
 
-|React Frontend|
-:Map re-centers, shows\ncountry-level bubbles\n(US, Canada)\nwith Roll up button;
+  |ASP.NET Core Backend (OlapService)|
+  #LightBlue:MDX drills from Groups\nto Countries within\nNorth America;
 
-|User (Browser)|
-:Click a **country**\n(e.g. "United States");
+  |React Frontend|
+  #LightGreen:Map re-centers, shows\ncountry-level bubbles\n(US, Canada)\nwith Roll up button;
 
-|React Frontend|
-:handleMapClick()\nsets **drillTerritoryCountry**\n= "United States";
+  |User (Browser)|
+  :Click a **country**\n(e.g. "United States");
 
-:Reload with territoryParams\n{ ...params,\n  territoryGroup: "North America",\n  territoryCountry: "United States" };
+  |React Frontend|
+  #LightYellow:handleMapClick()\nsets **drillTerritoryCountry**\n= "United States";
 
-|ASP.NET Core Backend (OlapService)|
-:MDX drills from Country\nto Regions within US\n(Southwest, Northwest, etc.);
+  :Reload with territoryParams\n{ ...params,\n  territoryGroup: "North America",\n  territoryCountry: "United States" };
 
-|React Frontend|
-:Map re-centers, shows\nregion-level bubbles;
+  |ASP.NET Core Backend (OlapService)|
+  #LightBlue:MDX drills from Country\nto Regions within US\n(Southwest, Northwest, etc.);
 
-:Title: "Regions in United States"\nwith Roll up button;
+  |React Frontend|
+  #LightGreen:Map re-centers, shows\nregion-level bubbles;
 
-|User (Browser)|
-:Click "Roll up" to go back\nto Country or Group level;
+  :Title: "Regions in United States"\nwith Roll up button;
 
-|React Frontend|
-:If drillTerritoryCountry set:\nclear it (go to country level)\nElse: clear drillTerritoryGroup\n(go to global level);
+  |User (Browser)|
+  :Click "Roll up" to go back\nto Country or Group level;
+
+  |React Frontend|
+  :If drillTerritoryCountry set:\nclear it (go to country level)\nElse: clear drillTerritoryGroup\n(go to global level);
+
+end split
 
 note right
   All drill patterns follow
@@ -186,4 +199,6 @@ note left
 end note
 
 stop
+
+caption Cube Insights — OlapService MDX against [Adventure Works DW2019] — interactive drill-down via React state
 @enduml

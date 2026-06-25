@@ -3,6 +3,20 @@
 title SSIS Package Execution Workflow
 caption Activity diagram for ETL orchestration of AdventureWorksDW_Sales
 
+skinparam defaultTextAlignment center
+skinparam shadowing true
+skinparam roundCorner 8
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+    DiamondBackgroundColor #FFFDE7
+    DiamondBorderColor #F9A825
+    StartColor #2E7D32
+    EndColor #C62828
+    FontSize 11
+}
+
 |#E8F5E9| SSIS Orchestration |
 start
 :Initialize SSIS Runtime;
@@ -165,6 +179,12 @@ legend bottom
   | 01_Load_Dimension.dtsx | Customer, Products, Territory, Currency, SalesPerson, ShipMethod |
   | 02_Load_FactSales.dtsx | Sales (Fact) |
   | Target Database | AdventureWorksDW_Sales |
+  |= Status Color |= Meaning |
+  | <back:#C8E6C9>Green</back> | Success path |
+  | <back:#FFCDD2>Red</back> | Error / failure path |
+  | <back:#FFFDE7>Yellow</back> | Warning / partial state |
 endlegend
+
+footer AdventureWorks Sales BI Platform | SSIS Execution Workflow | Page %page% of %lastpage%
 
 @enduml

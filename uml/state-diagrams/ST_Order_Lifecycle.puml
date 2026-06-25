@@ -21,44 +21,65 @@ skinparam state {
 [*] --> Pending : User completes checkout\nPOST /api/orders
 
 state "Pending" as Pending <<pending>> {
+  Pending : entry / create order items, deduct stock
+  Pending : do / await admin action or payment confirmation
+  Pending : exit / write updated OrderStatus to DB
   Pending : OrderStatus = 0
   Pending : Order created with items
   Pending : Stock deducted
   Pending : Awaiting payment/review
 }
 
+state choicePoint #LightYellow <<choice>>
+
+Pending --> choicePoint : [Admin action via]\nPATCH /api/orders/{id}/status
+
+choicePoint --> Paid : [status: 1]\nAdmin confirms payment
+choicePoint --> Processing : [status: 2]\nAdmin starts processing directly
+choicePoint --> Cancelled : [status: 5]\nUser or Admin cancels
+
 state "Paid" as Paid <<paid>> {
+  Paid : entry / record payment confirmation timestamp
+  Paid : do / await admin to start fulfilment
+  Paid : exit / update OrderStatus
   Paid : OrderStatus = 1
   Paid : Payment confirmed
 }
 
 state "Processing" as Processing <<processing>> {
+  Processing : entry / assign warehouse staff
+  Processing : do / pick, pack, and prepare shipment
+  Processing : exit / hand off to shipping carrier
   Processing : OrderStatus = 2
   Processing : Admin reviews order
   Processing : Preparing for shipment
 }
 
 state "Shipped" as Shipped <<shipped>> {
+  Shipped : entry / record dispatch timestamp
+  Shipped : do / carrier delivers package
+  Shipped : exit / confirm delivery receipt
   Shipped : OrderStatus = 3
   Shipped : Order dispatched
   Shipped : Tracking available
 }
 
 state "Delivered" as Delivered <<delivered>> {
+  Delivered : entry / notify customer
+  Delivered : do / await return window
+  Delivered : exit / archive order record
   Delivered : OrderStatus = 4
   Delivered : Customer received order
   Delivered : Order complete
 }
 
 state "Cancelled" as Cancelled <<cancelled>> {
+  Cancelled : entry / optionally restore stock
+  Cancelled : do / notify customer of cancellation
   Cancelled : OrderStatus = 5
   Cancelled : Order cancelled
   Cancelled : Stock may be restored
 }
-
-Pending --> Paid : [Admin confirms payment]\nPATCH /api/orders/{id}/status\n{ status: 1 }
-Pending --> Processing : [Admin starts processing]\nPATCH status: 2
-Pending --> Cancelled : [User/Admin cancels]\nPATCH status: 5
 
 Paid --> Processing : [Admin starts processing]\nPATCH status: 2
 Paid --> Cancelled : [Admin cancels]\nPATCH status: 5
@@ -80,6 +101,14 @@ note right of Pending
   change status via
   PATCH /api/orders/{id}/status
   (UpdateOrderStatusDto).
+end note
+
+note right of choicePoint
+  Choice pseudostate routes
+  the PATCH request to the
+  correct next state based
+  on the status value (1, 2, or 5)
+  supplied by the Admin.
 end note
 
 note bottom of Cancelled

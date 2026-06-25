@@ -3,114 +3,172 @@
 title Backend Package Structure - Ecom.Api
 caption ASP.NET Core .NET 9 Namespace Organization
 
+scale 1.5
+
 skinparam packageStyle rectangle
+skinparam packageFontStyle bold
+skinparam packageFontSize 13
 skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 40
 
-package "Ecom.Api" as ROOT #E3F2FD {
+package "Ecom.Api <<namespace>>" as ROOT #E3F2FD {
 
-    package "Controllers" as CTRL #BBDEFB {
-        class AuthController <<RestController>>
-        class CategoriesController <<RestController>>
-        class SubCategoriesController <<RestController>>
-        class ProductsController <<RestController>>
-        class OrdersController <<RestController>>
-        class DashboardController <<RestController>>
-        class CubeInsightsController <<RestController>>
-    }
-
-    package "Services" as SVC #C8E6C9 {
-        interface IJwtTokenService
-        class JwtTokenService
-
-        package "Dashboard" as SVC_DASH #A5D6A7 {
-            interface IDashboardService
-            class DashboardService
+    together {
+        package "Controllers <<layer>>" as CTRL #BBDEFB {
+            class AuthController <<RestController>>
+            class CategoriesController <<RestController>>
+            class SubCategoriesController <<RestController>>
+            class ProductsController <<RestController>>
+            class OrdersController <<RestController>>
+            class DashboardController <<RestController>>
+            class CubeInsightsController <<RestController>>
         }
 
-        interface IOlapService
-        class OlapService
-    }
-
-    package "Repositories" as REPO #FFE0B2 {
-        interface ICategoryRepository
-        class CategoryRepository
-        interface ISubCategoryRepository
-        class SubCategoryRepository
-        interface IProductRepository
-        class ProductRepository
-        interface IOrderRepository
-        class OrderRepository
-    }
-
-    package "Entities" as ENT #E1BEE7 {
-        class AppUser
-        class Category
-        class SubCategory
-        class Product
-        class Order
-        class OrderItem
-        enum OrderStatus
-
-        package "Analytics" as ENT_ANALYTICS #CE93D8 {
-            class SalesFact
-            class CustomerDim
-            class ProductDim
-            class TerritoryDim
-            class CurrencyDim
-            class SalesPersonDim
-            class ShipMethodDim
+        package "DTOs <<module>>" as DTO #B3E5FC {
+            class AuthDtos <<record>>
+            class CatalogDtos <<record>>
+            class DashboardDtos <<record>>
+            class OrderDtos <<record>>
         }
     }
 
-    package "Data" as DATA #FFCDD2 {
-        class OltpDbContext <<DbContext>>
-        class AnalyticsDbContext <<DbContext>>
-        class DbSeeder
+    together {
+        package "Services <<layer>>" as SVC #C8E6C9 {
+            interface IJwtTokenService
+            class JwtTokenService
+
+            package "Dashboard <<module>>" as SVC_DASH #A5D6A7 {
+                interface IDashboardService
+                class DashboardService
+            }
+
+            interface IOlapService
+            class OlapService
+        }
+
+        package "Repositories <<layer>>" as REPO #FFE0B2 {
+            interface ICategoryRepository
+            class CategoryRepository
+            interface ISubCategoryRepository
+            class SubCategoryRepository
+            interface IProductRepository
+            class ProductRepository
+            interface IOrderRepository
+            class OrderRepository
+        }
     }
 
-    package "DTOs" as DTO #B3E5FC {
-        class AuthDtos <<record>>
-        class CatalogDtos <<record>>
-        class DashboardDtos <<record>>
-        class OrderDtos <<record>>
-    }
+    together {
+        package "Entities <<namespace>>" as ENT #E1BEE7 {
+            class AppUser
+            class Category
+            class SubCategory
+            class Product
+            class Order
+            class OrderItem
+            enum OrderStatus
 
-    package "Migrations" as MIG #CFD8DC {
-        note "EF Core auto-generated\nmigration files" as MigNote
+            package "Analytics <<namespace>>" as ENT_ANALYTICS #CE93D8 {
+                class SalesFact
+                class CustomerDim
+                class ProductDim
+                class TerritoryDim
+                class CurrencyDim
+                class SalesPersonDim
+                class ShipMethodDim
+            }
+        }
+
+        package "Data <<namespace>>" as DATA #FFCDD2 {
+            class OltpDbContext <<DbContext>>
+            class AnalyticsDbContext <<DbContext>>
+            class DbSeeder
+        }
+
+        package "Migrations <<module>>" as MIG #CFD8DC {
+            note "EF Core auto-generated\nmigration files" as MigNote
+        }
     }
 }
 
 ' ── Dependency Arrows ─────────────────────────────────────
 
-' Controllers depend on Services and Repositories
-CTRL --> SVC : <<uses>>
-CTRL --> REPO : <<uses>>
-CTRL --> DTO : <<maps to/from>>
+CTRL -[#1565C0,bold]-> SVC : <<uses>>
+CTRL -[#1565C0,bold]-> REPO : <<uses>>
+CTRL -[#1565C0,dashed]-> DTO : <<maps to/from>>
 
-' Services depend on Data and Entities
-SVC --> DATA : <<queries>>
-SVC --> ENT : <<operates on>>
+SVC -[#2E7D32,bold]-> DATA : <<queries>>
+SVC -[#2E7D32,bold]-> ENT : <<operates on>>
 
-' Repositories depend on Data and Entities
-REPO --> DATA : <<queries>>
-REPO --> ENT : <<operates on>>
+REPO -[#E65100,bold]-> DATA : <<queries>>
+REPO -[#E65100,bold]-> ENT : <<operates on>>
 
-' Data depends on Entities
-DATA --> ENT : <<maps>>
+DATA -[#9C27B0,bold]-> ENT : <<maps>>
 
-' DTOs are used across layers
-SVC ..> DTO : <<returns>>
-REPO ..> ENT : <<returns>>
+SVC -[#607D8B,dashed]-> DTO : <<returns>>
+REPO -[#607D8B,dashed]-> ENT : <<returns>>
 
-' Migrations depend on Data
-MIG --> DATA : <<generated from>>
+MIG -[#9E9E9E,dashed]-> DATA : <<generated from>>
+
+note right of CTRL
+    Entry point for all HTTP requests.
+    Uses [Authorize] attribute for JWT
+    protection. [Authorize(Roles="Admin")]
+    for DashboardController.
+    Returns DTOs — never raw entities.
+end note
+
+note right of SVC
+    Business logic layer.
+    DashboardService queries DW
+    via AnalyticsDbContext (LINQ).
+    OlapService executes MDX
+    via ADOMD.NET against SSAS.
+    JwtTokenService generates
+    Bearer tokens with claims.
+end note
+
+note right of REPO
+    Repository pattern for OLTP
+    data access. All repositories
+    inject OltpDbContext.
+    ICategoryRepository,
+    IProductRepository, etc.
+    registered as Scoped in DI.
+end note
+
+note right of DATA
+    OltpDbContext extends
+    IdentityDbContext<AppUser>.
+    Maps Order to SalesOrderHeader,
+    OrderItem to SalesOrderDetail.
+    AnalyticsDbContext is read-only
+    (no migrations on DW tables).
+end note
 
 note bottom of ROOT
-    Dependency Injection configured in Program.cs
-    All interfaces registered as Scoped services
-    EF Core contexts registered with connection strings
+    Dependency Injection configured in Program.cs.
+    All interfaces registered as Scoped services.
+    EF Core contexts registered with distinct connection strings:
+      OLTPConnection    -> AdventureWorks2019
+      AnalyticsConnection -> AdventureWorksDW_Sales
+      SsasConnection    -> SSAS Cube (ADOMD.NET)
 end note
+
+legend bottom left
+    |= Arrow Style |= Meaning |
+    | -[#1565C0,bold]-> | Controller-layer dependency |
+    | -[#2E7D32,bold]-> | Service-layer data access |
+    | -[#E65100,bold]-> | Repository-layer data access |
+    | -[#9C27B0,bold]-> | EF Core entity mapping |
+    | -[dashed]-> | Indirect / return dependency |
+    |= Stereotype |= Meaning |
+    | <<namespace>> | .NET namespace group |
+    | <<layer>> | Architectural design layer |
+    | <<module>> | Functional sub-module |
+endlegend
+
+footer AdventureWorks Sales BI Platform | Backend Package Structure | Page %page% of %lastpage%
 
 @enduml

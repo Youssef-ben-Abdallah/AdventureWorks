@@ -66,14 +66,19 @@ end box
 == User Reviews Cart & Clicks Checkout ==
 
 User -> React : Reviews cart items\n(from CartContext)
+activate React
 React --> User : Display items, quantities,\nunit prices, total
 
 User -> React : Clicks **"Checkout"** button
 React -> React : Build payload from cart:\n{\n  items: [{ productId, qty }, ...]\n}
 
 React -> Axios : OrdersService.createOrder(payload)
+deactivate React
+activate Axios
 Axios -> Axios : Interceptor adds header:\nAuthorization: Bearer {token}
 Axios -> Controller : **POST /api/orders**\nBody: CreateOrderDto
+deactivate Axios
+activate Controller
 
 == JWT Authentication ==
 
@@ -82,33 +87,52 @@ Controller -> Controller : Extract UserId from\nClaimTypes.NameIdentifier
 
 alt No valid token / expired
     Controller --> Axios : **401 Unauthorized**
+    deactivate Controller
+    activate Axios
     Axios --> React : catch(err)
+    deactivate Axios
+    activate React
     React --> User : Redirect to /login
+    deactivate React
 else Token valid
     Controller -> Controller : userId = User.FindFirstValue(\n  ClaimTypes.NameIdentifier)
 
     alt Empty items list
         Controller --> Axios : **400 Bad Request**\n"Order must contain at least 1 item"
+        deactivate Controller
+        activate Axios
         Axios --> React : Show error
+        deactivate Axios
     else Items provided
 
         == Validate Each Item & Build Order ==
 
         loop For each item in dto.Items
             Controller -> ProdRepo : GetByIdAsync(item.ProductId)
+            activate ProdRepo
             ProdRepo -> DB : SELECT Product\nWHERE Id = @productId\nINCLUDE Category, SubCategory
+            activate DB
             DB --> ProdRepo : Product | null
+            deactivate DB
 
             alt Product not found
                 ProdRepo --> Controller : null
+                deactivate ProdRepo
                 Controller --> Axios : **400 Bad Request**\n"Product {id} not found"
+                deactivate Controller
+                activate Axios
                 Axios --> React : Show error
+                deactivate Axios
             else Product found
                 ProdRepo --> Controller : Product
+                deactivate ProdRepo
 
                 alt Insufficient stock (stockQty < qty)
                     Controller --> Axios : **400 Bad Request**\n"Not enough stock for {name}"
+                    deactivate Controller
+                    activate Axios
                     Axios --> React : Show error
+                    deactivate Axios
                 else Stock available
                     Controller -> Controller : Deduct stock:\n  p.StockQty -= item.Qty
                     Controller -> Controller : Create OrderItem:\n  { ProductId, Qty,\n    UnitPrice = product.Price }
@@ -121,7 +145,9 @@ else Token valid
         Controller -> Controller : Build Order entity:\n{\n  UserId, Status = Pending,\n  Items = orderItems[],\n  Total = sum(LineTotal)\n}
 
         Controller -> OrderRepo : AddAsync(order)
+        activate OrderRepo
         OrderRepo -> DB : _db.Orders.Add(order)\n_db.SaveChangesAsync()
+        activate DB
 
         note over DB
             SQL Server triggers fire:
@@ -132,34 +158,50 @@ else Token valid
         end note
 
         DB --> OrderRepo : Order (with generated Id)
+        deactivate DB
         OrderRepo --> Controller : created order
+        deactivate OrderRepo
 
         == Update Product Stock ==
 
         loop For each touched product
             Controller -> ProdRepo : UpdateAsync(product)
+            activate ProdRepo
             ProdRepo -> DB : UPDATE Products\nSET StockQty = @newQty\nWHERE Id = @id
+            activate DB
             DB --> ProdRepo : OK
+            deactivate DB
+            ProdRepo --> Controller : OK
+            deactivate ProdRepo
         end
 
         == Return Created Order ==
 
         Controller -> OrderRepo : GetByIdAsync(created.Id)
+        activate OrderRepo
         OrderRepo -> DB : SELECT Order\nINCLUDE Items.Product, User
+        activate DB
         DB --> OrderRepo : Order with navigation props
+        deactivate DB
         OrderRepo --> Controller : fetched order
+        deactivate OrderRepo
 
         Controller -> Controller : Map to OrderDto:\n{ Id, CreatedAtUtc, Status,\n  UserId, Username, Total,\n  Items: [{ ProductName,\n    Qty, UnitPrice, LineTotal }] }
 
         Controller --> Axios : **201 Created**\nOrderDto
+        deactivate Controller
+        activate Axios
         Axios --> React : response.data
+        deactivate Axios
 
         == Client-Side Cleanup ==
 
+        activate React
         React -> React : CartContext.clear()
         React -> React : localStorage.setItem(\n  "ecom_cart_v1", "[]")
         React -> React : navigate("/orders")
         React --> User : Redirect to My Orders page\nOrder confirmed
+        deactivate React
     end
 end
 

@@ -143,6 +143,6 @@ legend right
   | <#E3F2FD> Tables | Fact & dimension tables |
 endlegend
 
-footer AdventureWorks Sales BI Platform | Dashboard Data Flow Diagram
+footer AdventureWorks Sales BI Platform | Dashboard Data Flow Diagram | Page %page% of %lastpage%
 
 @enduml

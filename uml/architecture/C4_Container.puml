@@ -1,68 +1,67 @@
 @startuml C4_Container
-!theme cerulean-outline
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+
 title C4 Container Diagram (Level 2) - AdventureWorks Sales BI Platform
 caption Containers within the system and their communication protocols
 
-skinparam linetype ortho
-skinparam nodesep 60
-skinparam ranksep 60
-
 ' ── Actors ────────────────────────────────────────────────
-actor "Customer\n<<Person>>" as CUSTOMER #E3F2FD
-actor "Admin / Analyst\n<<Person>>" as ADMIN #E3F2FD
+Person(CUSTOMER, "Customer", "Browses products and places orders via the SPA.")
+Person(ADMIN, "Admin / Analyst", "Manages catalog and views analytics via the SPA.")
 
 ' ── System Boundary ───────────────────────────────────────
-rectangle "AdventureWorks Sales BI Platform\n<<Software System>>" as SYSTEM {
+System_Boundary(SYSTEM, "AdventureWorks Sales BI Platform") {
 
     ' ── Frontend Container ────────────────────────────────
-    rectangle "React SPA\n<<Container: React 19, TypeScript 6, Vite 8>>\n\nSingle-page application providing\nproduct browsing, cart, orders,\nand analytics dashboards.\nUses Recharts and react-leaflet\nfor data visualization." as SPA #BBDEFB
+    Container(SPA, "React SPA", "React 19 / TypeScript 6 / Vite 8", "Single-page application providing product browsing, cart, orders, and analytics dashboards. Uses Recharts and React-Leaflet for data visualization.")
 
     ' ── Backend Container ─────────────────────────────────
-    rectangle "ASP.NET Core API\n<<Container: .NET 9, C#>>\n\nRESTful API providing product catalog,\norder management, DW analytics,\nand OLAP cube queries.\nJWT Bearer authentication via\nASP.NET Identity." as API #C8E6C9
+    Container(API, "ASP.NET Core API", ".NET 9 / C#", "RESTful API providing product catalog, order management, DW analytics, and OLAP cube queries. JWT Bearer authentication via ASP.NET Identity.")
 
     ' ── ETL Container ─────────────────────────────────────
-    rectangle "SSIS ETL Packages\n<<Container: SQL Server Integration Services>>\n\nETL pipeline loading dimensions (SCD)\nand fact tables from OLTP source\ninto the data warehouse.\n01_Load_Dimension.dtsx\n02_Load_FactSales.dtsx" as SSIS #FFE0B2
+    Container(SSIS, "SSIS ETL Packages", "SQL Server Integration Services", "ETL pipeline executing 01_Load_Dimension.dtsx and 02_Load_FactSales.dtsx. Loads dimensions (SCD Type 1) and fact table from OLTP into the data warehouse via stored procedures.")
 
     ' ── Data Stores ───────────────────────────────────────
-    database "OLTP Database\n<<Container: SQL Server>>\n<<AdventureWorks2019>>\n\nTransactional database storing\nproducts, categories, users,\norders, and ASP.NET Identity." as OLTP #FFE0B2
+    ContainerDb(OLTP, "OLTP Database", "SQL Server (AdventureWorks2019)", "Transactional database storing products, categories, users, orders, and ASP.NET Identity tables. Managed by OltpDbContext.")
 
-    database "Analytics Data Warehouse\n<<Container: SQL Server>>\n<<AdventureWorksDW_Sales>>\n\nStar schema with SalesFact\nand 6 dimension tables for\nsales analytics." as DW #FFE0B2
+    ContainerDb(DW, "Analytics Data Warehouse", "SQL Server (AdventureWorksDW_Sales)", "Custom star schema with Sales fact table and 6 dimension tables. Includes vwSalesDashboard view. Managed by AnalyticsDbContext.")
 
-    database "SSAS Cube\n<<Container: Analysis Services>>\n<<CubeAW2019>>\n\nMultidimensional OLAP cube\nwith 8 dimensions for\ninteractive analytics." as SSAS #E1BEE7
+    ContainerDb(SSAS, "SSAS Cube", "Analysis Services (CubeAW2019)", "Multidimensional OLAP cube with 8+ dimensions, 12 base measures, and 8 calculated members. Queried via MDX through ADOMD.NET.")
 
-    database "SSAS Source Database\n<<Container: SQL Server>>\n<<AdventureWorksDW2019>>\n\nSource database used by SSAS\nfor cube processing." as DW2019 #FFE0B2
+    ContainerDb(DW2019, "SSAS Source Database", "SQL Server (AdventureWorksDW2019)", "AdventureWorks DW 2019 database used as source for SSAS cube processing. Contains DimDate, DimProduct, FactResellerSales, and 8 more tables.")
 
-    storage "File Storage\n<<Container: File System>>\n<<C:\\images\\product\\>>\n\nProduct image files served\nas static assets by the API." as IMAGES #FFF9C4
+    Container(IMAGES, "Product Image Store", "File System (C:\\images\\product\\)", "Product image files (JPEG/PNG) served as static assets by the API via ASP.NET Core StaticFiles middleware at /images/product/{filename}.")
 }
 
 ' ── User Relationships ────────────────────────────────────
-CUSTOMER --> SPA : "Browses, orders\n[HTTPS, Browser]"
-ADMIN --> SPA : "Manages, analyzes\n[HTTPS, Browser]"
+Rel(CUSTOMER, SPA, "Browses, orders", "HTTPS / Browser")
+Rel(ADMIN, SPA, "Manages, analyzes", "HTTPS / Browser")
 
 ' ── Container Communication ───────────────────────────────
-SPA --> API : "API calls\n[HTTP REST, JSON]\nAxios + JWT Bearer"
+Rel(SPA, API, "All API calls (REST/JSON)", "HTTP / Axios + JWT Bearer")
 
-API --> OLTP : "Reads/writes\n[TDS, EF Core]\nOltpDbContext"
-API --> DW : "Reads analytics\n[TDS, EF Core]\nAnalyticsDbContext"
-API --> SSAS : "MDX queries\n[XMLA, ADOMD.NET]"
-API --> IMAGES : "Serves images\n[File I/O]\nStaticFiles middleware"
+Rel(API, OLTP, "Reads/writes OLTP entities", "TDS / EF Core OltpDbContext")
+Rel(API, DW, "Reads analytics aggregations", "TDS / EF Core AnalyticsDbContext")
+Rel(API, SSAS, "Executes MDX queries for cube insights", "XMLA / ADOMD.NET")
+Rel(API, IMAGES, "Reads and streams product images", "File I/O / StaticFiles")
 
-SSIS --> OLTP : "Extracts data\n[TDS, OLE DB]"
-SSIS --> DW : "Loads data\n[TDS, OLE DB]"
+Rel(SSIS, OLTP, "Extracts transactional source data", "TDS / OLE DB")
+Rel(SSIS, DW, "Loads dimensions and fact tables", "TDS / Stored Procedures")
 
-SSAS --> DW2019 : "Processes cube\n[TDS, OLE DB]"
+Rel(SSAS, DW2019, "Processes cube from relational source", "TDS / OLE DB")
 
 note bottom of SSIS
-    Scheduled via
-    SQL Server Agent
-    or manual execution
-    in Visual Studio
+    Scheduled via SQL Server Agent
+    or manual execution in Visual Studio.
+    Run order: 01 (Dimensions) then 02 (Facts).
 end note
 
 note right of API
     Ports:
     HTTPS :57240
     HTTP  :57241
+    Swagger: :57241/swagger
 end note
 
 note left of SPA
@@ -73,11 +72,13 @@ end note
 
 legend bottom right
     |= Protocol |= Description |
-    | HTTP/HTTPS | REST API (JSON payloads) |
+    | HTTP/HTTPS | REST API with JSON payloads |
     | TDS | SQL Server Tabular Data Stream |
-    | XMLA | XML for Analysis (ADOMD.NET) |
-    | OLE DB | SSIS data source/destination |
-    | File I/O | Static file serving |
+    | XMLA | XML for Analysis via ADOMD.NET |
+    | OLE DB | SSIS data source/destination connectors |
+    | File I/O | Static file reading and streaming |
 endlegend
+
+footer AdventureWorks Sales BI Platform | C4 Container Diagram (Level 2) | Page %page% of %lastpage%
 
 @enduml

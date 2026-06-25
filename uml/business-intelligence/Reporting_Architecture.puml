@@ -116,6 +116,6 @@ legend right
   | API Docs | Swagger / OpenAPI | 57241/swagger |
 endlegend
 
-footer AdventureWorks Sales BI Platform | Reporting Architecture Diagram
+footer AdventureWorks Sales BI Platform | Reporting Architecture Diagram | Page %page% of %lastpage%
 
 @enduml

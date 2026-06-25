@@ -42,6 +42,12 @@ export interface Order {
   id: number;
   createdAtUtc: string;
   status: number;
+  userId: string;
+  username: string;
   total: number;
+  customerId: number;
+  billToAddressId: number;
+  shipToAddressId: number;
+  shipMethodId: number;
   items: OrderItem[];
 }

@@ -7,6 +7,7 @@ interface OrderTicketModalProps {
   order: Order | null;
   onClose: () => void;
   isAdmin?: boolean;
+  onDelete?: (order: Order) => void;
 }
 
 const statusLabel = (id: number) => {
@@ -45,7 +46,7 @@ const formatDate = (dateString: string) => {
   }).format(d);
 };
 
-export const OrderTicketModal: React.FC<OrderTicketModalProps> = ({ isOpen, order, onClose, isAdmin = false }) => {
+export const OrderTicketModal: React.FC<OrderTicketModalProps> = ({ isOpen, order, onClose, isAdmin = false, onDelete }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -122,6 +123,15 @@ export const OrderTicketModal: React.FC<OrderTicketModalProps> = ({ isOpen, orde
         </div>
 
         <div className="ticket-actions">
+          {isAdmin && onDelete && (
+            <button 
+              className="btn-secondary-glass" 
+              style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)', marginRight: '8px' }} 
+              onClick={() => onDelete(order)}
+            >
+              Delete
+            </button>
+          )}
           <button className="btn-secondary-glass" onClick={onClose}>Close</button>
         </div>
       </div>

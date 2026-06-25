@@ -137,6 +137,12 @@ export const AdminDashboard = () => {
     } catch (e: any) { setError(e.message); }
   };
 
+  const handleDeleteOrder = (o: Order) => openModal('Delete Order', [], {}, async () => { 
+    await OrdersService.deleteOrder(o.id); 
+    reloadAll(); 
+    if (selectedTicket?.id === o.id) setSelectedTicket(null);
+  }, true);
+
   const getStatusBadge = (id: number) => {
     switch (id) {
       case 0: return 'badge-pending';
@@ -328,6 +334,9 @@ export const AdminDashboard = () => {
                           <button className="tbl-btn" style={{ marginLeft: '8px' }} onClick={() => setSelectedTicket(o)}>
                             <span className="material-icons">receipt_long</span> Ticket
                           </button>
+                          <button className="tbl-btn tbl-btn-danger" style={{ marginLeft: '8px' }} onClick={() => handleDeleteOrder(o)}>
+                            <span className="material-icons">delete</span> Del
+                          </button>
                         </td>
                       </tr>
                     );
@@ -400,6 +409,7 @@ export const AdminDashboard = () => {
         order={selectedTicket} 
         onClose={() => setSelectedTicket(null)} 
         isAdmin={true} 
+        onDelete={handleDeleteOrder}
       />
     </div>
   );

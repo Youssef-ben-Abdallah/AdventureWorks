@@ -27,7 +27,7 @@ export const Cart = () => {
       shipToAddressID,
       shipMethodID
     };
-    
+
     try {
       await OrdersService.createOrder(payload);
       clear();
@@ -58,7 +58,7 @@ export const Cart = () => {
         </div>
       </div>
       <div className="neon-divider"></div>
-
+      <br />
       {error && <div className="error" style={{ margin: '1.5rem clamp(1rem, 4vw, 3rem)' }}>{error}</div>}
 
       {items.length === 0 ? (

@@ -44,4 +44,14 @@ public class OrderRepository : IOrderRepository
         _db.Orders.Update(entity);
         await _db.SaveChangesAsync();
     }
+
+    public async Task DeleteAsync(int id)
+    {
+        var order = await _db.Orders.FindAsync(id);
+        if (order != null)
+        {
+            _db.Orders.Remove(order);
+            await _db.SaveChangesAsync();
+        }
+    }
 }

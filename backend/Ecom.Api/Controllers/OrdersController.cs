@@ -114,6 +114,17 @@ public class OrdersController : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var order = await _repo.GetByIdAsync(id);
+        if (order == null) return NotFound();
+
+        await _repo.DeleteAsync(id);
+        return NoContent();
+    }
+
     private static OrderDto Map(Order o) => new(
         o.Id,
         o.CreatedAtUtc,

@@ -9,4 +9,5 @@ public interface IOrderRepository
     Task<Order?> GetByIdAsync(int id);
     Task<Order> AddAsync(Order entity);
     Task UpdateAsync(Order entity);
+    Task DeleteAsync(int id);
 }

@@ -1,3 +1,3 @@
 export const environment = {
-  apiBaseUrl: 'https://localhost:57240' // change if your API runs elsewhere
+  apiBaseUrl: 'http://127.0.0.1:57241' // Use 127.0.0.1 to bypass cached browser redirects on localhost
 };

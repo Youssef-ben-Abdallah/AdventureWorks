@@ -134,7 +134,10 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 2rem;
   font-weight: 700;
-  color: #f1f5f9;
+  background: linear-gradient(135deg, #a5b4fc, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0 0 1rem;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -350,7 +353,7 @@
 
 .btn-submit:hover:not(:disabled) {
   background: linear-gradient(135deg, #818cf8, #6366f1);
-  box-shadow: 0 0 30px rgba(99,102,241,0.55);
+  box-shadow: 0 0 30px rgba(99,102,241,0.65), 0 0 60px rgba(6,182,212,0.2);
   transform: translateY(-1px);
 }
 

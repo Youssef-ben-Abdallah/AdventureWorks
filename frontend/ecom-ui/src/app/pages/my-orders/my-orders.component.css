@@ -19,9 +19,18 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #a5b4fc, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
   letter-spacing: -0.02em;
+}
+[data-theme="light"] .orders-title {
+  background: linear-gradient(135deg, #4f46e5, #0891b2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 .orders-subtitle {
   color: #64748b;
@@ -74,16 +83,31 @@
   padding: 1.5rem;
 }
 
-/* Order card */
 .order-card {
-  background: linear-gradient(135deg, var(--hero-gradient-1), var(--hero-gradient-2));
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
 }
 .order-card:hover {
   border-color: rgba(99,102,241,0.3) !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  box-shadow: 0 12px 40px rgba(99,102,241,0.15), 0 0 20px rgba(99,102,241,0.1);
+  transform: translateY(-3px);
+}
+[data-theme="light"] .order-card {
+  background: #ffffff;
+  border: 1px solid rgba(99,102,241,0.18);
+  box-shadow: 0 4px 20px rgba(99,102,241,0.08), 0 1px 4px rgba(0,0,0,0.05);
+  backdrop-filter: none;
+}
+[data-theme="light"] .order-card:hover {
+  border-color: rgba(99,102,241,0.35) !important;
+  box-shadow: 0 8px 32px rgba(99,102,241,0.12);
+  transform: translateY(-2px);
 }
 
 /* Order head */

@@ -146,8 +146,7 @@ await DbSeeder.SeedAsync(
 );
 app.UseSwagger();
 app.UseSwaggerUI();
-
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Disabled to allow HTTP requests from frontend without SSL cert issues
 
 // Serve product images from a local folder (Windows default: C:\images\product)
 var productImagesPath = app.Configuration["Images:ProductsPath"] ?? @"C:\images\product";

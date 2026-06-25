@@ -144,11 +144,12 @@
 .nav-link:hover::after,
 .nav-link.active::after {
   width: calc(100% - 16px);
+  box-shadow: 0 0 8px rgba(6,182,212,0.4);
 }
 
 .nav-link.active {
-  color: #a5b4fc;
-  background: rgba(99,102,241,0.1);
+  color: #06b6d4;
+  background: rgba(6,182,212,0.08);
 }
 
 /* ===================== */

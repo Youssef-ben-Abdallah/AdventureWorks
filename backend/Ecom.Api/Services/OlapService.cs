@@ -210,4 +210,97 @@ public class OlapService : IOlapService
         }
         return results;
     }
+
+    public async Task<object> GetSalesTrendAsync(string? year, string? territory)
+    {
+        using var conn = await GetConnectionAsync();
+        
+        string slicer = "";
+        if (!string.IsNullOrEmpty(year) && year != "All") slicer += $"[Order Date].[Calendar Year].&[{year}], ";
+        if (!string.IsNullOrEmpty(territory) && territory != "All") slicer += $"[Dim Sales Territory].[Sales Territory Group].&[{territory}], ";
+        string whereClause = slicer != "" ? "WHERE (" + slicer.TrimEnd(',', ' ') + ")" : "";
+
+        string mdx = $@"
+            WITH MEMBER [Measures].[Net Profit Amt] AS '[Measures].[Sales Amount] - [Measures].[Total Product Cost] - [Measures].[Tax Amt] - [Measures].[Freight]'
+            SELECT 
+            {{ [Measures].[Sales Amount], [Measures].[Net Profit Amt] }} ON COLUMNS,
+            NON EMPTY {{ [Order Date].[English Month Name].[English Month Name].MEMBERS }} ON ROWS
+            FROM [Adventure Works DW2019]
+            {whereClause}
+        ";
+        using var cmd = new AdomdCommand(mdx, conn);
+        using var reader = cmd.ExecuteReader();
+        var results = new List<object>();
+        while (reader.Read())
+        {
+            results.Add(new
+            {
+                Month = reader[0]?.ToString(),
+                Sales = reader[1] == DBNull.Value ? 0 : reader[1],
+                Profit = reader[2] == DBNull.Value ? 0 : reader[2]
+            });
+        }
+        return results;
+    }
+
+    public async Task<object> GetTopProductsAsync(string? year, string? territory)
+    {
+        using var conn = await GetConnectionAsync();
+        
+        string slicer = "";
+        if (!string.IsNullOrEmpty(year) && year != "All") slicer += $"[Order Date].[Calendar Year].&[{year}], ";
+        if (!string.IsNullOrEmpty(territory) && territory != "All") slicer += $"[Dim Sales Territory].[Sales Territory Group].&[{territory}], ";
+        string whereClause = slicer != "" ? "WHERE (" + slicer.TrimEnd(',', ' ') + ")" : "";
+
+        string mdx = $@"
+            WITH MEMBER [Measures].[Net Profit Amt] AS '[Measures].[Sales Amount] - [Measures].[Total Product Cost] - [Measures].[Tax Amt] - [Measures].[Freight]'
+            SELECT 
+            {{ [Measures].[Sales Amount], [Measures].[Net Profit Amt] }} ON COLUMNS,
+            TOPCOUNT(NONEMPTY([Dim Product].[Product Key].[Product Key].MEMBERS, [Measures].[Sales Amount]), 10, [Measures].[Sales Amount]) ON ROWS
+            FROM [Adventure Works DW2019]
+            {whereClause}
+        ";
+        using var cmd = new AdomdCommand(mdx, conn);
+        using var reader = cmd.ExecuteReader();
+        var results = new List<object>();
+        while (reader.Read())
+        {
+            results.Add(new
+            {
+                Product = reader[0]?.ToString(),
+                Sales = reader[1] == DBNull.Value ? 0 : reader[1],
+                Profit = reader[2] == DBNull.Value ? 0 : reader[2]
+            });
+        }
+        return results;
+    }
+
+    public async Task<object> GetTerritorySalesAsync(string? year)
+    {
+        using var conn = await GetConnectionAsync();
+        
+        string slicer = "";
+        if (!string.IsNullOrEmpty(year) && year != "All") slicer += $"[Order Date].[Calendar Year].&[{year}], ";
+        string whereClause = slicer != "" ? "WHERE (" + slicer.TrimEnd(',', ' ') + ")" : "";
+
+        string mdx = $@"
+            SELECT 
+            {{ [Measures].[Sales Amount] }} ON COLUMNS,
+            NON EMPTY {{ [Dim Sales Territory].[Sales Territory Region].MEMBERS }} ON ROWS
+            FROM [Adventure Works DW2019]
+            {whereClause}
+        ";
+        using var cmd = new AdomdCommand(mdx, conn);
+        using var reader = cmd.ExecuteReader();
+        var results = new List<object>();
+        while (reader.Read())
+        {
+            results.Add(new
+            {
+                Region = reader[0]?.ToString(),
+                Sales = reader[1] == DBNull.Value ? 0 : reader[1]
+            });
+        }
+        return results;
+    }
 }

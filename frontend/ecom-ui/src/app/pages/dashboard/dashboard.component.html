@@ -95,7 +95,11 @@
 
   <mat-tab-group (selectedIndexChange)="tabChanged($event)" class="tabs">
     <!-- ===================== OVERVIEW ===================== -->
-    <mat-tab label="Overview">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="material-icons tab-icon">dashboard</span>
+        <span>Overview</span>
+      </ng-template>
       <div class="tab">
         <div class="busy" *ngIf="loadingOverview"><mat-spinner></mat-spinner></div>
 
@@ -173,7 +177,11 @@
     </mat-tab>
 
     <!-- ===================== PRODUCTS ===================== -->
-    <mat-tab label="Products">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="material-icons tab-icon">inventory_2</span>
+        <span>Products</span>
+      </ng-template>
       <div class="tab">
         <div class="busy" *ngIf="loadingProducts"><mat-spinner></mat-spinner></div>
 
@@ -256,7 +264,11 @@
     </mat-tab>
 
     <!-- ===================== CUSTOMERS ===================== -->
-    <mat-tab label="Customers">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="material-icons tab-icon">people</span>
+        <span>Customers</span>
+      </ng-template>
       <div class="tab">
         <div class="busy" *ngIf="loadingCustomers"><mat-spinner></mat-spinner></div>
 
@@ -333,7 +345,11 @@
     </mat-tab>
 
     <!-- ===================== SALES TEAM ===================== -->
-    <mat-tab label="Sales team">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="material-icons tab-icon">leaderboard</span>
+        <span>Sales team</span>
+      </ng-template>
       <div class="tab">
         <div class="busy" *ngIf="loadingSalesTeam"><mat-spinner></mat-spinner></div>
 
@@ -398,7 +414,11 @@
     </mat-tab>
 
     <!-- ===================== SHIPPING ===================== -->
-    <mat-tab label="Shipping">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="material-icons tab-icon">local_shipping</span>
+        <span>Shipping</span>
+      </ng-template>
       <div class="tab">
         <div class="busy" *ngIf="loadingShipping"><mat-spinner></mat-spinner></div>
 

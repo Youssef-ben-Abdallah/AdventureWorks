@@ -18,9 +18,18 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 2.25rem;
   font-weight: 700;
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #a5b4fc, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
   letter-spacing: -0.02em;
+}
+[data-theme="light"] .cart-title {
+  background: linear-gradient(135deg, #4f46e5, #0891b2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 .cart-subtitle {
   color: #64748b;

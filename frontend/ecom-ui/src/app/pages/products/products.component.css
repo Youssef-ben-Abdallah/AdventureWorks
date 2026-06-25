@@ -7,9 +7,16 @@
 /* HEADER                */
 /* ===================== */
 .products-header {
-  background: linear-gradient(135deg, var(--hero-gradient-1), var(--hero-gradient-2));
-  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(145deg, rgba(15,23,42,0.95), rgba(10,15,30,0.98));
+  border-bottom: 1px solid rgba(99,102,241,0.2);
   padding: 2.5rem 0;
+  backdrop-filter: blur(12px);
+}
+[data-theme="light"] .products-header {
+  background: rgba(255,255,255,0.92);
+  border-bottom-color: rgba(99,102,241,0.15);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
 
 .header-inner {
@@ -27,9 +34,18 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 2.25rem;
   font-weight: 700;
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #a5b4fc, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
   letter-spacing: -0.02em;
+}
+[data-theme="light"] .products-title {
+  background: linear-gradient(135deg, #4f46e5, #0891b2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .products-subtitle {
@@ -105,6 +121,17 @@
   padding: 1.5rem;
   position: sticky;
   top: 90px;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.85));
+  border: 1px solid rgba(99,102,241,0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+[data-theme="light"] .filters-sidebar {
+  background: #ffffff;
+  border: 1px solid rgba(99,102,241,0.2);
+  box-shadow: 0 4px 20px rgba(99,102,241,0.08), 0 1px 4px rgba(0,0,0,0.05);
+  backdrop-filter: none;
 }
 
 .filters-title {
@@ -133,12 +160,13 @@
   display: block;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #64748b;
+  color: #818cf8;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   margin-bottom: 0.5rem;
   font-family: 'Space Grotesk', sans-serif;
 }
+[data-theme="light"] .filter-label { color: #4f46e5; }
 
 .search-wrap {
   position: relative;

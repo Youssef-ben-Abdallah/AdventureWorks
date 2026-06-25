@@ -42,6 +42,27 @@ public class CubeInsightsController : ControllerBase
         return Ok(data);
     }
 
+    [HttpGet("sales-trend")]
+    public async Task<IActionResult> GetSalesTrend([FromQuery] string? year, [FromQuery] string? territory)
+    {
+        var result = await _olapService.GetSalesTrendAsync(year, territory);
+        return Ok(result);
+    }
+
+    [HttpGet("top-products")]
+    public async Task<IActionResult> GetTopProducts([FromQuery] string? year, [FromQuery] string? territory)
+    {
+        var result = await _olapService.GetTopProductsAsync(year, territory);
+        return Ok(result);
+    }
+
+    [HttpGet("territory-sales")]
+    public async Task<IActionResult> GetTerritorySales([FromQuery] string? year)
+    {
+        var result = await _olapService.GetTerritorySalesAsync(year);
+        return Ok(result);
+    }
+
     [HttpGet("target-status")]
     public async Task<IActionResult> GetTargetStatus([FromQuery] string? year, [FromQuery] string? territory)
     {

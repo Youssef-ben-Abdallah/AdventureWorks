@@ -59,7 +59,10 @@
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   font-size: 0.95rem;
-  color: #e2e8f0;
+  background: linear-gradient(135deg, #a5b4fc, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .footer-brand-sub {
@@ -166,7 +169,12 @@
   color: #334155;
 }
 
-[data-theme="light"] .footer-brand-name,
+[data-theme="light"] .footer-brand-name {
+  background: linear-gradient(135deg, #6366f1, #0891b2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 [data-theme="light"] .footer-col-title {
   color: var(--text-primary) !important;
 }

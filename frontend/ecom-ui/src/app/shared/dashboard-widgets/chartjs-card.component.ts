@@ -41,18 +41,39 @@ import {
   </div>
   `,
   styles: [`
-    /*
-      Prevent layout shift on hover:
-      - Force a stable box model for the mat-card.
-    */
-    .card{padding:1.25rem; padding-bottom:1.5rem; height:100%; display:flex; flex-direction:column; overflow:hidden; box-sizing:border-box; border-radius: 16px; border: 1px solid var(--border-subtle);}
-    .head{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
-    .title{font-weight:800;line-height:1.15}
-    .meta{font-size:12px;opacity:.75}
+    .card{
+      padding:1.25rem;
+      padding-bottom:1.5rem;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      box-sizing:border-box;
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.9));
+      border: 1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    :host-context([data-theme="light"]) .card {
+      background: #ffffff;
+      border: 1px solid rgba(99,102,241,0.2);
+      box-shadow: 0 4px 24px rgba(99,102,241,0.08), 0 1px 4px rgba(0,0,0,0.05);
+      backdrop-filter: none;
+    }
+    .head{display:flex;flex-direction:column;gap:2px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05);}
+    :host-context([data-theme="light"]) .head{border-bottom-color:rgba(99,102,241,0.1);}
+    .title{font-weight:700;line-height:1.15;color:#f1f5f9;font-family:'Space Grotesk',sans-serif;font-size:1rem;}
+    :host-context([data-theme="light"]) .title{color:#0f172a;}
+    .meta{font-size:12px;color:#94a3b8;margin-top:2px;}
+    :host-context([data-theme="light"]) .meta{color:#64748b;}
     .canvasWrap{flex:1; min-height:220px; position:relative;}
     .canvasWrap.tight{min-height:180px;}
     canvas{display:block; width:100% !important; height:100% !important;}
-    .hint{font-size:12px;opacity:.75;margin-top:8px}
+    .hint{font-size:11px;color:#64748b;margin-top:8px;}
+    :host-context([data-theme="light"]) .hint{color:#94a3b8;}
   `]
 })
 export class ChartJsCardComponent implements OnChanges {
@@ -91,12 +112,12 @@ export class ChartJsCardComponent implements OnChanges {
               label: this.datasetLabel,
               data: this.values,
               backgroundColor: [
-                'rgba(99, 102, 241, 0.6)',
-                'rgba(6, 182, 212, 0.6)',
-                'rgba(244, 63, 94, 0.6)',
-                'rgba(234, 179, 8, 0.6)',
-                'rgba(168, 85, 247, 0.6)',
-                'rgba(16, 185, 129, 0.6)'
+                'rgba(99, 102, 241, 0.7)',
+                'rgba(6, 182, 212, 0.7)',
+                'rgba(244, 63, 94, 0.7)',
+                'rgba(234, 179, 8, 0.7)',
+                'rgba(168, 85, 247, 0.7)',
+                'rgba(16, 185, 129, 0.7)'
               ],
               borderColor: [
                 '#6366f1',
@@ -106,7 +127,7 @@ export class ChartJsCardComponent implements OnChanges {
                 '#a855f7',
                 '#10b981'
               ],
-              borderWidth: 1,
+              borderWidth: 1.5,
               fill: true
             },
           ],
@@ -116,18 +137,27 @@ export class ChartJsCardComponent implements OnChanges {
 
     if (changes['type'] || changes['showLegend'] || changes['xAxisLabel'] || changes['yAxisLabel'] || changes['valueFormat']) {
       const isCartesian = this.type === 'bar' || this.type === 'line' || this.type === 'scatter';
+      // Adaptive color: dark mode uses lighter muted, light mode uses darker text
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      const tickColor  = isLight ? '#475569' : '#94a3b8';
+      const gridColor  = isLight ? 'rgba(99,102,241,0.08)' : 'rgba(148,163,184,0.1)';
+      const labelColor = isLight ? '#334155' : '#94a3b8';
 
       this.chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
-        color: '#888',
         layout: {
           padding: { bottom: 30 }
         },
         plugins: {
-          legend: { display: this.showLegend, labels: { color: '#888' } },
+          legend: { display: this.showLegend, labels: { color: labelColor, font: { family: 'Inter, sans-serif', size: 12 } } },
           tooltip: {
+            backgroundColor: isLight ? 'rgba(255,255,255,0.96)' : 'rgba(15,23,42,0.95)',
+            titleColor: isLight ? '#0f172a' : '#f1f5f9',
+            bodyColor: isLight ? '#334155' : '#94a3b8',
+            borderColor: isLight ? 'rgba(99,102,241,0.25)' : 'rgba(99,102,241,0.3)',
+            borderWidth: 1,
             callbacks: {
               label: (ctx: TooltipItem<any>) => {
                 const label = ctx.dataset?.label ? `${ctx.dataset.label}: ` : '';
@@ -140,17 +170,20 @@ export class ChartJsCardComponent implements OnChanges {
         scales: isCartesian
           ? {
               x: {
-                title: { display: !!this.xAxisLabel, text: this.xAxisLabel, color: '#888' },
-                ticks: { maxRotation: 0, autoSkip: true, color: '#888' },
+                title: { display: !!this.xAxisLabel, text: this.xAxisLabel, color: labelColor, font: { family: 'Space Grotesk, sans-serif', size: 11 } },
+                ticks: { maxRotation: 0, autoSkip: true, color: tickColor, font: { family: 'Inter, sans-serif', size: 11 } },
                 grid: { display: false },
+                border: { color: gridColor },
               },
               y: {
-                title: { display: !!this.yAxisLabel, text: this.yAxisLabel, color: '#888' },
+                title: { display: !!this.yAxisLabel, text: this.yAxisLabel, color: labelColor, font: { family: 'Space Grotesk, sans-serif', size: 11 } },
                 ticks: {
-                  color: '#888',
+                  color: tickColor,
+                  font: { family: 'Inter, sans-serif', size: 11 },
                   callback: (value: any) => this.fmtTick(value),
                 },
-                grid: { color: 'rgba(128,128,128,0.1)' }
+                grid: { color: gridColor },
+                border: { color: gridColor },
               },
             }
           : undefined,

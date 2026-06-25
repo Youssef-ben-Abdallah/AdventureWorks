@@ -57,6 +57,7 @@
 /* ===================== */
 /* BASE RESET            */
 /* ===================== */
+@import 'leaflet/dist/leaflet.css';
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
@@ -216,33 +217,108 @@ html, body {
 .animate-orb-pulse { animation: orb-pulse 4s ease-in-out infinite; }
 
 /* ===================== */
+/* GRADIENT TITLE        */
+/* ===================== */
+/* Dark mode: light purple → cyan (good on dark bg) */
+.gradient-title {
+  background: linear-gradient(135deg, #a5b4fc, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+/* Light mode: darker indigo → dark cyan (WCAG AA compliant) */
+[data-theme="light"] .gradient-title {
+  background: linear-gradient(135deg, #4f46e5, #0891b2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===================== */
+/* ICON BOXES (colored)  */
+/* ===================== */
+.icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.icon-box .material-icons { font-size: 26px !important; color: white; }
+
+.icon-box-purple { background: linear-gradient(135deg, #8b5cf6, #6366f1); box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
+.icon-box-blue   { background: linear-gradient(135deg, #3b82f6, #0ea5e9); box-shadow: 0 4px 15px rgba(59,130,246,0.4); }
+.icon-box-pink   { background: linear-gradient(135deg, #ec4899, #f43f5e); box-shadow: 0 4px 15px rgba(236,72,153,0.4); }
+.icon-box-cyan   { background: linear-gradient(135deg, #06b6d4, #14b8a6); box-shadow: 0 4px 15px rgba(6,182,212,0.4); }
+.icon-box-amber  { background: linear-gradient(135deg, #f59e0b, #ef4444); box-shadow: 0 4px 15px rgba(245,158,11,0.4); }
+.icon-box-emerald{ background: linear-gradient(135deg, #10b981, #06b6d4); box-shadow: 0 4px 15px rgba(16,185,129,0.4); }
+
+/* ===================== */
+/* GLOWING TAB           */
+/* ===================== */
+.tab-glow::after {
+  box-shadow: 0 0 10px rgba(6,182,212,0.5) !important;
+  background: linear-gradient(to right, #6366f1, #06b6d4) !important;
+}
+
+/* ===================== */
 /* CARD COMPONENTS       */
 /* ===================== */
 .aw-card {
-  background: linear-gradient(135deg, var(--hero-gradient-1) 0%, var(--hero-gradient-2) 100%);
-  border: 1px solid rgba(99,102,241,0.15);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .aw-card:hover {
+  border-color: rgba(99,102,241,0.3);
+  box-shadow: 0 12px 40px rgba(99,102,241,0.15), 0 0 0 1px rgba(99,102,241,0.1);
+  transform: translateY(-4px);
+}
+
+[data-theme="light"] .aw-card {
+  background: #ffffff;
+  border: 1px solid rgba(99,102,241,0.2);
+  box-shadow: 0 4px 24px rgba(99,102,241,0.08), 0 1px 4px rgba(0,0,0,0.06);
+  backdrop-filter: none;
+}
+[data-theme="light"] .aw-card:hover {
   border-color: rgba(99,102,241,0.4);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 20px rgba(99,102,241,0.15);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(99,102,241,0.14), 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .aw-product-card {
-  background: linear-gradient(135deg, var(--hero-gradient-1) 0%, var(--hero-gradient-2) 100%);
-  border: 1px solid rgba(99,102,241,0.12);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .aw-product-card:hover {
-  border-color: rgba(99,102,241,0.45);
-  box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 24px rgba(99,102,241,0.2);
-  transform: translateY(-4px);
+  border-color: rgba(99,102,241,0.35);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 28px rgba(99,102,241,0.2);
+  transform: translateY(-5px);
+}
+
+[data-theme="light"] .aw-product-card {
+  background: #ffffff;
+  border: 1px solid rgba(99,102,241,0.18);
+  box-shadow: 0 4px 24px rgba(99,102,241,0.08), 0 1px 4px rgba(0,0,0,0.06);
+  backdrop-filter: none;
+}
+[data-theme="light"] .aw-product-card:hover {
+  border-color: rgba(99,102,241,0.4);
+  box-shadow: 0 12px 40px rgba(99,102,241,0.14);
 }
 
 .aw-product-card:hover .product-img {

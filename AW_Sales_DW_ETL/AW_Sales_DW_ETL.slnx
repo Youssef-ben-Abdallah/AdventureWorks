@@ -3,6 +3,10 @@
     <BuildType Name="Development" />
     <Platform Name="Default" />
   </Configurations>
+  <Project Path="../MultdimCubeAW2019/MultdimCubeAW2019.dwproj" Type="d2abab84-bf74-430a-b69e-9dc6d40dda17">
+    <Platform Project="?" />
+    <Deploy />
+  </Project>
   <Project Path="AW_Sales_DW_ETL.dtproj" Type="c9674dcb-5085-4a16-b785-4c70dd1589bd">
     <Platform Project="?" />
   </Project>

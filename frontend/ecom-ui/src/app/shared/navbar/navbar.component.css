@@ -514,3 +514,27 @@
 [data-theme="light"] .menu-username {
   color: var(--text-primary) !important;
 }
+/* Reseller Button Special Styles */
+.reseller-btn {
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: #6366f1 !important;
+  border-bottom: 2px solid #06b6d4;
+  border-radius: 8px 8px 0 0;
+}
+.reseller-btn .nav-link-icon {
+  color: #6366f1 !important;
+  opacity: 1 !important;
+}
+.reseller-btn:hover {
+  background: rgba(99, 102, 241, 0.25) !important;
+}
+.reseller-btn::after {
+  display: none !important;
+}
+
+[data-theme="light"] .reseller-btn {
+  background: #ede9fe !important; /* light purple */
+}
+[data-theme="light"] .reseller-btn:hover {
+  background: #ddd6fe !important;
+}

@@ -127,6 +127,7 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 // Dashboard
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IOlapService, OlapService>();
 
 builder.Services.AddCors(opt =>
 {

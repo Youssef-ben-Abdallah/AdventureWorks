@@ -9,6 +9,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { MyOrdersComponent } from './pages/my-orders/my-orders.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { CubeInsightsComponent } from './pages/cube-insights/cube-insights.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -19,5 +20,6 @@ export const routes: Routes = [
   { path: 'orders', component: MyOrdersComponent, canActivate: [authGuard] },
   { path: 'admin', component: AdminDashboardComponent, canActivate: [authGuard, adminGuard] },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard, adminGuard] },
+  { path: 'cube-insights', component: CubeInsightsComponent, canActivate: [authGuard, adminGuard] },
   { path: '**', redirectTo: '' }
 ];

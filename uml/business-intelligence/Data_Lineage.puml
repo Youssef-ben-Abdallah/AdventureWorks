@@ -1,0 +1,100 @@
+@startuml Data_Lineage
+!theme cerulean-outline
+title AdventureWorks Sales BI Platform - Data Lineage
+caption Tracing key measures from OLTP source columns through ETL, DW, SSAS Cube, to dashboard visuals
+
+skinparam defaultTextAlignment center
+skinparam shadowing true
+skinparam roundCorner 10
+
+left to right direction
+
+skinparam rectangle {
+    BackgroundColor<<oltp>> #E8F5E9
+    BorderColor<<oltp>> #2E7D32
+    BackgroundColor<<etl>> #FFF3E0
+    BorderColor<<etl>> #E65100
+    BackgroundColor<<dw>> #E3F2FD
+    BorderColor<<dw>> #1565C0
+    BackgroundColor<<cube>> #F3E5F5
+    BorderColor<<cube>> #6A1B9A
+    BackgroundColor<<viz>> #FCE4EC
+    BorderColor<<viz>> #C62828
+}
+
+' ════════════════════════════════════════════════════════════════════
+' LINEAGE 1: SalesAmount
+' ════════════════════════════════════════════════════════════════════
+package "Sales Amount Lineage" as L1 #FAFAFA {
+    rectangle "**AdventureWorks2019**\n---\nSales.SalesOrderDetail\n.LineTotal" as S1 <<oltp>>
+    rectangle "**SSIS**\n---\nupdateSales\n(02_Load_FactSales.dtsx)" as E1 <<etl>>
+    rectangle "**AdventureWorksDW_Sales**\n---\nSales.LineTotal" as D1 <<dw>>
+    rectangle "**SSAS Cube**\n---\nFactResellerSales\n.SalesAmount\n[Measures].[Sales Amount]" as C1 <<cube>>
+    rectangle "**Dashboard Visuals**\n---\nCube Insights: Revenue KPI\nCube Insights: Sales Trend\nCube Insights: Territory Map\nDW Dashboard: Revenue Chart\nDW Dashboard: Overview KPIs" as V1 <<viz>>
+
+    S1 -[#2E7D32,bold]-> E1 : "Extract &\nTransform"
+    E1 -[#E65100,bold]-> D1 : "SCD Type 1\nLoad"
+    D1 -[#1565C0,bold]-> C1 : "Cube\nProcessing"
+    C1 -[#6A1B9A,bold]-> V1 : "MDX / LINQ\nvia API"
+}
+
+' ════════════════════════════════════════════════════════════════════
+' LINEAGE 2: OrderQty
+' ════════════════════════════════════════════════════════════════════
+package "Order Quantity Lineage" as L2 #FAFAFA {
+    rectangle "**AdventureWorks2019**\n---\nSales.SalesOrderDetail\n.OrderQty" as S2 <<oltp>>
+    rectangle "**SSIS**\n---\nupdateSales\n(02_Load_FactSales.dtsx)" as E2 <<etl>>
+    rectangle "**AdventureWorksDW_Sales**\n---\nSales.OrderQty" as D2 <<dw>>
+    rectangle "**SSAS Cube**\n---\nFactResellerSales\n.OrderQuantity\n[Measures].[Order Quantity]" as C2 <<cube>>
+    rectangle "**Dashboard Visuals**\n---\nCube Insights: Order Volume\nCube Insights: Shipping Volume\nCube Insights: Freight Per Unit\nDW Dashboard: Overview" as V2 <<viz>>
+
+    S2 -[#2E7D32,bold]-> E2 : "Extract &\nTransform"
+    E2 -[#E65100,bold]-> D2 : "SCD Type 1\nLoad"
+    D2 -[#1565C0,bold]-> C2 : "Cube\nProcessing"
+    C2 -[#6A1B9A,bold]-> V2 : "MDX / LINQ\nvia API"
+}
+
+' ════════════════════════════════════════════════════════════════════
+' LINEAGE 3: TotalProductCost
+' ════════════════════════════════════════════════════════════════════
+package "Total Product Cost Lineage" as L3 #FAFAFA {
+    rectangle "**AdventureWorks2019**\n---\nProduction.Product\n.StandardCost\n+ Sales.SalesOrderDetail" as S3 <<oltp>>
+    rectangle "**SSIS**\n---\nupdateSales +\nUpdateProduct\n(SSIS Packages)" as E3 <<etl>>
+    rectangle "**AdventureWorksDW_Sales**\n---\nSales.TotalProductCost\nProducts.StandardCost" as D3 <<dw>>
+    rectangle "**SSAS Cube**\n---\nFactResellerSales\n.TotalProductCost\n[Measures].[Total Product Cost]\n[Measures].[Product Standard Cost]" as C3 <<cube>>
+    rectangle "**Dashboard Visuals**\n---\nCube Insights: Gross Profit Margin\nCube Insights: Net Profit\nCube Insights: Cost Analysis\nCube Insights: Margin %" as V3 <<viz>>
+
+    S3 -[#2E7D32,bold]-> E3 : "Extract &\nTransform"
+    E3 -[#E65100,bold]-> D3 : "SCD Type 1\nLoad"
+    D3 -[#1565C0,bold]-> C3 : "Cube\nProcessing"
+    C3 -[#6A1B9A,bold]-> V3 : "MDX\nvia API"
+}
+
+' ════════════════════════════════════════════════════════════════════
+' LINEAGE 4: Freight
+' ════════════════════════════════════════════════════════════════════
+package "Freight Lineage" as L4 #FAFAFA {
+    rectangle "**AdventureWorks2019**\n---\nSales.SalesOrderHeader\n.Freight" as S4 <<oltp>>
+    rectangle "**SSIS**\n---\nupdateSales\n(02_Load_FactSales.dtsx)" as E4 <<etl>>
+    rectangle "**AdventureWorksDW_Sales**\n---\nSales.Freight" as D4 <<dw>>
+    rectangle "**SSAS Cube**\n---\nFactResellerSales\n.Freight\n[Measures].[Freight]" as C4 <<cube>>
+    rectangle "**Dashboard Visuals**\n---\nCube Insights: Freight Analysis\nCube Insights: Freight/Revenue Ratio\nCube Insights: Freight by Territory\nCube Insights: Freight Per Unit\nDW Dashboard: Shipping Tab" as V4 <<viz>>
+
+    S4 -[#2E7D32,bold]-> E4 : "Extract &\nTransform"
+    E4 -[#E65100,bold]-> D4 : "SCD Type 1\nLoad"
+    D4 -[#1565C0,bold]-> C4 : "Cube\nProcessing"
+    C4 -[#6A1B9A,bold]-> V4 : "MDX / LINQ\nvia API"
+}
+
+legend right
+  |= Stage |= Technology |= Role |
+  | <#E8F5E9> Source (OLTP) | SQL Server 2019 | Transactional data capture |
+  | <#FFF3E0> ETL | SSIS + Stored Procs | Extract, transform, load |
+  | <#E3F2FD> Data Warehouse | SQL Server (Star Schema) | Analytical storage |
+  | <#F3E5F5> SSAS Cube | Multidimensional OLAP | Pre-aggregated measures |
+  | <#FCE4EC> Visuals | React Dashboard / Cube Insights | End-user reporting |
+endlegend
+
+footer AdventureWorks Sales BI Platform | Data Lineage Diagram
+
+@enduml

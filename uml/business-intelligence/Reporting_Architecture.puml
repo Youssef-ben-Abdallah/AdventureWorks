@@ -1,0 +1,121 @@
+@startuml Reporting_Architecture
+!theme cerulean-outline
+title AdventureWorks Sales BI Platform - Reporting Architecture
+caption Dual reporting paths: SSAS Cube via ADOMD.NET and DW via EF Core, both served through ASP.NET Core API
+
+skinparam componentStyle rectangle
+skinparam defaultTextAlignment center
+skinparam shadowing true
+skinparam roundCorner 10
+skinparam packageStyle frame
+
+' ── Color palette ──
+skinparam component {
+    BackgroundColor<<data>> #E3F2FD
+    BorderColor<<data>> #1565C0
+    BackgroundColor<<dal>> #F3E5F5
+    BorderColor<<dal>> #6A1B9A
+    BackgroundColor<<service>> #FFF3E0
+    BorderColor<<service>> #E65100
+    BackgroundColor<<controller>> #FFFDE7
+    BorderColor<<controller>> #F9A825
+    BackgroundColor<<api>> #E8F5E9
+    BorderColor<<api>> #2E7D32
+    BackgroundColor<<ui>> #FCE4EC
+    BorderColor<<ui>> #C62828
+    BackgroundColor<<docs>> #F5F5F5
+    BorderColor<<docs>> #616161
+}
+
+' ════════════════════════════════════════
+' Data Sources
+' ════════════════════════════════════════
+package "Data Sources" as DATASRC #E3F2FD/white {
+    database "Adventure Works DW2019\n(SSAS Multidimensional Cube)\n<<MultdimCubeAW2019>>" as CUBE <<data>> {
+        component "Measure Group:\nFact Reseller Sales" as MG <<data>>
+        component "9 Dimensions:\nDate, Product, Territory,\nEmployee, Reseller,\nPromotion, Currency,\nGeography, ProductCategory" as CDIMS <<data>>
+    }
+
+    database "AdventureWorksDW_Sales\n(SQL Server DW)" as DW <<data>> {
+        component "Fact: Sales" as FACT <<data>>
+        component "Dims: Customer, Products,\nTerritory, Currency,\nSalesPerson, ShipMethod" as DDIMS <<data>>
+        component "vwSalesDashboard" as VW <<data>>
+    }
+}
+
+' ════════════════════════════════════════
+' Data Access Layer
+' ════════════════════════════════════════
+package "Data Access Layer" as DALPKG #F3E5F5/white {
+    component "ADOMD.NET\n(MDX Query Client)\nMicrosoft.AnalysisServices.AdomdClient" as ADOMD <<dal>>
+    component "EF Core\nAnalyticsDbContext\n(LINQ to SQL)" as EFCORE <<dal>>
+}
+
+' ════════════════════════════════════════
+' Service Layer
+' ════════════════════════════════════════
+package "Service Layer (Ecom.Api/Services)" as SVCPKG #FFF3E0/white {
+    component "OlapService.cs\n(IOlapService)\n---\nGetKpisAsync\nGetSalesTrendAsync\nGetTerritorySalesAsync\nGetTopEmployeesAsync\nGetSalesByPromotionAsync\nGetFulfillmentKpisAsync\n... (25+ methods)" as OLAPSVC <<service>>
+
+    component "DashboardService.cs\n(IDashboardService)\n---\nGetOverviewAsync\nGetProductsAsync\nGetCustomersAsync\nGetSalesTeamAsync\nGetShippingAsync\nGetDetailsAsync" as DASHSVC <<service>>
+}
+
+' ════════════════════════════════════════
+' Controller Layer
+' ════════════════════════════════════════
+package "ASP.NET Core API (Ecom.Api)\nHTTPS :57241 | HTTP :57240" as APIPKG #FFFDE7/white {
+    component "CubeInsightsController\n[Route: api/cubeinsights]\n---\nGET /kpis\nGET /sales-trend\nGET /top-products\nGET /territory-sales\nGET /top-employees\nGET /promotion-kpis\nGET /fulfillment-kpis\n... (22 endpoints)" as CUBECTRL <<controller>>
+
+    component "DashboardController\n[Route: api/dashboard]\n[Authorize: Admin]\n---\nGET /overview\nGET /products\nGET /customers\nGET /sales-team\nGET /shipping\nGET /details" as DASHCTRL <<controller>>
+
+    component "Swagger / OpenAPI\nAPI Documentation\n/swagger" as SWAGGER <<docs>>
+}
+
+' ════════════════════════════════════════
+' Frontend
+' ════════════════════════════════════════
+package "React + Vite Frontend (ecom-ui)\nhttp://localhost:5173" as UIPKG #FCE4EC/white {
+    component "Cube Insights Page\n(CubeInsights.tsx)\n---\n1. Overview\n2. Product Insights\n3. Territory Map\n4. Employee Performance\n5. Promotions & Discounts\n6. Order Fulfillment" as CUBEUI <<ui>>
+
+    component "Admin Dashboard Page\n(Dashboard.tsx)\n---\n1. Overview\n2. Products\n3. Customers\n4. Sales Team\n5. Shipping" as DASHUI <<ui>>
+
+    component "Services Layer\n---\ncubeInsights.ts\ndashboard.ts" as UISVC <<ui>>
+}
+
+' ════════════════════════════════════════
+' Connections - SSAS Path
+' ════════════════════════════════════════
+CUBE -[#1565C0,bold]-> ADOMD : "XMLA/TCP\nMDX Queries"
+ADOMD -[#6A1B9A,bold]-> OLAPSVC : "AdomdCommand\nExecuteReader"
+OLAPSVC -[#E65100,bold]-> CUBECTRL : "Dependency\nInjection"
+CUBECTRL -[#F9A825,bold]-> UISVC : "REST/JSON\nHTTPS :57241"
+UISVC -[#C62828,bold]-> CUBEUI : "React State\n& Props"
+
+' ════════════════════════════════════════
+' Connections - DW Path
+' ════════════════════════════════════════
+DW -[#1565C0,bold]-> EFCORE : "TDS/TCP\nLINQ to SQL"
+EFCORE -[#6A1B9A,bold]-> DASHSVC : "DbContext\nInjection"
+DASHSVC -[#E65100,bold]-> DASHCTRL : "Dependency\nInjection"
+DASHCTRL -[#F9A825,bold]-> UISVC : "REST/JSON\nHTTPS :57241"
+UISVC -[#C62828,bold]-> DASHUI : "React State\n& Props"
+
+' ════════════════════════════════════════
+' Swagger
+' ════════════════════════════════════════
+CUBECTRL -[#616161,dotted]-> SWAGGER : "Auto-generated\nAPI docs"
+DASHCTRL -[#616161,dotted]-> SWAGGER : "Auto-generated\nAPI docs"
+
+legend right
+  |= Layer |= Technology |= Port |
+  | SSAS Cube | SSAS Multidimensional | 2383 (default) |
+  | Data Warehouse | SQL Server | 1433 (default) |
+  | Data Access | ADOMD.NET / EF Core | -- |
+  | API | ASP.NET Core .NET 9 | 57240 / 57241 |
+  | Frontend | React + Vite (TypeScript) | 5173 |
+  | API Docs | Swagger / OpenAPI | 57241/swagger |
+endlegend
+
+footer AdventureWorks Sales BI Platform | Reporting Architecture Diagram
+
+@enduml

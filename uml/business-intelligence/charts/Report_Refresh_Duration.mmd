@@ -1,0 +1,18 @@
+%% Report Refresh Duration
+%% Bar chart showing average API response times for each BI endpoint.
+%% GetSalesTrend is the slowest at 350ms; GetKpis is the fastest at 120ms.
+%% Used to identify performance bottlenecks in the reporting layer.
+
+---
+config:
+  theme: base
+  themeVariables:
+    xyChart:
+      titleColor: "#333333"
+      backgroundColor: "#ffffff"
+---
+xychart-beta
+    title "Average API Response Time by Endpoint (ms)"
+    x-axis ["GetKpis", "GetFulfillment", "GetPromotion", "GetEmployee", "GetTerritory", "GetTopProducts", "GetProfitAnalysis", "GetSalesTrend"]
+    y-axis "Response Time (ms)" 0 --> 400
+    bar "Avg Response (ms)" [120, 140, 150, 180, 200, 280, 310, 350]

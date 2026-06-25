@@ -1,0 +1,18 @@
+%% Data Volume Growth
+%% Line chart showing cumulative data volume (MB) in the data warehouse over 4 years.
+%% Growth from ~50MB (2010) to ~450MB (2013), reflecting increasing reseller sales data.
+%% Illustrates the scaling characteristics of the AdventureWorks DW.
+
+---
+config:
+  theme: base
+  themeVariables:
+    xyChart:
+      titleColor: "#333333"
+      backgroundColor: "#ffffff"
+---
+xychart-beta
+    title "Cumulative Data Warehouse Volume (MB) — 2010 to 2013"
+    x-axis ["2010-Q1", "2010-Q2", "2010-Q3", "2010-Q4", "2011-Q1", "2011-Q2", "2011-Q3", "2011-Q4", "2012-Q1", "2012-Q2", "2012-Q3", "2012-Q4", "2013-Q1", "2013-Q2", "2013-Q3", "2013-Q4"]
+    y-axis "Volume (MB)" 0 --> 500
+    line "DW Size" [50, 68, 85, 105, 125, 148, 172, 198, 225, 255, 285, 318, 348, 382, 418, 450]

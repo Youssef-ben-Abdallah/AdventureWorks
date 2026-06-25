@@ -1,0 +1,142 @@
+@startuml ETL_Process_Flow
+!theme cerulean-outline
+title AdventureWorks ETL Process Flow
+caption Extract from AdventureWorks2019 OLTP >> Transform >> Load into AdventureWorksDW_Sales
+
+skinparam defaultTextAlignment center
+skinparam shadowing true
+skinparam roundCorner 8
+
+skinparam component {
+    BackgroundColor<<extract>> #C8E6C9
+    BorderColor<<extract>> #2E7D32
+    BackgroundColor<<transform>> #FFE0B2
+    BorderColor<<transform>> #E65100
+    BackgroundColor<<load>> #BBDEFB
+    BorderColor<<load>> #1565C0
+    BackgroundColor<<error>> #FFCDD2
+    BorderColor<<error>> #C62828
+    BackgroundColor<<log>> #F5F5F5
+    BorderColor<<log>> #616161
+}
+
+left to right direction
+
+' ════════════════════════════════════════
+' Source
+' ════════════════════════════════════════
+database "AdventureWorks2019\n(SQL Server OLTP)" as OLTP {
+    [Sales.SalesOrderHeader\nSales.SalesOrderDetail] as T_Sales <<extract>>
+    [Sales.Customer\nPerson.Person] as T_Cust <<extract>>
+    [Production.Product\nProduction.ProductSubcategory\nProduction.ProductCategory] as T_Prod <<extract>>
+    [Sales.SalesTerritory] as T_Terr <<extract>>
+    [Sales.CurrencyRate\nSales.Currency] as T_Curr <<extract>>
+    [Sales.SalesPerson\nPerson.Person] as T_SP <<extract>>
+    [Purchasing.ShipMethod] as T_Ship <<extract>>
+}
+
+' ════════════════════════════════════════
+' Validation & Transformation
+' ════════════════════════════════════════
+package "Validate & Transform" as VT #FFF8E1 {
+    component "Data Type Validation\n& NULL Checks" as VALIDATE <<transform>>
+    component "Business Rule\nTransformations" as TRANSFORM <<transform>>
+    component "Surrogate Key\nMapping" as KEYMAP <<transform>>
+    component "Referential Integrity\nCheck" as REFCHECK <<transform>>
+}
+
+' ════════════════════════════════════════
+' Error Handling
+' ════════════════════════════════════════
+package "Error Handling" as ERRPKG #FFEBEE {
+    component "Rejected Records\nLog" as REJECTED <<error>>
+    component "Error Notification\n& Alerting" as ERRALERT <<error>>
+    component "Data Quality\nReport" as DQREPORT <<error>>
+}
+
+' ════════════════════════════════════════
+' Stored Procedures (Load)
+' ════════════════════════════════════════
+package "Stored Procedures\n(AdventureWorksDW_Sales)" as SPROCS #E3F2FD {
+    component "updateCurrency" as SP_CURR <<load>>
+    component "updateCustomer" as SP_CUST <<load>>
+    component "UpdateProduct" as SP_PROD <<load>>
+    component "updateSalesPerson" as SP_SP <<load>>
+    component "updateShipMethod" as SP_SHIP <<load>>
+    component "updateTerritory" as SP_TERR <<load>>
+    component "updateSales" as SP_SALES <<load>>
+}
+
+' ════════════════════════════════════════
+' Target DW
+' ════════════════════════════════════════
+database "AdventureWorksDW_Sales\n(Star Schema)" as DW {
+    [Currency] as DW_CURR <<load>>
+    [Customer] as DW_CUST <<load>>
+    [Products] as DW_PROD <<load>>
+    [SalesPerson] as DW_SP <<load>>
+    [ShipMethod] as DW_SHIP <<load>>
+    [Territory] as DW_TERR <<load>>
+    [Sales (Fact)] as DW_FACT <<load>>
+    [vwSalesDashboard] as DW_VIEW <<load>>
+}
+
+' ════════════════════════════════════════
+' Execution Log
+' ════════════════════════════════════════
+component "SSIS Execution Log\n& Audit Trail" as AUDITLOG <<log>>
+
+' ── Extract connections ──
+T_Curr --> VALIDATE
+T_Cust --> VALIDATE
+T_Prod --> VALIDATE
+T_SP --> VALIDATE
+T_Ship --> VALIDATE
+T_Terr --> VALIDATE
+T_Sales --> VALIDATE
+
+' ── Transform flow ──
+VALIDATE --> TRANSFORM
+TRANSFORM --> KEYMAP
+KEYMAP --> REFCHECK
+
+' ── Error branches ──
+VALIDATE -[#C62828,dashed]-> REJECTED : Invalid\nrecords
+REFCHECK -[#C62828,dashed]-> REJECTED : Orphan\nrecords
+REJECTED --> ERRALERT
+REJECTED --> DQREPORT
+
+' ── Load via stored procs ──
+REFCHECK --> SP_CURR
+REFCHECK --> SP_CUST
+REFCHECK --> SP_PROD
+REFCHECK --> SP_SP
+REFCHECK --> SP_SHIP
+REFCHECK --> SP_TERR
+REFCHECK --> SP_SALES
+
+' ── Into DW tables ──
+SP_CURR --> DW_CURR
+SP_CUST --> DW_CUST
+SP_PROD --> DW_PROD
+SP_SP --> DW_SP
+SP_SHIP --> DW_SHIP
+SP_TERR --> DW_TERR
+SP_SALES --> DW_FACT
+
+DW_FACT ..[#616161]..> DW_VIEW : Feeds view
+
+' ── Logging ──
+SP_CURR -[#616161,dotted]-> AUDITLOG
+SP_SALES -[#616161,dotted]-> AUDITLOG
+ERRALERT -[#616161,dotted]-> AUDITLOG
+
+legend bottom
+  |= Stage |= Description |
+  | <back:#C8E6C9>Extract</back> | Read from AdventureWorks2019 OLTP tables |
+  | <back:#FFE0B2>Transform</back> | Validate, apply business rules, map keys |
+  | <back:#FFCDD2>Error</back> | Rejected records, alerts, data quality reports |
+  | <back:#BBDEFB>Load</back> | Execute stored procedures into DW tables |
+endlegend
+
+@enduml

@@ -1,0 +1,127 @@
+@startuml Cube_Performance_Architecture
+!theme cerulean-outline
+title AdventureWorks Sales BI Platform - SSAS Cube Performance Architecture
+caption MOLAP storage, query processing pipeline, aggregation design, and caching layers
+
+skinparam defaultTextAlignment center
+skinparam shadowing true
+skinparam roundCorner 10
+skinparam packageStyle frame
+
+skinparam component {
+    BackgroundColor<<client>> #FCE4EC
+    BorderColor<<client>> #C62828
+    BackgroundColor<<query>> #FFFDE7
+    BorderColor<<query>> #F9A825
+    BackgroundColor<<formula>> #FFF3E0
+    BorderColor<<formula>> #E65100
+    BackgroundColor<<storage>> #E3F2FD
+    BorderColor<<storage>> #1565C0
+    BackgroundColor<<cache>> #E8F5E9
+    BorderColor<<cache>> #2E7D32
+    BackgroundColor<<disk>> #F5F5F5
+    BorderColor<<disk>> #616161
+    BackgroundColor<<process>> #F3E5F5
+    BorderColor<<process>> #6A1B9A
+    BackgroundColor<<agg>> #E8EAF6
+    BorderColor<<agg>> #283593
+    BackgroundColor<<partition>> #FFF9C4
+    BorderColor<<partition>> #F57F17
+}
+
+' ════════════════════════════════════════════════════════════════
+' SECTION 1: Query Processing Pipeline
+' ════════════════════════════════════════════════════════════════
+package "Query Processing Pipeline" as QPP #FAFAFA {
+
+    component "**Client Applications**\n---\nReact Cube Insights\n(via OlapService / ADOMD.NET)\n+ SSMS / Excel" as CLIENT <<client>>
+
+    component "**MDX Query**\n---\nReceived via XMLA/TCP :2383\nParsed & validated\nQuery plan generated" as MDXQ <<query>>
+
+    component "**Formula Engine (FE)**\n---\nEvaluates calculated members:\n- Gross Profit Margin\n- Net Profit Amt\n- AOV, Discount Ratio\n- Freight Revenue Ratio\n- Freight Per Unit\n- Employee AOV\n- Active Employees count\nCoordinates sub-queries\nto Storage Engine" as FE <<formula>>
+
+    component "**Storage Engine (SE)**\n---\nRetrieves pre-aggregated data\nScans MOLAP structures\nApplies dimension filters\n(year, territory, category)\nReturns cell sets to FE" as SE <<storage>>
+
+    component "**MOLAP Cache**\n---\nIn-memory cache of\nrecently queried subcubes\nWarmed on first query\nInvalidated on processing" as CACHE <<cache>>
+
+    component "**MOLAP Disk Storage**\n---\n.data files (fact data)\n.agg files (aggregations)\n.dim files (dimension data)\n.string files (string store)\nCompressed & indexed" as DISK <<disk>>
+
+    CLIENT -[#C62828,bold]-> MDXQ : "XMLA/TCP\nMDX Query"
+    MDXQ -[#F9A825,bold]-> FE : "Parse &\nPlan"
+    FE -[#E65100,bold]-> SE : "Sub-cube\nRequests"
+    SE -[#1565C0,bold]-> CACHE : "Cache\nLookup"
+    CACHE -[#2E7D32,bold]-> DISK : "Cache Miss\nDisk Read"
+    DISK -[#616161,bold]-> CACHE : "Load\nSubcubes"
+    CACHE -[#2E7D32,bold]-> SE : "Return\nData"
+    SE -[#1565C0,bold]-> FE : "Cell\nSets"
+    FE -[#E65100,bold]-> CLIENT : "Result\nCellSet"
+}
+
+' ════════════════════════════════════════════════════════════════
+' SECTION 2: Storage Architecture
+' ════════════════════════════════════════════════════════════════
+package "MOLAP Storage Architecture" as MSA #FAFAFA {
+
+    component "**Storage Mode: MOLAP**\n(Multidimensional OLAP)\n---\nAll data copied from relational\nsource into SSAS proprietary\ncompressed binary format.\nProvides fastest query performance.\nData latency = time since\nlast cube processing." as MOLAP <<storage>>
+
+    component "**Aggregation Design**\n---\nPre-computed summaries at\nvarious granularity levels:\n\nProduct Category + Year\nTerritory Group + Year\nEmployee + Year\nPromotion + Year\nCategory + Territory + Year\n---\nDesign goal: cover 80%+\nof common query patterns\nwith <30% storage overhead" as AGGDESIGN <<agg>>
+
+    component "**Partition Strategy**\n---\nFactResellerSales partitioned by:\n\nPartition 1: Historical data\n  (all years before current)\nPartition 2: Current year data\n  (incremental processing)\n---\nBenefits:\n- Faster incremental processing\n- Parallel query on partitions\n- Reduced processing window" as PARTITIONS <<partition>>
+
+    MOLAP -[#1565C0]-> AGGDESIGN : "Contains\nAggregations"
+    MOLAP -[#1565C0]-> PARTITIONS : "Organized\ninto Partitions"
+}
+
+' ════════════════════════════════════════════════════════════════
+' SECTION 3: Cube Processing
+' ════════════════════════════════════════════════════════════════
+package "Cube Processing Pipeline" as CPP #FAFAFA {
+
+    component "**Source Database**\n---\nAdventureWorksDW2019\n(SQL Server)\n---\nFactResellerSales\n+ 9 Dimension Tables" as SRCDB <<storage>>
+
+    component "**Full Processing**\n---\nProcessFull:\n1. Drop all existing data\n2. Re-read all source data\n3. Build all dimensions\n4. Build all aggregations\n5. Rebuild MOLAP storage\n---\nUse case: Initial deploy,\nschema changes,\ndata corrections\nDuration: Longer" as PROCFULL <<process>>
+
+    component "**Incremental Processing**\n---\nProcessAdd / ProcessUpdate:\n1. Read only new/changed data\n2. Merge into existing structures\n3. Update affected aggregations\n4. Update affected partitions\n---\nUse case: Regular scheduled\nrefresh (daily/hourly)\nDuration: Shorter" as PROCINC <<process>>
+
+    component "**Dimension Processing**\n---\nProcessUpdate on dimensions:\n- DimDate (rarely changes)\n- DimProduct (new products)\n- DimSalesTerritory\n- DimEmployee (new hires)\n- DimPromotion\n- DimCurrency\n---\nMust complete before\nfact processing" as PROCDIM <<process>>
+
+    SRCDB -[#1565C0,bold]-> PROCFULL : "SELECT *\nFROM tables"
+    SRCDB -[#1565C0,bold]-> PROCINC : "SELECT WHERE\nModified > Last"
+    PROCDIM -[#6A1B9A,bold]-> PROCFULL : "Dims first"
+    PROCDIM -[#6A1B9A,bold]-> PROCINC : "Dims first"
+    PROCFULL -[#6A1B9A,bold]-> MOLAP : "Rebuild\nAll Storage"
+    PROCINC -[#6A1B9A,bold]-> PARTITIONS : "Update\nCurrent Partition"
+}
+
+' ════════════════════════════════════════════════════════════════
+' SECTION 4: Client-Side Caching
+' ════════════════════════════════════════════════════════════════
+package "Client Query Caching" as CQC #FAFAFA {
+
+    component "**React Frontend Cache**\n---\nComponent state (useState)\nCached API responses\nAvoid re-fetch on tab switch\nInvalidated on filter change\n(year, territory)" as REACTCACHE <<client>>
+
+    component "**API Response Caching**\n---\nASP.NET Core API\nNo explicit cache headers\n(real-time data preference)\n---\nOlapService:\nDictionary lookups cached\nin-memory (employee names,\npromotion names, currency names)\nper service lifetime" as APICACHE <<cache>>
+
+    component "**ADOMD.NET Connection**\n---\nConnection pooling enabled\nReuses XMLA connections\nReduces connection overhead\nfor concurrent queries" as CONNPOOL <<cache>>
+
+    REACTCACHE -[#C62828]-> APICACHE : "HTTP GET\n/api/cubeinsights/*"
+    APICACHE -[#2E7D32]-> CONNPOOL : "AdomdCommand\nExecuteReader"
+    CONNPOOL -[#2E7D32]-> MDXQ : "XMLA/TCP\nPooled Connection"
+}
+
+legend right
+  |= Component |= Role |
+  | <#FCE4EC> Client | Query initiator (React, SSMS) |
+  | <#FFFDE7> MDX Query | Query reception & parsing |
+  | <#FFF3E0> Formula Engine | Calculated member evaluation |
+  | <#E3F2FD> Storage Engine | Data retrieval from MOLAP |
+  | <#E8F5E9> MOLAP Cache | In-memory subcube cache |
+  | <#F5F5F5> Disk Storage | Compressed binary MOLAP files |
+  | <#E8EAF6> Aggregations | Pre-computed summaries |
+  | <#FFF9C4> Partitions | Data partitioning strategy |
+  | <#F3E5F5> Processing | Full & incremental cube refresh |
+endlegend
+
+footer AdventureWorks Sales BI Platform | Cube Performance Architecture Diagram
+
+@enduml

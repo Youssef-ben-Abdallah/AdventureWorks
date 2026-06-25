@@ -114,7 +114,7 @@ export const Home = () => {
         setLoading(true);
         const rows = await CatalogService.getProducts();
         setProducts(rows);
-        const randomTop = pickRandom(rows, 6);
+        const randomTop = pickRandom(rows, 5);
         setTop(randomTop);
         setFilteredTop(randomTop);
       } catch (err: any) {
@@ -129,10 +129,10 @@ export const Home = () => {
   const handleCategoryChange = (id: number) => {
     setSelectedCategory(id);
     if (id === 0) {
-      setFilteredTop(pickRandom(products, 6));
+      setFilteredTop(pickRandom(products, 5));
     } else {
       const filtered = products.filter(p => p.categoryId === id);
-      setFilteredTop(pickRandom(filtered.length > 0 ? filtered : products, 6));
+      setFilteredTop(pickRandom(filtered.length > 0 ? filtered : products, 5));
     }
   };
 
@@ -149,7 +149,7 @@ export const Home = () => {
       {/* =============== HERO SECTION =============== */}
       <section className="hero-section">
         <div className="hero-bg">
-          <img src="/assets/images/hero-bg.png" alt="" className="hero-bg-img" aria-hidden="true" />
+          <div className="hero-bg-pattern" aria-hidden="true"></div>
           <div className="hero-overlay"></div>
         </div>
 
@@ -288,7 +288,7 @@ export const Home = () => {
 
           {loading && (
             <div className="products-grid">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+              {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="aw-product-card skeleton-card">
                   <div className="skeleton" style={{ height: '200px', borderRadius: '12px 12px 0 0' }}></div>
                   <div style={{ padding: '1rem' }}>

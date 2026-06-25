@@ -219,10 +219,17 @@
 [data-theme="light"] .kpi-info h3 { color: #64748b; }
 .kpi-info .kpi-value {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: clamp(1rem, 3.5vw, 1.75rem);
   font-weight: 700;
   color: #f8fafc;
   font-family: 'Space Grotesk', sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kpi-info {
+  min-width: 0;
+  overflow: hidden;
 }
 [data-theme="light"] .kpi-info .kpi-value { color: #0f172a; }
 

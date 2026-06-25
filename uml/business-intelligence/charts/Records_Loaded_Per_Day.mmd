@@ -1,0 +1,19 @@
+%% Records Loaded per Day
+%% Bar chart showing dimension and fact records loaded per ETL run across months.
+%% Dimension records ~500-2000; fact records ~3000-8000 per run.
+%% Demonstrates the volume of data processed in each ETL cycle.
+
+---
+config:
+  theme: base
+  themeVariables:
+    xyChart:
+      titleColor: "#333333"
+      backgroundColor: "#ffffff"
+---
+xychart-beta
+    title "Records Loaded per ETL Run (by Month)"
+    x-axis ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    y-axis "Record Count" 0 --> 9000
+    bar "Dimension Records" [820, 650, 1100, 950, 1450, 1200, 1680, 1350, 1800, 1550, 1900, 2000]
+    bar "Fact Records" [3200, 3800, 4500, 4100, 5200, 5800, 6100, 5500, 6800, 7200, 7600, 8000]

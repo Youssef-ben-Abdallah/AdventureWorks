@@ -1,0 +1,144 @@
+@startuml Incremental_Load_Process
+!theme cerulean-outline
+title AdventureWorks Sales BI Platform - Incremental (Delta) Load Process
+caption Activity diagram for SSIS stored procedure-based incremental ETL pipeline
+
+skinparam defaultTextAlignment center
+skinparam shadowing true
+skinparam roundCorner 10
+
+skinparam activity {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+    DiamondBackgroundColor #FFFDE7
+    DiamondBorderColor #F9A825
+    StartColor #2E7D32
+    EndColor #C62828
+}
+
+skinparam partition {
+    BackgroundColor #FAFAFA
+    BorderColor #9E9E9E
+}
+
+|#E8F5E9| **SSIS Orchestrator**
+|#FFF3E0| **01_Load_Dimension.dtsx**
+|#E3F2FD| **02_Load_FactSales.dtsx**
+|#F3E5F5| **Logging & Monitoring**
+
+|**SSIS Orchestrator**|
+start
+
+:Read **last load timestamp**\nfrom ETL control table;
+
+note right
+  The control table stores
+  the last successful load
+  datetime for each entity
+end note
+
+:Connect to **AdventureWorks2019**\n(OLTP source database);
+
+:Identify changed records\nsince last load timestamp\n(ModifiedDate > LastLoadDate);
+
+|**01_Load_Dimension.dtsx**|
+
+partition "Dimension Loading (Parallel)" {
+
+    fork
+        :Execute **updateCurrency**\n---\nExtract: Sales.Currency\n+ Sales.CurrencyRate\nCompare: match on CurrencyCode\nSCD Type 1: overwrite changed\nInsert: new currency records;
+
+        note right #FFF9C4
+            **SCD Type 1 Logic**
+            Check if record exists
+            in DW by business key.
+            If exists & changed:
+              UPDATE (overwrite)
+            If not exists:
+              INSERT new record
+        end note
+
+    fork again
+        :Execute **updateCustomer**\n---\nExtract: Sales.Customer\n+ Person.Person\n+ Person.Address\nCompare: match on CustomerID\nSCD Type 1: overwrite changed\nInsert: new customer records;
+
+    fork again
+        :Execute **UpdateProduct**\n---\nExtract: Production.Product\n+ Production.ProductSubcategory\n+ Production.ProductCategory\nCompare: match on ProductID\nSCD Type 1: overwrite changed\nInsert: new product records;
+
+    fork again
+        :Execute **updateSalesPerson**\n---\nExtract: Sales.SalesPerson\n+ HumanResources.Employee\n+ Person.Person\nCompare: match on SalesPersonID\nSCD Type 1: overwrite changed\nInsert: new salesperson records;
+
+    fork again
+        :Execute **updateShipMethod**\n---\nExtract: Purchasing.ShipMethod\nCompare: match on ShipMethodID\nSCD Type 1: overwrite changed\nInsert: new ship methods;
+
+    fork again
+        :Execute **updateTerritory**\n---\nExtract: Sales.SalesTerritory\nCompare: match on TerritoryID\nSCD Type 1: overwrite changed\nInsert: new territory records;
+
+    end fork
+}
+
+|**SSIS Orchestrator**|
+
+if (All dimensions\nloaded successfully?) then (yes)
+    :Proceed to fact loading;
+else (no)
+    |**Logging & Monitoring**|
+    :Log dimension load **FAILURE**\n---\nRecord: error message,\nfailed procedure,\ntimestamp, row counts;
+    :Send alert notification;
+    |**SSIS Orchestrator**|
+    stop
+endif
+
+|**02_Load_FactSales.dtsx**|
+
+partition "Fact Loading" {
+    :Execute **updateSales**\n---\nExtract: Sales.SalesOrderHeader\n+ Sales.SalesOrderDetail\nwhere ModifiedDate > LastLoadDate;
+
+    :Lookup dimension keys:\n- CustomerKey (from DW Customer)\n- ProductKey (from DW Products)\n- TerritoryKey (from DW Territory)\n- CurrencyKey (from DW Currency)\n- SalesPersonKey (from DW SalesPerson)\n- ShipMethodKey (from DW ShipMethod);
+
+    :Transform & calculate:\n- LineTotal (UnitPrice * Qty * (1-Discount))\n- TotalProductCost\n- Freight (allocated per line)\n- TaxAmt (allocated per line);
+
+    :Insert new fact records\ninto **AdventureWorksDW_Sales.Sales**;
+
+    note right #E8F5E9
+        Fact table is append-only
+        for new sales orders.
+        No updates to existing
+        fact records (immutable).
+    end note
+}
+
+|**SSIS Orchestrator**|
+
+if (Fact load\nsuccessful?) then (yes)
+    :Update **last load timestamp**\nin ETL control table\nto current datetime;
+else (no)
+    |**Logging & Monitoring**|
+    :Log fact load **FAILURE**\n---\nRecord: error message,\nrows attempted vs loaded,\ntimestamp;
+    :Send alert notification;
+    |**SSIS Orchestrator**|
+    stop
+endif
+
+|**Logging & Monitoring**|
+
+:Log load **SUCCESS** statistics\n---\nDimension rows: inserted / updated\nFact rows: inserted\nDuration: start to end\nTimestamp: completion time;
+
+:Update ETL audit trail\n---\nPackage: execution ID\nStatus: Success\nRow counts per entity;
+
+|**SSIS Orchestrator**|
+
+stop
+
+legend right
+  |= Phase |= Package |= Procedures |
+  | Dimensions | 01_Load_Dimension.dtsx | updateCurrency, updateCustomer, |
+  |  |  | UpdateProduct, updateSalesPerson, |
+  |  |  | updateShipMethod, updateTerritory |
+  | Facts | 02_Load_FactSales.dtsx | updateSales |
+  |= SCD Type |= Strategy |= Behavior |
+  | Type 1 | Overwrite | Update in place, no history |
+endlegend
+
+footer AdventureWorks Sales BI Platform | Incremental Load Process Diagram
+
+@enduml

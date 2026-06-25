@@ -1,0 +1,143 @@
+@startuml SSAS_Cube_Architecture
+!theme cerulean-outline
+title SSAS Multidimensional Cube - Internal Architecture
+caption Adventure Works DW2019 (MultdimCubeAW2019 Project)
+
+skinparam shadowing true
+skinparam roundCorner 10
+skinparam defaultTextAlignment center
+skinparam packageStyle frame
+
+skinparam component {
+    BackgroundColor<<datasource>> #C8E6C9
+    BorderColor<<datasource>> #2E7D32
+    BackgroundColor<<dsv>> #FFE0B2
+    BorderColor<<dsv>> #E65100
+    BackgroundColor<<dim>> #E3F2FD
+    BorderColor<<dim>> #1565C0
+    BackgroundColor<<measure>> #F3E5F5
+    BorderColor<<measure>> #6A1B9A
+    BackgroundColor<<calc>> #FFFDE7
+    BorderColor<<calc>> #F9A825
+    BackgroundColor<<roleplay>> #FFCDD2
+    BorderColor<<roleplay>> #C62828
+}
+
+' ════════════════════════════════════════
+' Data Source
+' ════════════════════════════════════════
+database "AdventureWorksDW2019\n(SSAS Source Database)" as SRCDB <<datasource>> #C8E6C9
+
+' ════════════════════════════════════════
+' Data Source View
+' ════════════════════════════════════════
+package "Data Source View (DSV)" as DSV #FFF8E1 {
+    component "DimDate" as DSV_DATE <<dsv>>
+    component "DimProduct" as DSV_PROD <<dsv>>
+    component "DimProductSubcategory" as DSV_SUBCAT <<dsv>>
+    component "DimProductCategory" as DSV_CAT <<dsv>>
+    component "DimSalesTerritory" as DSV_TERR <<dsv>>
+    component "DimEmployee" as DSV_EMP <<dsv>>
+    component "DimReseller" as DSV_RES <<dsv>>
+    component "DimGeography" as DSV_GEO <<dsv>>
+    component "DimPromotion" as DSV_PROMO <<dsv>>
+    component "DimCurrency" as DSV_CURR <<dsv>>
+    component "FactResellerSales" as DSV_FACT <<dsv>>
+}
+
+' ════════════════════════════════════════
+' CUBE
+' ════════════════════════════════════════
+package "Cube: Adventure Works DW2019" as CUBE #F3E5F5/white {
+
+    ' ── Role-Playing Dimensions (from DimDate) ──
+    package "Role-Playing Dimensions\n(from DimDate)" as RPD #FFEBEE {
+        component "Order Date\n(Calendar Hierarchy:\nYear > Quarter > Month > Date)" as DIM_ORDERDATE <<roleplay>>
+        component "Ship Date\n(Calendar Hierarchy:\nYear > Quarter > Month > Date)" as DIM_SHIPDATE <<roleplay>>
+        component "Due Date\n(Calendar Hierarchy:\nYear > Quarter > Month > Date)" as DIM_DUEDATE <<roleplay>>
+    }
+
+    ' ── Standard Dimensions ──
+    package "Cube Dimensions" as CUBEDIMS #E3F2FD {
+        component "Dim Product\n(Hierarchy: Category >\nSubcategory > Product)" as DIM_PROD <<dim>>
+        component "Dim Sales Territory\n(Hierarchy: Group >\nCountry > Region)" as DIM_TERR <<dim>>
+        component "Dim Employee\n(Parent-Child\nHierarchy)" as DIM_EMP <<dim>>
+        component "Dim Reseller" as DIM_RES <<dim>>
+        component "Dim Promotion" as DIM_PROMO <<dim>>
+        component "Dim Currency" as DIM_CURR <<dim>>
+    }
+
+    ' ── Measure Group ──
+    package "Measure Group: Fact Reseller Sales" as MGROUP #F3E5F5 {
+
+        package "Base Measures (12)" as BASEM <<measure>> {
+            component "Sales Amount" as BM1 <<measure>>
+            component "Total Product Cost" as BM2 <<measure>>
+            component "Extended Amount" as BM3 <<measure>>
+            component "Discount Amount" as BM4 <<measure>>
+            component "Tax Amt" as BM5 <<measure>>
+            component "Freight" as BM6 <<measure>>
+            component "Order Quantity" as BM7 <<measure>>
+            component "Unit Price" as BM8 <<measure>>
+            component "Unit Price Discount Pct" as BM9 <<measure>>
+            component "Product Standard Cost" as BM10 <<measure>>
+            component "Revision Number" as BM11 <<measure>>
+            component "Fact Reseller Sales Count" as BM12 <<measure>>
+        }
+
+        package "Calculated Measures (8)" as CALCM <<calc>> {
+            component "Gross Profit Margin" as CM1 <<calc>>
+            component "AOV\n(Avg Order Value)" as CM2 <<calc>>
+            component "Discount Ratio" as CM3 <<calc>>
+            component "Effective Tax Rate" as CM4 <<calc>>
+            component "Gross Profit Amount" as CM5 <<calc>>
+            component "Net Profit Amount" as CM6 <<calc>>
+            component "Sales Target Status" as CM7 <<calc>>
+            component "Freight Cost Per Item" as CM8 <<calc>>
+        }
+    }
+}
+
+' ════════════════════════════════════════
+' Connections: Data Source -> DSV
+' ════════════════════════════════════════
+SRCDB -[#2E7D32,bold]-> DSV : 11 tables
+
+' ════════════════════════════════════════
+' Connections: DSV -> Cube Dimensions
+' ════════════════════════════════════════
+DSV_DATE -[#C62828,bold]-> DIM_ORDERDATE
+DSV_DATE -[#C62828,bold]-> DIM_SHIPDATE
+DSV_DATE -[#C62828,bold]-> DIM_DUEDATE
+
+DSV_PROD -[#1565C0]-> DIM_PROD
+DSV_SUBCAT -[#1565C0,dotted]-> DIM_PROD
+DSV_CAT -[#1565C0,dotted]-> DIM_PROD
+DSV_TERR -[#1565C0]-> DIM_TERR
+DSV_GEO -[#1565C0,dotted]-> DIM_TERR
+DSV_EMP -[#1565C0]-> DIM_EMP
+DSV_RES -[#1565C0]-> DIM_RES
+DSV_PROMO -[#1565C0]-> DIM_PROMO
+DSV_CURR -[#1565C0]-> DIM_CURR
+
+' ════════════════════════════════════════
+' Connections: DSV -> Measure Group
+' ════════════════════════════════════════
+DSV_FACT -[#6A1B9A,bold]-> MGROUP : populates
+
+' ════════════════════════════════════════
+' Calculated measures depend on base
+' ════════════════════════════════════════
+BASEM .[#F9A825,dashed].> CALCM : MDX\ncalculations
+
+legend bottom
+  |= Component |= Description |
+  | <back:#C8E6C9>Data Source</back> | AdventureWorksDW2019 SQL Server database |
+  | <back:#FFE0B2>DSV</back> | Data Source View with 11 tables |
+  | <back:#FFCDD2>Role-Playing</back> | DimDate used as Order Date, Ship Date, Due Date |
+  | <back:#E3F2FD>Dimensions</back> | Standard cube dimensions with hierarchies |
+  | <back:#F3E5F5>Measures</back> | 12 base measures from FactResellerSales |
+  | <back:#FFFDE7>Calculated</back> | 8 MDX calculated members |
+endlegend
+
+@enduml

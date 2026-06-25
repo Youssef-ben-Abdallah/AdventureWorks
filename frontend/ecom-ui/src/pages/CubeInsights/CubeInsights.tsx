@@ -316,6 +316,9 @@ export const CubeInsights = () => {
   const formatMoney = (v: number) => {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(v || 0);
   };
+  const formatMoneyCompact = (v: number) => {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 }).format(v || 0);
+  };
 
   const renderTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -907,21 +910,21 @@ export const CubeInsights = () => {
                 <div className="kpi-icon icon-blue"><span className="material-icons">trending_up</span></div>
                 <div className="kpi-info">
                   <h3>Avg Revenue/Employee</h3>
-                  <p className="kpi-value">{formatMoney(employeeKpis.avgRevenuePerEmployee)}</p>
+                  <p className="kpi-value">{formatMoneyCompact(employeeKpis.avgRevenuePerEmployee)}</p>
                 </div>
               </div>
               <div className="kpi-card">
                 <div className="kpi-icon icon-pink"><span className="material-icons">star</span></div>
                 <div className="kpi-info">
                   <h3>Top Employee Revenue</h3>
-                  <p className="kpi-value">{formatMoney(employeeKpis.topEmployeeRevenue)}</p>
+                  <p className="kpi-value">{formatMoneyCompact(employeeKpis.topEmployeeRevenue)}</p>
                 </div>
               </div>
               <div className="kpi-card">
                 <div className="kpi-icon icon-cyan"><span className="material-icons">account_balance_wallet</span></div>
                 <div className="kpi-info">
                   <h3>Total Revenue</h3>
-                  <p className="kpi-value">{formatMoney(employeeKpis.totalRevenue)}</p>
+                  <p className="kpi-value">{formatMoneyCompact(employeeKpis.totalRevenue)}</p>
                 </div>
               </div>
             </section>
@@ -1006,7 +1009,7 @@ export const CubeInsights = () => {
                 <div className="kpi-icon icon-purple"><span className="material-icons">money_off</span></div>
                 <div className="kpi-info">
                   <h3>Total Discount</h3>
-                  <p className="kpi-value">{formatMoney(promotionKpis.totalDiscount)}</p>
+                  <p className="kpi-value">{formatMoneyCompact(promotionKpis.totalDiscount)}</p>
                 </div>
               </div>
               <div className="kpi-card">
@@ -1112,7 +1115,7 @@ export const CubeInsights = () => {
                 <div className="kpi-icon icon-purple"><span className="material-icons">local_shipping</span></div>
                 <div className="kpi-info">
                   <h3>Total Freight</h3>
-                  <p className="kpi-value">{formatMoney(fulfillmentKpis.totalFreight)}</p>
+                  <p className="kpi-value">{formatMoneyCompact(fulfillmentKpis.totalFreight)}</p>
                 </div>
               </div>
               <div className="kpi-card">

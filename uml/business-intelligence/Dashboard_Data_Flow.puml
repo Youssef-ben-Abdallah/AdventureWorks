@@ -1,0 +1,148 @@
+@startuml Dashboard_Data_Flow
+!theme cerulean-outline
+title AdventureWorks Sales BI Platform - Dashboard Data Flow
+caption Dependency chain for each major dashboard visualization
+
+skinparam defaultTextAlignment center
+skinparam shadowing true
+skinparam roundCorner 10
+skinparam packageStyle frame
+
+skinparam component {
+    BackgroundColor<<visual>> #FCE4EC
+    BorderColor<<visual>> #C62828
+    BackgroundColor<<endpoint>> #FFFDE7
+    BorderColor<<endpoint>> #F9A825
+    BackgroundColor<<service>> #FFF3E0
+    BorderColor<<service>> #E65100
+    BackgroundColor<<query>> #F3E5F5
+    BorderColor<<query>> #6A1B9A
+    BackgroundColor<<cube>> #E8EAF6
+    BorderColor<<cube>> #283593
+    BackgroundColor<<table>> #E3F2FD
+    BorderColor<<table>> #1565C0
+    BackgroundColor<<dw>> #E8F5E9
+    BorderColor<<dw>> #2E7D32
+}
+
+' ════════════════════════════════════════════════════════════════
+' SECTION 1: Cube Insights KPIs
+' ════════════════════════════════════════════════════════════════
+package "Cube Insights - Overview KPIs" as SEC1 #FAFAFA {
+    component "KPI Cards\n(Gross Profit Margin,\nAOV, Discount Ratio,\nEffective Tax Rate)" as V1 <<visual>>
+    component "GET /api/cubeinsights/kpis\n?year=&territory=" as EP1 <<endpoint>>
+    component "OlapService\n.GetKpisAsync()" as SVC1 <<service>>
+    component "MDX WITH\nCalculated Members:\nGross Profit Margin,\nAOV, Discount Ratio,\nEffective Tax Rate" as Q1 <<query>>
+    component "Adventure Works\nDW2019 Cube" as C1 <<cube>>
+    component "FactResellerSales\n(SalesAmount, TotalProductCost,\nDiscountAmount, TaxAmt)" as T1 <<table>>
+
+    V1 -[#C62828]-> EP1
+    EP1 -[#F9A825]-> SVC1
+    SVC1 -[#E65100]-> Q1
+    Q1 -[#6A1B9A]-> C1
+    C1 -[#283593]-> T1
+}
+
+' ════════════════════════════════════════════════════════════════
+' SECTION 2: Territory Map
+' ════════════════════════════════════════════════════════════════
+package "Cube Insights - Territory Map" as SEC2 #FAFAFA {
+    component "Territory Sales Chart\n+ Territory Detail Table\n(Region, Sales, Profit,\nOrderQty, Freight, Margin%)" as V2 <<visual>>
+    component "GET /api/cubeinsights/territory-sales\nGET /api/cubeinsights/territory-detail\n?year=&territoryGroup=&territoryCountry=" as EP2 <<endpoint>>
+    component "OlapService\n.GetTerritorySalesAsync()\n.GetTerritoryDetailAsync()" as SVC2 <<service>>
+    component "MDX WITH\nNet Profit, Margin%\nDrill: Group > Country > Region" as Q2 <<query>>
+    component "Adventure Works\nDW2019 Cube" as C2 <<cube>>
+    component "DimSalesTerritory\n(Group, Country, Region)\n+\nFactResellerSales" as T2 <<table>>
+
+    V2 -[#C62828]-> EP2
+    EP2 -[#F9A825]-> SVC2
+    SVC2 -[#E65100]-> Q2
+    Q2 -[#6A1B9A]-> C2
+    C2 -[#283593]-> T2
+}
+
+' ════════════════════════════════════════════════════════════════
+' SECTION 3: Employee Performance
+' ════════════════════════════════════════════════════════════════
+package "Cube Insights - Employee Performance" as SEC3 #FAFAFA {
+    component "Employee KPIs\n+ Top 10 Employees\n+ Sales by Territory\n+ Employee AOV" as V3 <<visual>>
+    component "GET /api/cubeinsights/employee-kpis\nGET /api/cubeinsights/top-employees\nGET /api/cubeinsights/employee-sales-by-territory\nGET /api/cubeinsights/employee-aov" as EP3 <<endpoint>>
+    component "OlapService\n.GetEmployeeKpisAsync()\n.GetTopEmployeesAsync()\n.GetEmployeeSalesByTerritoryAsync()\n.GetEmployeeAovAsync()" as SVC3 <<service>>
+    component "MDX WITH\nActive Employees,\nAvg Revenue/Employee,\nEmployee AOV\n+ DW Lookup: DimEmployee names" as Q3 <<query>>
+    component "Adventure Works\nDW2019 Cube" as C3 <<cube>>
+    component "DimEmployee\n(EmployeeKey, Name)\n+\nFactResellerSales\n+\nDimSalesTerritory" as T3 <<table>>
+
+    V3 -[#C62828]-> EP3
+    EP3 -[#F9A825]-> SVC3
+    SVC3 -[#E65100]-> Q3
+    Q3 -[#6A1B9A]-> C3
+    C3 -[#283593]-> T3
+}
+
+' ════════════════════════════════════════════════════════════════
+' SECTION 4: DW Dashboard Overview
+' ════════════════════════════════════════════════════════════════
+package "DW Dashboard - Overview" as SEC4 #FAFAFA {
+    component "Overview Tab\n(Revenue KPIs,\nSales Trend,\nTop Products,\nTerritory Breakdown)" as V4 <<visual>>
+    component "GET /api/dashboard/overview\n?year=&territory=&category=" as EP4 <<endpoint>>
+    component "DashboardService\n.GetOverviewAsync()" as SVC4 <<service>>
+    component "EF Core LINQ Queries\nAnalyticsDbContext\n(Aggregations, GroupBy,\nJoins across tables)" as Q4 <<query>>
+    component "AdventureWorksDW_Sales\n(SQL Server DW)" as C4 <<dw>>
+    component "Sales (Fact)\n+ Products (Dim)\n+ Territory (Dim)\n+ Customer (Dim)\n+ SalesPerson (Dim)\n+ vwSalesDashboard" as T4 <<table>>
+
+    V4 -[#C62828]-> EP4
+    EP4 -[#F9A825]-> SVC4
+    SVC4 -[#E65100]-> Q4
+    Q4 -[#2E7D32]-> C4
+    C4 -[#1565C0]-> T4
+}
+
+' ════════════════════════════════════════════════════════════════
+' SECTION 5: Promotions & Discounts
+' ════════════════════════════════════════════════════════════════
+package "Cube Insights - Promotions & Discounts" as SEC5 #FAFAFA {
+    component "Promotion KPIs\n+ Sales by Promotion\n+ Discount Trend\n+ Sales by Currency" as V5 <<visual>>
+    component "GET /api/cubeinsights/promotion-kpis\nGET /api/cubeinsights/sales-by-promotion\nGET /api/cubeinsights/discount-trend\nGET /api/cubeinsights/sales-by-currency" as EP5 <<endpoint>>
+    component "OlapService\n.GetPromotionKpisAsync()\n.GetSalesByPromotionAsync()\n.GetDiscountTrendAsync()\n.GetSalesByCurrencyAsync()" as SVC5 <<service>>
+    component "MDX WITH\nDiscount Revenue Ratio,\nAvg Discount Per Order\n+ DW Lookup: Promotion/Currency names" as Q5 <<query>>
+    component "Adventure Works\nDW2019 Cube" as C5 <<cube>>
+    component "DimPromotion\n+ DimCurrency\n+ FactResellerSales\n(DiscountAmount, SalesAmount)" as T5 <<table>>
+
+    V5 -[#C62828]-> EP5
+    EP5 -[#F9A825]-> SVC5
+    SVC5 -[#E65100]-> Q5
+    Q5 -[#6A1B9A]-> C5
+    C5 -[#283593]-> T5
+}
+
+' ════════════════════════════════════════════════════════════════
+' SECTION 6: Order Fulfillment
+' ════════════════════════════════════════════════════════════════
+package "Cube Insights - Order Fulfillment" as SEC6 #FAFAFA {
+    component "Fulfillment KPIs\n+ Shipping Volume\n+ Freight by Territory\n+ Order-Ship Lag" as V6 <<visual>>
+    component "GET /api/cubeinsights/fulfillment-kpis\nGET /api/cubeinsights/shipping-volume\nGET /api/cubeinsights/freight-by-territory\nGET /api/cubeinsights/order-ship-lag" as EP6 <<endpoint>>
+    component "OlapService\n.GetFulfillmentKpisAsync()\n.GetShippingVolumeAsync()\n.GetFreightByTerritoryAsync()\n.GetOrderShipLagAsync()" as SVC6 <<service>>
+    component "MDX WITH\nFreight Revenue Ratio,\nFreight Per Unit\n+ Ship Date dimension" as Q6 <<query>>
+    component "Adventure Works\nDW2019 Cube" as C6 <<cube>>
+    component "FactResellerSales\n(Freight, OrderQuantity)\n+ DimSalesTerritory\n+ Order Date / Ship Date" as T6 <<table>>
+
+    V6 -[#C62828]-> EP6
+    EP6 -[#F9A825]-> SVC6
+    SVC6 -[#E65100]-> Q6
+    Q6 -[#6A1B9A]-> C6
+    C6 -[#283593]-> T6
+}
+
+legend right
+  |= Layer |= Description |
+  | <#FCE4EC> Visual | React UI component / chart |
+  | <#FFFDE7> Endpoint | ASP.NET Core API endpoint |
+  | <#FFF3E0> Service | C# service class |
+  | <#F3E5F5> Query | MDX or LINQ query |
+  | <#E8EAF6> Cube / <#E8F5E9> DW | Data storage |
+  | <#E3F2FD> Tables | Fact & dimension tables |
+endlegend
+
+footer AdventureWorks Sales BI Platform | Dashboard Data Flow Diagram
+
+@enduml

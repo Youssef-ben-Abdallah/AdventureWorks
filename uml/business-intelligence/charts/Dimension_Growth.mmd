@@ -1,0 +1,18 @@
+%% Dimension Table Row Counts
+%% Bar chart comparing the number of rows in each dimension table.
+%% Customer is the largest dimension at 19,820 rows; ShipMethod is the smallest at 5.
+%% Illustrates the relative sizes of dimension tables in the star schema.
+
+---
+config:
+  theme: base
+  themeVariables:
+    xyChart:
+      titleColor: "#333333"
+      backgroundColor: "#ffffff"
+---
+xychart-beta
+    title "Dimension Table Row Counts — AdventureWorks DW"
+    x-axis ["Customer", "Product", "Employee", "Currency", "Promotion", "Territory", "SalesPerson", "ShipMethod"]
+    y-axis "Row Count" 0 --> 21000
+    bar "Rows" [19820, 606, 296, 105, 16, 10, 17, 5]

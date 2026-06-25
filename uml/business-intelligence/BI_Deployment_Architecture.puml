@@ -1,0 +1,159 @@
+@startuml BI_Deployment_Architecture
+!theme cerulean-outline
+title AdventureWorks Sales BI Platform - Deployment Architecture
+caption Physical deployment topology with network connections, ports, and protocols
+
+skinparam defaultTextAlignment center
+skinparam shadowing true
+skinparam roundCorner 10
+
+skinparam node {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+}
+
+skinparam database {
+    BackgroundColor #E8F5E9
+    BorderColor #2E7D32
+}
+
+skinparam component {
+    BackgroundColor<<oltp>> #E8F5E9
+    BorderColor<<oltp>> #2E7D32
+    BackgroundColor<<dw>> #E3F2FD
+    BorderColor<<dw>> #1565C0
+    BackgroundColor<<ssas>> #F3E5F5
+    BorderColor<<ssas>> #6A1B9A
+    BackgroundColor<<ssis>> #FFF3E0
+    BorderColor<<ssis>> #E65100
+    BackgroundColor<<api>> #FFFDE7
+    BorderColor<<api>> #F9A825
+    BackgroundColor<<ui>> #FCE4EC
+    BorderColor<<ui>> #C62828
+    BackgroundColor<<browser>> #F5F5F5
+    BorderColor<<browser>> #616161
+}
+
+' ════════════════════════════════════════════════════════════════
+' SQL Server Instance
+' ════════════════════════════════════════════════════════════════
+node "SQL Server Instance\n(localhost / TCP :1433)" as SQLNODE {
+    database "AdventureWorks2019\n(OLTP Source)" as OLTP <<oltp>> {
+        component "Sales Schema" as SS <<oltp>>
+        component "Production Schema" as PS <<oltp>>
+        component "Person Schema" as PRS <<oltp>>
+        component "Purchasing Schema" as PUS <<oltp>>
+        component "HumanResources Schema" as HRS <<oltp>>
+    }
+
+    database "AdventureWorksDW_Sales\n(Custom Data Warehouse)" as DW <<dw>> {
+        component "Fact: Sales" as FS <<dw>>
+        component "Dims: Customer, Products,\nTerritory, Currency,\nSalesPerson, ShipMethod" as DD <<dw>>
+        component "vwSalesDashboard (View)" as VW <<dw>>
+        component "Stored Procedures\n(updateCurrency, updateCustomer,\nUpdateProduct, updateSales,\nupdateSalesPerson,\nupdateShipMethod, updateTerritory)" as SP <<dw>>
+    }
+
+    database "AdventureWorksDW2019\n(SSAS Source Database)" as SSASDB <<dw>> {
+        component "DimDate, DimProduct,\nDimProductSubcategory,\nDimProductCategory" as SSASDIM1 <<dw>>
+        component "DimSalesTerritory,\nDimEmployee, DimReseller,\nDimGeography" as SSASDIM2 <<dw>>
+        component "DimPromotion, DimCurrency,\nFactResellerSales" as SSASDIM3 <<dw>>
+    }
+}
+
+' ════════════════════════════════════════════════════════════════
+' SSAS Instance
+' ════════════════════════════════════════════════════════════════
+node "SSAS Multidimensional Instance\n(localhost / TCP :2383)" as SSASNODE {
+    component "Adventure Works DW2019\n(SSAS Cube Database)" as CUBEDB <<ssas>> {
+        component "Measure Group:\nFact Reseller Sales\n(12 Base + 8 Calculated Measures)" as MG <<ssas>>
+        component "9 Dimensions:\nDate, Product, Territory,\nEmployee, Reseller, Promotion,\nCurrency, Geography, ProductCategory" as CUBEDIMS <<ssas>>
+        component "MOLAP Storage\nAggregation Designs\nPartitions" as STORAGE <<ssas>>
+    }
+}
+
+' ════════════════════════════════════════════════════════════════
+' SSIS
+' ════════════════════════════════════════════════════════════════
+node "SQL Server Integration Services\n(SSIS Runtime)" as SSISNODE {
+    component "AW_Sales_DW_ETL Project" as ETLPROJ <<ssis>> {
+        component "01_Load_Dimension.dtsx\n(6 stored proc tasks)" as PKG1 <<ssis>>
+        component "02_Load_FactSales.dtsx\n(1 stored proc task)" as PKG2 <<ssis>>
+    }
+}
+
+' ════════════════════════════════════════════════════════════════
+' .NET API Server
+' ════════════════════════════════════════════════════════════════
+node "Application Server\n(.NET 9 Runtime)" as APINODE {
+    component "Ecom.Api\n(ASP.NET Core Web API)" as API <<api>> {
+        component "CubeInsightsController\n(22 endpoints)\n/api/cubeinsights/*" as CUBECTRL <<api>>
+        component "DashboardController\n(7 endpoints)\n/api/dashboard/*" as DASHCTRL <<api>>
+        component "OlapService\n(ADOMD.NET Client)" as OLAPSVC <<api>>
+        component "DashboardService\n(EF Core / AnalyticsDbContext)" as DASHSVC <<api>>
+        component "Swagger UI\n/swagger" as SWAGGER <<api>>
+    }
+}
+
+' ════════════════════════════════════════════════════════════════
+' React Frontend
+' ════════════════════════════════════════════════════════════════
+node "Frontend Dev Server\n(Node.js / Vite)" as FENODE {
+    component "ecom-ui\n(React + Vite + TypeScript)" as FEAPP <<ui>> {
+        component "Cube Insights\n(6 tabs)" as CI <<ui>>
+        component "Admin Dashboard\n(5 tabs)" as AD <<ui>>
+        component "Products, Cart,\nOrders, Auth" as OTHER <<ui>>
+    }
+}
+
+' ════════════════════════════════════════════════════════════════
+' Client Browsers
+' ════════════════════════════════════════════════════════════════
+node "Client Browsers" as CLIENTS {
+    component "Chrome / Edge /\nFirefox / Safari" as BROWSER <<browser>>
+}
+
+' ════════════════════════════════════════════════════════════════
+' Connections
+' ════════════════════════════════════════════════════════════════
+
+' ETL connections
+OLTP -[#2E7D32,bold]-> PKG1 : "TDS/TCP :1433\nExtract dimension data"
+OLTP -[#2E7D32,bold]-> PKG2 : "TDS/TCP :1433\nExtract fact data"
+PKG1 -[#E65100,bold]-> DW : "TDS/TCP :1433\nLoad dimensions\n(stored procs)"
+PKG2 -[#E65100,bold]-> DW : "TDS/TCP :1433\nLoad facts\n(updateSales)"
+
+' SSAS processing
+SSASDB -[#6A1B9A,bold]-> CUBEDB : "XMLA/TCP :2383\nCube processing\n(Full / Incremental)"
+
+' API to data sources
+OLAPSVC -[#6A1B9A,bold]-> CUBEDB : "XMLA/TCP :2383\nMDX queries via\nADOMD.NET"
+DASHSVC -[#1565C0,bold]-> DW : "TDS/TCP :1433\nLINQ queries via\nEF Core"
+OLAPSVC -[#1565C0,dashed]-> SSASDB : "TDS/TCP :1433\nLookup queries\n(Employee, Promotion,\nCurrency names)"
+
+' Frontend to API
+FEAPP -[#F9A825,bold]-> API : "HTTPS :57241\nREST/JSON\n(Axios/Fetch)"
+
+' Browser to Frontend
+BROWSER -[#C62828,bold]-> FEAPP : "HTTP :5173\n(Vite Dev Server)\nHMR WebSocket"
+
+' Browser to API (Swagger)
+BROWSER -[#616161,dashed]-> SWAGGER : "HTTPS :57241\n/swagger"
+
+legend right
+  |= Component |= Port |= Protocol |
+  | SQL Server | 1433 | TDS/TCP |
+  | SSAS | 2383 | XMLA/TCP |
+  | .NET API (HTTP) | 57240 | HTTP |
+  | .NET API (HTTPS) | 57241 | HTTPS |
+  | React Dev Server | 5173 | HTTP + WS |
+  | Swagger UI | 57241 | HTTPS (/swagger) |
+  |= Project |= Technology |= |
+  | AW_Sales_DW_ETL | SSIS (SQL Server) | |
+  | MultdimCubeAW2019 | SSAS Multidimensional | |
+  | Ecom.Api | ASP.NET Core .NET 9 | |
+  | ecom-ui | React + Vite + TS | |
+endlegend
+
+footer AdventureWorks Sales BI Platform | Deployment Architecture Diagram
+
+@enduml

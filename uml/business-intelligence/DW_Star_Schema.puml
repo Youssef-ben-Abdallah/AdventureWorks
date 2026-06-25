@@ -1,0 +1,141 @@
+@startuml DW_Star_Schema
+!theme cerulean-outline
+title AdventureWorksDW_Sales - Star Schema
+caption Data Warehouse dimensional model with fact and dimension tables
+
+skinparam class {
+    BackgroundColor<<fact>> #BBDEFB
+    BorderColor<<fact>> #1565C0
+    HeaderBackgroundColor<<fact>> #1565C0
+    FontColor<<fact>> #000000
+
+    BackgroundColor<<dim>> #C8E6C9
+    BorderColor<<dim>> #2E7D32
+    HeaderBackgroundColor<<dim>> #2E7D32
+    FontColor<<dim>> #000000
+}
+
+skinparam classAttributeIconSize 0
+skinparam shadowing true
+skinparam roundCorner 5
+
+' ════════════════════════════════════════
+' FACT TABLE
+' ════════════════════════════════════════
+class "Sales\n(Fact Table)" as Sales <<fact>> {
+    <b>PK</b> SalesOrderDetailID : int
+    --
+    <b>FK</b> CustomerID : int
+    <b>FK</b> ProductID : int
+    <b>FK</b> TerritoryID : int
+    <b>FK</b> CurrencyRateID : int
+    <b>FK</b> SalesPersonID : int
+    <b>FK</b> ShipMethodID : int
+    --
+    <i>Measures</i>
+    .. Quantity & Pricing ..
+    OrderQty : smallint
+    UnitPrice : money
+    UnitPriceDiscount : money
+    LineTotal : money
+    .. Order Totals ..
+    SubTotal : money
+    TaxAmt : money
+    Freight : money
+    TotalDue : money
+    .. Dates ..
+    OrderDate : datetime
+    DueDate : datetime
+    ShipDate : datetime
+}
+
+' ════════════════════════════════════════
+' DIMENSION TABLES
+' ════════════════════════════════════════
+class "Customer\n(Dimension)" as Customer <<dim>> {
+    <b>PK</b> CustomerID : int
+    --
+    FirstName : nvarchar
+    LastName : nvarchar
+    MiddleName : nvarchar
+    PersonType : nchar(2)
+}
+
+class "Products\n(Dimension)" as Products <<dim>> {
+    <b>PK</b> ProductID : int
+    --
+    Name : nvarchar
+    ProductNumber : nvarchar
+    Color : nvarchar
+    StandardCost : money
+    ListPrice : money
+    SubCategoryName : nvarchar
+    CategoryName : nvarchar
+}
+
+class "Territory\n(Dimension)" as Territory <<dim>> {
+    <b>PK</b> TerritoryID : int
+    --
+    Name : nvarchar
+    CountryRegionCode : nvarchar
+    Group : nvarchar
+}
+
+class "Currency\n(Dimension)" as Currency <<dim>> {
+    <b>PK</b> CurrencyID : int
+    --
+    CurrencyCode : nchar(3)
+    AverageRate : money
+    EndOfDayRate : money
+    Name : nvarchar
+}
+
+class "SalesPerson\n(Dimension)" as SalesPerson <<dim>> {
+    <b>PK</b> BusinessEntityID : int
+    --
+    SalesQuota : money
+    Bonus : money
+    CommissionPct : smallmoney
+    TerritoryID : int
+    FirstName : nvarchar
+    LastName : nvarchar
+}
+
+class "ShipMethod\n(Dimension)" as ShipMethod <<dim>> {
+    <b>PK</b> ShipMethodID : int
+    --
+    Name : nvarchar
+    ShipBase : money
+    ShipRate : money
+}
+
+' ════════════════════════════════════════
+' VIEW
+' ════════════════════════════════════════
+class "vwSalesDashboard\n(View)" as SalesView <<fact>> {
+    <i>Pre-joined view combining</i>
+    <i>Sales fact with all dimensions</i>
+    <i>for dashboard queries</i>
+}
+
+' ════════════════════════════════════════
+' RELATIONSHIPS (FK with cardinality)
+' ════════════════════════════════════════
+Customer "1" -[#2E7D32,bold]- "*" Sales : CustomerID
+Products "1" -[#2E7D32,bold]- "*" Sales : ProductID
+Territory "1" -[#2E7D32,bold]- "*" Sales : TerritoryID
+Currency "1" -[#2E7D32,bold]- "*" Sales : CurrencyRateID
+SalesPerson "1" -[#2E7D32,bold]- "*" Sales : SalesPersonID
+ShipMethod "1" -[#2E7D32,bold]- "*" Sales : ShipMethodID
+
+Sales .[#1565C0,dashed].> SalesView : feeds
+
+legend bottom right
+  |= Symbol |= Meaning |
+  | <b>PK</b> | Primary Key |
+  | <b>FK</b> | Foreign Key |
+  | 1 --- * | One-to-Many |
+  | Database | AdventureWorksDW_Sales |
+endlegend
+
+@enduml

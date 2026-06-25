@@ -1,0 +1,18 @@
+%% Data Quality Metrics
+%% Bar chart showing data quality dimension scores for the AdventureWorks DW.
+%% All metrics above 96%, demonstrating high data integrity.
+%% Completeness: 98.5%, Accuracy: 99.2%, Consistency: 97.8%, Timeliness: 96.5%, Uniqueness: 99.9%
+
+---
+config:
+  theme: base
+  themeVariables:
+    xyChart:
+      titleColor: "#333333"
+      backgroundColor: "#ffffff"
+---
+xychart-beta
+    title "Data Quality Metrics — AdventureWorks DW (%)"
+    x-axis ["Completeness", "Accuracy", "Consistency", "Timeliness", "Uniqueness"]
+    y-axis "Quality Score (%)" 90 --> 100
+    bar "Score" [98.5, 99.2, 97.8, 96.5, 99.9]

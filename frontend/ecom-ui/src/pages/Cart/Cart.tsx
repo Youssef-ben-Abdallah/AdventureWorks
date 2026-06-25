@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart, CartItem } from '../../context/CartContext';
-import { CatalogService } from '../../services/catalog';
 import { OrdersService } from '../../services/orders';
 import './Cart.css';
 
@@ -74,10 +73,8 @@ export const Cart = () => {
         <div className="cart-grid aw-page-content">
           <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px' }}>
             {items.map((i: CartItem) => {
-              const imgUrl = CatalogService.imgUrl(i.product.imageFileName);
               return (
                 <div key={i.product.id} className="item cart-item">
-                  <img className="thumb" src={imgUrl || '/assets/images/default.png'} alt={i.product.name} />
                   <div className="info">
                     <div className="name">{i.product.name}</div>
                     <div className="small text-muted">{i.product.categoryName} / {i.product.subCategoryName}</div>

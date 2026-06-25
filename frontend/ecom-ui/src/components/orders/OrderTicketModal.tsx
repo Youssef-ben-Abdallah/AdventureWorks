@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Order } from '../../../types/models';
+import { Order, OrderItem } from '../../types/models';
 import './OrderTicketModal.css';
 
 interface OrderTicketModalProps {
@@ -58,7 +58,7 @@ export const OrderTicketModal: React.FC<OrderTicketModalProps> = ({ isOpen, orde
 
   if (!isOpen || !order) return null;
 
-  const subTotal = (order.items || []).reduce((acc, i) => acc + (i.lineTotal ?? (i.qty * i.unitPrice)), 0);
+  const subTotal = (order.items || []).reduce((acc: number, i: OrderItem) => acc + (i.lineTotal ?? (i.qty * i.unitPrice)), 0);
 
   return (
     <div className="ticket-overlay" onClick={onClose}>
@@ -99,7 +99,7 @@ export const OrderTicketModal: React.FC<OrderTicketModalProps> = ({ isOpen, orde
 
         <div className="ticket-section">
           <div className="ticket-items-title">Items</div>
-          {(order.items || []).map((i, idx) => (
+          {(order.items || []).map((i: OrderItem, idx: number) => (
             <div className="ticket-item" key={idx}>
               <div className="ticket-name">{i.productName}</div>
               <div className="ticket-muted">x{i.qty}</div>

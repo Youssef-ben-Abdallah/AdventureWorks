@@ -14,22 +14,10 @@ class ProductsPage(BasePage):
                 try:
                     btn.click()
                 except Exception:
-                    self.driver.execute_script("""
-                        var nav = document.querySelector('nav');
-                        if (nav) nav.style.opacity = '0';
-                        var toasts = document.querySelector('.Toastify');
-                        if (toasts) toasts.style.opacity = '0';
-                    """)
                     self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
                     import time
                     time.sleep(0.1)
-                    btn.click()
-                    self.driver.execute_script("""
-                        var nav = document.querySelector('nav');
-                        if (nav) nav.style.opacity = '1';
-                        var toasts = document.querySelector('.Toastify');
-                        if (toasts) toasts.style.opacity = '1';
-                    """)
+                    self.driver.execute_script("arguments[0].click();", btn)
                 self.pause('add first enabled product to cart')
                 return
         raise Exception("No enabled Add to Cart buttons found")

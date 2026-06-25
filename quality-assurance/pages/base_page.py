@@ -26,21 +26,9 @@ class BasePage:
         try:
             element.click()
         except Exception:
-            self.driver.execute_script("""
-                var nav = document.querySelector('nav');
-                if (nav) nav.style.opacity = '0';
-                var toasts = document.querySelector('.Toastify');
-                if (toasts) toasts.style.opacity = '0';
-            """)
             self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
             time.sleep(0.1)
-            element.click()
-            self.driver.execute_script("""
-                var nav = document.querySelector('nav');
-                if (nav) nav.style.opacity = '1';
-                var toasts = document.querySelector('.Toastify');
-                if (toasts) toasts.style.opacity = '1';
-            """)
+            self.driver.execute_script("arguments[0].click();", element)
         self.pause(f'click {value}')
 
     def type_testid(self, value: str, text: str):

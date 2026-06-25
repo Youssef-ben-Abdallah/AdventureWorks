@@ -212,9 +212,9 @@ def test_non_admin_user_is_redirected_from_admin_route(driver, ui_base_url):
     driver.wait.until(EC.url_to_be(f'{ui_base_url}/'))
     driver.ui_pause('user login completed')
     driver.get(f'{ui_base_url}/admin')
-    driver.wait.until(lambda d: '/admin' not in d.current_url)
-    driver.ui_pause('non-admin redirected away from admin')
-    assert '/admin' not in driver.current_url
+    driver.wait.until(lambda d: 'Access Denied' in d.page_source)
+    driver.ui_pause('non-admin denied access to admin')
+    assert 'Access Denied' in driver.page_source
 
 
 @pytest.mark.static

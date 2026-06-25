@@ -65,11 +65,16 @@ end box
 == Page Load ==
 
 User -> React : Navigates to /orders
+activate React
 React -> React : useEffect triggers\ndata fetch on mount
 
 React -> Axios : OrdersService.myOrders()
+deactivate React
+activate Axios
 Axios -> Axios : Interceptor adds header:\nAuthorization: Bearer {token}\n(from localStorage)
 Axios -> Controller : **GET /api/orders/mine**
+deactivate Axios
+activate Controller
 
 == JWT Authentication & Authorization ==
 
@@ -77,28 +82,42 @@ Controller -> Controller : [Authorize] middleware\nvalidates JWT token
 
 alt No token or token expired
     Controller --> Axios : **401 Unauthorized**
+    deactivate Controller
+    activate Axios
     Axios --> React : catch(err) — err.response.status = 401
+    deactivate Axios
+    activate React
     React -> React : Redirect to\n/login?returnUrl=/orders
     React --> User : Login page shown
+    deactivate React
 else Token valid
     Controller -> Controller : Extract userId:\nUser.FindFirstValue(\n  ClaimTypes.NameIdentifier)
 
     alt userId is null/empty
         Controller --> Axios : **401 Unauthorized**
+        deactivate Controller
+        activate Axios
         Axios --> React : Error state
+        deactivate Axios
+        activate React
         React --> User : "Please log in" message
+        deactivate React
     else userId extracted
 
         == Query User's Orders ==
 
         Controller -> Repo : GetMyOrdersAsync(userId)
+        activate Repo
         Repo -> DB : SELECT * FROM Orders\n  WHERE UserId = @userId\n  INCLUDE Items\n    THEN INCLUDE Product\n  INCLUDE User\n  ORDER BY CreatedAtUtc DESC\n  AsNoTracking()
+        activate DB
         DB --> Repo : List<Order>
+        deactivate DB
         Repo --> Controller : List<Order>
+        deactivate Repo
 
         Controller -> Controller : Map each Order to OrderDto:\nrows.Select(Map).ToList()
 
-        note right of Controller
+        note over Controller
             OrderDto {
               Id, CreatedAtUtc,
               Status (Pending/Shipped/...),
@@ -111,23 +130,31 @@ else Token valid
         end note
 
         Controller --> Axios : **200 OK**\nOrderDto[]
+        deactivate Controller
+        activate Axios
         Axios --> React : orders[]
+        deactivate Axios
 
         == Render Orders ==
 
+        activate React
         React -> React : setOrders(data)\nsetLoading(false)
 
         alt No orders
             React --> User : "No orders yet"\nempty state message
+            deactivate React
         else Orders exist
             React -> React : Render order list:\n- Order #{id}\n- Date: {createdAtUtc}\n- Status badge (Pending/Shipped/...)\n- Total: ${total}\n- Expandable item details
             React --> User : Order list displayed\nwith status badges\nand item summaries
+            deactivate React
 
             == User Expands Order Details ==
 
             User -> React : Clicks on an order row\nto expand details
+            activate React
             React -> React : Toggle expanded state\nShow order items:\n- Product name\n- Qty x UnitPrice\n- LineTotal
             React --> User : Order items displayed\nwithin expanded row
+            deactivate React
         end
     end
 end

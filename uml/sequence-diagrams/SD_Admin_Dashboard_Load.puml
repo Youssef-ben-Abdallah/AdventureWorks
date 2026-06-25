@@ -60,10 +60,12 @@ end box
 == Navigation & Authorization Check ==
 
 Admin -> React : Navigates to /dashboard
+activate React
 React -> React : Route guard checks\nAuthContext.isAdmin
 
 alt Not admin
     React --> Admin : Redirect to /login\nor "Access Denied"
+    deactivate React
 else Is admin
 
     == Phase 1: Load Filter Options ==
@@ -71,41 +73,56 @@ else Is admin
     React -> React : useEffect triggers\ninitial data load
 
     React -> Axios : DashboardService.getFilters()
+    deactivate React
+    activate Axios
     Axios -> Axios : Interceptor: Authorization: Bearer {token}
     Axios -> Controller : **GET /api/dashboard/filters**
+    deactivate Axios
+    activate Controller
 
     Controller -> Controller : [Authorize(Roles="Admin")]\nvalidate JWT + role claim
 
     alt Not authorized (missing Admin role)
         Controller --> Axios : **403 Forbidden**
+        deactivate Controller
+        activate Axios
         Axios --> React : Error displayed
+        deactivate Axios
     else Authorized
         Controller -> Service : GetFiltersAsync(ct)
+        activate Service
 
         group Parallel AnalyticsDbContext queries
             Service -> DB : Territories.OrderBy(Name)
+            activate DB
             Service -> DB : Territories.Select(Group).Distinct()
             Service -> DB : SalesPeople.OrderBy(LastName, FirstName)
             Service -> DB : ShipMethods.OrderBy(Name)
             Service -> DB : Products.Select(CategoryName).Distinct()
             Service -> DB : Products.Select(SubCategoryName).Distinct()
             Service -> DB : Currencies.Select(CurrencyCode).Distinct()
+            DB --> Service : All filter dimension data
+            deactivate DB
         end
-
-        DB --> Service : All filter dimension data
 
         Service -> Service : Build DashboardFiltersDto {\n  Territories[], TerritoryGroups[],\n  SalesPeople[], ShipMethods[],\n  ProductCategories[], ProductSubCategories[],\n  Currencies[]\n}
 
         Service --> Controller : DashboardFiltersDto
+        deactivate Service
         Controller --> Axios : **200 OK** DashboardFiltersDto
+        deactivate Controller
+        activate Axios
         Axios --> React : filtersData
+        deactivate Axios
 
+        activate React
         React -> React : Populate filter dropdowns:\n- Date range pickers\n- Territory / Territory Group\n- Sales Person, Ship Method\n- Category / SubCategory\n- Currency
         React --> Admin : Filter panel rendered
 
         == Phase 2: Load Overview Data ==
 
         React -> Axios : DashboardService.getOverview(query)
+        deactivate React
         note right of React
             DashboardQuery {
               from?, to?,
@@ -116,21 +133,31 @@ else Is admin
             }
         end note
 
+        activate Axios
         Axios -> Controller : **GET /api/dashboard/overview**\n?from=...&to=...&territoryId=...
+        deactivate Axios
+        activate Controller
         Controller -> Service : GetOverviewAsync(query, ct)
+        activate Service
 
         Service -> DB : Complex LINQ joins:\n  SalesFacts\n  JOIN Products (Category, SubCategory)\n  JOIN Territories, SalesPeople\n  WHERE date range + filters\n  GROUP BY for aggregations
-
+        activate DB
         DB --> Service : Aggregated results
+        deactivate DB
 
         Service -> Service : Build OverviewDto {\n  Kpis: [\n    { "totalRevenue", value },\n    { "totalOrders", value },\n    { "avgOrderValue", value },\n    ...\n  ],\n  RevenueTrend: [{ X: month, Y: revenue }],\n  RevenueByCategory: [{ Key, Label, Value, Share }],\n  RevenueByTerritory: [{ Key, Label, Value, Share }],\n  TopProducts: [{ Key, Label, Value }]\n}
 
         Service --> Controller : OverviewDto
+        deactivate Service
         Controller --> Axios : **200 OK** OverviewDto
+        deactivate Controller
+        activate Axios
         Axios --> React : overviewData
+        deactivate Axios
 
         == Phase 3: Render Dashboard ==
 
+        activate React
         React -> React : Render KPI cards:\n- Total Revenue / Total Orders\n- Avg Order Value / Margin %
 
         React -> React : Render charts:\n- Revenue Trend (line chart)\n- Revenue by Category (pie/bar)\n- Revenue by Territory (bar)\n- Top Products (horizontal bar)
@@ -142,15 +169,28 @@ else Is admin
         Admin -> React : Changes filter selection\n(e.g. Territory = "Northwest")
         React -> React : Update DashboardQuery state
         React -> Axios : DashboardService.getOverview(\n  updatedQuery)
+        deactivate React
+        activate Axios
         Axios -> Controller : **GET /api/dashboard/overview**\n?territoryId=4&from=...
+        deactivate Axios
+        activate Controller
         Controller -> Service : GetOverviewAsync(updatedQuery, ct)
+        activate Service
         Service -> DB : Re-query with new filters
+        activate DB
         DB --> Service : Filtered results
+        deactivate DB
         Service --> Controller : OverviewDto (filtered)
+        deactivate Service
         Controller --> Axios : **200 OK**
+        deactivate Controller
+        activate Axios
         Axios --> React : filteredData
+        deactivate Axios
+        activate React
         React -> React : Re-render all charts\nwith filtered data
         React --> Admin : Dashboard updated\nwith applied filters
+        deactivate React
     end
 end
 

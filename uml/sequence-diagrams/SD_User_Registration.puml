@@ -77,7 +77,6 @@ else Validation passes
     deactivate React
     activate Axios
     Axios -> Controller : **POST /api/auth/register**\nBody: RegisterDto { Username, Email, Password }
-    deactivate Axios
     activate Controller
 
     Controller -> Service : new AppUser { UserName, Email,\n  EmailConfirmed = true }

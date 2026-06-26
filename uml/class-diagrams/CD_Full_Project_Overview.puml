@@ -1,0 +1,197 @@
+@startuml CD_Full_Project_Overview
+!theme cerulean-outline
+
+title AdventureWorks Sales BI Platform\nFull Project Architecture Overview
+caption End-to-end class structure connecting Frontend, Controllers, Services, Repositories, and Domain Entities.
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam packageStyle rectangle
+
+skinparam class {
+    BackgroundColor #FAFAFA
+    BorderColor #4A90D9
+    HeaderBackgroundColor #E8F0FE
+}
+
+' ─────────────────────────────────────────────
+'  Frontend (React)
+' ─────────────────────────────────────────────
+package "Frontend (React SPA)" <<Rectangle>> #FFF8E1 {
+    class "ApiClient" as ApiClient <<Service>> {
+        + get(url)
+        + post(url, data)
+    }
+
+    class "CatalogService" as FrontendCatalog {
+        + getProducts()
+        + getCategories()
+    }
+
+    class "OrdersService" as FrontendOrders {
+        + createOrder(order)
+        + myOrders()
+    }
+
+    class "CubeInsightsService" as FrontendCube {
+        + getKpis(filters)
+        + getProfitAnalysis(filters)
+    }
+
+    FrontendCatalog --> ApiClient : uses
+    FrontendOrders --> ApiClient : uses
+    FrontendCube --> ApiClient : uses
+}
+
+' ─────────────────────────────────────────────
+'  API Controllers
+' ─────────────────────────────────────────────
+package "Ecom.Api.Controllers" <<Rectangle>> #E3F2FD {
+    class ProductsController <<Controller>> {
+        + GetAll()
+        + Create(dto)
+    }
+
+    class OrdersController <<Controller>> {
+        + GetMyOrders()
+        + CreateOrder(dto)
+    }
+
+    class CubeInsightsController <<Controller>> {
+        + Kpis(filters)
+        + ProfitAnalysis(filters)
+    }
+    
+    class AuthController <<Controller>> {
+        + Login(dto)
+        + Register(dto)
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Service Layer
+' ─────────────────────────────────────────────
+package "Ecom.Api.Services" <<Rectangle>> #EFF6FF {
+    interface IOlapService <<Interface>> {
+        + GetKpisAsync(filters)
+    }
+    
+    class OlapService <<Service>> {
+        - _connectionString
+        + GetKpisAsync(filters)
+        + ExecuteMdxQuery(mdx)
+    }
+
+    interface IJwtTokenService <<Interface>>
+    class JwtTokenService <<Service>>
+
+    IOlapService <|.. OlapService
+    IJwtTokenService <|.. JwtTokenService
+}
+
+' ─────────────────────────────────────────────
+'  Repository Layer
+' ─────────────────────────────────────────────
+package "Ecom.Api.Repositories" <<Rectangle>> #F3E5F5 {
+    interface IProductRepository <<Interface>> {
+        + GetAllAsync()
+        + CreateAsync(product)
+    }
+    class ProductRepository <<Repository>>
+
+    interface IOrderRepository <<Interface>> {
+        + GetByUserIdAsync(userId)
+        + CreateAsync(order)
+    }
+    class OrderRepository <<Repository>>
+
+    IProductRepository <|.. ProductRepository
+    IOrderRepository <|.. OrderRepository
+}
+
+' ─────────────────────────────────────────────
+'  Domain Entities
+' ─────────────────────────────────────────────
+package "Ecom.Api.Entities" <<Rectangle>> #E8F5E9 {
+    class Product <<Entity>> {
+        + Id : int
+        + Sku : string
+        + Name : string
+        + Price : decimal
+        + StockQty : int
+    }
+
+    class Order <<Entity>> {
+        + Id : int
+        + Total : decimal
+        + Status : OrderStatus
+    }
+
+    class OrderItem <<Entity>> {
+        + ProductId : int
+        + Qty : int
+        + LineTotal : decimal
+    }
+
+    class AppUser <<Entity>> {
+        + Email : string
+        + Roles : list
+    }
+
+    Order *-- OrderItem
+    OrderItem --> Product
+}
+
+' ─────────────────────────────────────────────
+'  Data Access / Infrastructure
+' ─────────────────────────────────────────────
+package "Data Access" <<Database>> #F0FDF4 {
+    class OltpDbContext <<DbContext>> {
+        + Products : DbSet<Product>
+        + Orders : DbSet<Order>
+    }
+
+    class AnalyticsDbContext <<DbContext>> {
+        + Sales : DbSet<SalesFact>
+    }
+    
+    class AdomdConnection <<External>> {
+        + Open()
+    }
+}
+
+' ─────────────────────────────────────────────
+'  Cross-Boundary Relationships
+' ─────────────────────────────────────────────
+ApiClient ..> ProductsController : HTTP GET/POST
+ApiClient ..> OrdersController : HTTP GET/POST
+ApiClient ..> CubeInsightsController : HTTP GET/POST
+ApiClient ..> AuthController : HTTP POST
+
+ProductsController --> IProductRepository : injects
+OrdersController --> IOrderRepository : injects
+CubeInsightsController --> IOlapService : injects
+AuthController --> IJwtTokenService : injects
+
+ProductRepository --> OltpDbContext : queries
+OrderRepository --> OltpDbContext : queries
+OlapService --> AdomdConnection : MDX queries
+
+OltpDbContext --> Product : manages
+OltpDbContext --> Order : manages
+
+' ─────────────────────────────────────────────
+'  Legend
+' ─────────────────────────────────────────────
+legend bottom right
+    |= Line |= Meaning |
+    | --> | Dependency / Injection |
+    | ..> | HTTP Call (Network Boundary) |
+    | <|.. | Interface Implementation |
+    | *-- | Composition |
+endlegend
+
+@enduml

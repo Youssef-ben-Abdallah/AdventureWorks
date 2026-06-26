@@ -21,7 +21,7 @@ export const Layout = () => {
   return (
     <>
       <Navbar />
-      <main className="page" style={{ paddingTop: '72px' }}>
+      <main className="page">
         <Outlet />
       </main>
       <Footer />

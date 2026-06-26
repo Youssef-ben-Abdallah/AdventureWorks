@@ -66,9 +66,11 @@ end box
 == Page Load ==
 
 User -> React : Navigates to /products
+activate React
 React -> React : useEffect triggers\ndata fetch on mount
 
 React -> Axios : CatalogService.getCategories()
+deactivate React
 activate Axios
 Axios -> CatCtrl : **GET /api/categories**
 deactivate Axios
@@ -82,8 +84,10 @@ deactivate CatCtrl
 activate Axios
 Axios --> React : categories
 deactivate Axios
+activate React
 
 React -> Axios : CatalogService.getProducts()
+deactivate React
 activate Axios
 Axios -> ProdCtrl : **GET /api/products**
 deactivate Axios
@@ -105,14 +109,18 @@ deactivate ProdCtrl
 activate Axios
 Axios --> React : products[]
 deactivate Axios
+activate React
 
 React -> React : Render product grid\nwith category filter sidebar
+deactivate React
 
 == Product Image Loading ==
 
 loop For each product with ImageFileName
+    activate React
     React -> React : CatalogService.imgUrl(filename)\n=> http://localhost:57241/images/product/{filename}
     React -> Axios : <img src={imgUrl} />
+    deactivate React
     activate Axios
     Axios -> ProdCtrl : **GET /images/product/{filename}**
     deactivate Axios
@@ -165,6 +173,8 @@ alt Product not found
     activate Axios
     Axios --> React : Error displayed
     deactivate Axios
+    activate React
+    deactivate React
 else Product found
     Repo --> ProdCtrl : Product
     deactivate Repo

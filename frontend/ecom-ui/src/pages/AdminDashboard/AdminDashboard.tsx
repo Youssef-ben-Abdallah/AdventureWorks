@@ -41,6 +41,56 @@ export const AdminDashboard = () => {
   const [subFilter, setSubFilter] = useState('');
   const [prodFilter, setProdFilter] = useState('');
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, catFilter, subFilter, prodFilter]);
+
+  const getPageData = (total: number) => {
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const currentPage = Math.min(page, totalPages);
+    const startItem = total ? (currentPage - 1) * pageSize + 1 : 0;
+    const endItem = total ? Math.min(currentPage * pageSize, total) : 0;
+    return { totalPages, currentPage, startItem, endItem };
+  };
+
+  const renderPagination = (total: number) => {
+    const { totalPages, currentPage, startItem, endItem } = getPageData(total);
+    if (total === 0) return null;
+
+    const range: number[] = [];
+    const delta = 2;
+    for (let i = Math.max(1, currentPage - delta); i <= Math.min(totalPages, currentPage + delta); i++) {
+      range.push(i);
+    }
+
+    return (
+      <div className="pagination admin-pagination">
+        <div className="page-info">
+          Showing <strong>{startItem}–{endItem}</strong> of <strong>{total}</strong>
+        </div>
+        <div className="page-actions">
+          <button className="page-btn" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1}>
+            <span className="material-icons">chevron_left</span>
+          </button>
+          <div className="page-numbers">
+            {range.map(n => (
+              <button key={n} className={`page-num ${n === currentPage ? 'active' : ''}`} onClick={() => setPage(n)}>
+                {n}
+              </button>
+            ))}
+          </div>
+          <button className="page-btn" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= totalPages}>
+            <span className="material-icons">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   useEffect(() => {
     reloadAll();
   }, []);
@@ -165,6 +215,19 @@ export const AdminDashboard = () => {
   const filteredSubs = subCategories.filter(s => s.name.toLowerCase().includes(subFilter.toLowerCase()));
   const filteredProds = products.filter(p => p.name.toLowerCase().includes(prodFilter.toLowerCase()) || p.sku?.toLowerCase().includes(prodFilter.toLowerCase()));
 
+  // Paged lists
+  const { currentPage: catPage } = getPageData(filteredCats.length);
+  const pagedCats = filteredCats.slice((catPage - 1) * pageSize, catPage * pageSize);
+
+  const { currentPage: subPage } = getPageData(filteredSubs.length);
+  const pagedSubs = filteredSubs.slice((subPage - 1) * pageSize, subPage * pageSize);
+
+  const { currentPage: prodPage } = getPageData(filteredProds.length);
+  const pagedProds = filteredProds.slice((prodPage - 1) * pageSize, prodPage * pageSize);
+
+  const { currentPage: orderPage } = getPageData(orders.length);
+  const pagedOrders = orders.slice((orderPage - 1) * pageSize, orderPage * pageSize);
+
   return (
     <div className="admin-page">
       <div className="aw-page-header with-inner">
@@ -220,7 +283,7 @@ export const AdminDashboard = () => {
               <table className="admin-table">
                 <thead><tr><th>Name</th><th></th></tr></thead>
                 <tbody>
-                  {filteredCats.map(c => (
+                  {pagedCats.map(c => (
                     <tr key={c.id}>
                       <td className="name-cell">{c.name}</td>
                       <td style={{ textAlign: 'right' }}>
@@ -232,6 +295,7 @@ export const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+            {renderPagination(filteredCats.length)}
           </div>
         </div>
 
@@ -252,7 +316,7 @@ export const AdminDashboard = () => {
               <table className="admin-table">
                 <thead><tr><th>Name</th><th>Category</th><th></th></tr></thead>
                 <tbody>
-                  {filteredSubs.map(s => (
+                  {pagedSubs.map(s => (
                     <tr key={s.id}>
                       <td className="name-cell">{s.name}</td>
                       <td>{getCategoryName(s.categoryId)}</td>
@@ -265,6 +329,7 @@ export const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+            {renderPagination(filteredSubs.length)}
           </div>
         </div>
 
@@ -285,7 +350,7 @@ export const AdminDashboard = () => {
               <table className="admin-table">
                 <thead><tr><th>SKU</th><th>Name</th><th>Category</th><th>Sub-category</th><th style={{ textAlign: 'right' }}>Price</th><th style={{ textAlign: 'right' }}>Stock</th><th></th></tr></thead>
                 <tbody>
-                  {filteredProds.map(p => (
+                  {pagedProds.map(p => (
                     <tr key={p.id}>
                       <td className="mono">{p.sku}</td>
                       <td className="name-cell">{p.name}</td>
@@ -302,6 +367,7 @@ export const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+            {renderPagination(filteredProds.length)}
           </div>
         </div>
 
@@ -315,7 +381,7 @@ export const AdminDashboard = () => {
               <table className="admin-table">
                 <thead><tr><th>#</th><th>Date</th><th>Status</th><th style={{ textAlign: 'right' }}>Total</th><th>Change Status</th></tr></thead>
                 <tbody>
-                  {orders.map(o => {
+                  {pagedOrders.map(o => {
                     const statusObj = STATUSES.find(s => s.id === o.status) || STATUSES[0];
                     return (
                       <tr key={o.id}>
@@ -344,6 +410,7 @@ export const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+            {renderPagination(orders.length)}
           </div>
         </div>
 

@@ -163,10 +163,12 @@ else Is admin
         React -> React : Render charts:\n- Revenue Trend (line chart)\n- Revenue by Category (pie/bar)\n- Revenue by Territory (bar)\n- Top Products (horizontal bar)
 
         React --> Admin : Full dashboard rendered\nwith interactive charts
+        deactivate React
 
         == User Applies Filters ==
 
         Admin -> React : Changes filter selection\n(e.g. Territory = "Northwest")
+        activate React
         React -> React : Update DashboardQuery state
         React -> Axios : DashboardService.getOverview(\n  updatedQuery)
         deactivate React

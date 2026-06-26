@@ -103,6 +103,9 @@ else Token valid
         activate Axios
         Axios --> React : Show error
         deactivate Axios
+        activate React
+        React --> User : Show error message
+        deactivate React
     else Items provided
 
         == Validate Each Item & Build Order ==
@@ -123,6 +126,9 @@ else Token valid
                 activate Axios
                 Axios --> React : Show error
                 deactivate Axios
+                activate React
+                React --> User : Show error message
+                deactivate React
             else Product found
                 ProdRepo --> Controller : Product
                 deactivate ProdRepo
@@ -133,6 +139,9 @@ else Token valid
                     activate Axios
                     Axios --> React : Show error
                     deactivate Axios
+                    activate React
+                    React --> User : Show error message
+                    deactivate React
                 else Stock available
                     Controller -> Controller : Deduct stock:\n  p.StockQty -= item.Qty
                     Controller -> Controller : Create OrderItem:\n  { ProductId, Qty,\n    UnitPrice = product.Price }

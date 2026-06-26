@@ -469,3 +469,87 @@
   justify-content: flex-end;
   gap: 1rem;
 }
+
+/* Pagination */
+.admin-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid rgba(99,102,241,0.1);
+}
+.admin-pagination .page-info {
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+.admin-pagination .page-info strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.admin-pagination .page-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.admin-pagination .page-btn {
+  background: rgba(99,102,241,0.05);
+  border: 1px solid rgba(99,102,241,0.2);
+  color: var(--text-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.admin-pagination .page-btn:hover:not(:disabled) {
+  background: rgba(99,102,241,0.15);
+  border-color: rgba(99,102,241,0.4);
+}
+.admin-pagination .page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.admin-pagination .page-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+.admin-pagination .page-num {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.admin-pagination .page-num:hover {
+  background: rgba(99,102,241,0.05);
+  color: var(--text-primary);
+}
+.admin-pagination .page-num.active {
+  background: linear-gradient(135deg, #6366f1, #06b6d4);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+}
+[data-theme="light"] .admin-pagination {
+  background: #f8fafc;
+  border-color: rgba(79,70,229,0.15);
+}
+[data-theme="light"] .admin-pagination .page-info { color: #64748b; }
+[data-theme="light"] .admin-pagination .page-num { color: #64748b; }
+[data-theme="light"] .admin-pagination .page-btn { background: #fff; border-color: #cbd5e1; }
+[data-theme="light"] .admin-pagination .page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #94a3b8; }
+[data-theme="light"] .admin-pagination .page-num.active {
+  background: linear-gradient(135deg, #4f46e5, #0891b2);
+  box-shadow: 0 4px 12px rgba(79,70,229,0.2);
+}

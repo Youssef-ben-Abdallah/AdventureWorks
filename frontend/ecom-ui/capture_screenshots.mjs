@@ -18,6 +18,8 @@ const mockOrders = [
 
 const WAIT_MS = 5000;
 const FAST_WAIT = 1000;
+const DASH_WAIT = 10000;
+const CUBE_WAIT = 30000;
 
 async function runTheme(theme) {
   console.log(`Processing theme: ${theme}`);
@@ -31,7 +33,18 @@ async function runTheme(theme) {
     await p.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
   };
 
-  // 1. Sign up page
+  // 1. No Sign In
+  await page.goto(`${BASE_URL}/`);
+  await setTheme(page);
+  await page.waitForTimeout(WAIT_MS);
+  await page.screenshot({ path: `screenshot/${theme}/home_no_signin.png`, fullPage: true });
+
+  await page.goto(`${BASE_URL}/products`);
+  await setTheme(page);
+  await page.waitForTimeout(WAIT_MS);
+  await page.screenshot({ path: `screenshot/${theme}/products_no_signin.png`, fullPage: true });
+
+  // 2. Sign up page
   await page.goto(`${BASE_URL}/login`);
   await setTheme(page);
   await page.waitForTimeout(WAIT_MS);
@@ -40,7 +53,7 @@ async function runTheme(theme) {
   await page.waitForTimeout(FAST_WAIT);
   await page.screenshot({ path: `screenshot/${theme}/login_register.png`, fullPage: true });
 
-  // Normal User Home
+  // 3. Normal User Home
   await page.evaluate(() => {
     localStorage.setItem('token', 'fake-token-for-ui');
     localStorage.setItem('role', 'User');
@@ -50,6 +63,22 @@ async function runTheme(theme) {
   await setTheme(page);
   await page.waitForTimeout(WAIT_MS);
   await page.screenshot({ path: `screenshot/${theme}/home_user.png`, fullPage: true });
+
+  // Normal User Add to Cart
+  await page.goto(`${BASE_URL}/products`);
+  await setTheme(page);
+  await page.waitForTimeout(WAIT_MS);
+  
+  if (await page.locator('[data-testid="product-add-to-cart"]:not([disabled])').count() > 0) {
+    await page.locator('[data-testid="product-add-to-cart"]:not([disabled])').first().click();
+    await page.waitForTimeout(FAST_WAIT);
+    await page.screenshot({ path: `screenshot/${theme}/products_user_added_to_cart.png`, fullPage: true });
+
+    await page.goto(`${BASE_URL}/cart`);
+    await setTheme(page);
+    await page.waitForTimeout(WAIT_MS);
+    await page.screenshot({ path: `screenshot/${theme}/cart_user.png`, fullPage: true });
+  }
 
   await context.close();
 
@@ -70,7 +99,7 @@ async function runTheme(theme) {
   await page.click('[data-testid="auth-submit"]');
   await page.waitForTimeout(3000);
 
-  // 3. Base Pages
+  // Base Pages
   const pages = [
     { name: 'home_admin', url: '/' },
     { name: 'products', url: '/products' },
@@ -84,7 +113,7 @@ async function runTheme(theme) {
     await page.screenshot({ path: `screenshot/${theme}/${p.name}.png`, fullPage: true });
   }
 
-  // Dashboard Tabs
+  // Dashboard Tabs (10s wait)
   await page.goto(`${BASE_URL}/dashboard`);
   await setTheme(page);
   await page.waitForTimeout(WAIT_MS);
@@ -92,11 +121,12 @@ async function runTheme(theme) {
   let dashCount = await dashTabs.count();
   for (let i = 0; i < dashCount; i++) {
     await dashTabs.nth(i).click();
-    await page.waitForTimeout(WAIT_MS);
+    console.log(`[${theme}] Dashboard tab ${i} - Waiting ${DASH_WAIT}ms...`);
+    await page.waitForTimeout(DASH_WAIT);
     await page.screenshot({ path: `screenshot/${theme}/dashboard_tab_${i}.png`, fullPage: true });
   }
 
-  // Cube Insights Tabs
+  // Cube Insights Tabs (30s wait)
   await page.goto(`${BASE_URL}/cube-insights`);
   await setTheme(page);
   await page.waitForTimeout(WAIT_MS);
@@ -104,11 +134,12 @@ async function runTheme(theme) {
   let cubeCount = await cubeTabs.count();
   for (let i = 0; i < cubeCount; i++) {
     await cubeTabs.nth(i).click();
-    await page.waitForTimeout(WAIT_MS);
+    console.log(`[${theme}] Cube Insights tab ${i} - Waiting ${CUBE_WAIT}ms...`);
+    await page.waitForTimeout(CUBE_WAIT);
     await page.screenshot({ path: `screenshot/${theme}/cube_insights_tab_${i}.png`, fullPage: true });
   }
 
-  // Admin Dashboard Modals
+  // Admin Dashboard Lists & Modals
   await page.goto(`${BASE_URL}/admin`);
   await setTheme(page);
   await page.waitForTimeout(WAIT_MS);
@@ -120,16 +151,20 @@ async function runTheme(theme) {
 
   // Categories
   await page.locator('[data-testid="admin-tab-categories"]').click();
-  await page.waitForTimeout(FAST_WAIT);
+  await page.waitForTimeout(WAIT_MS);
+  await page.screenshot({ path: `screenshot/${theme}/admin_list_categories.png`, fullPage: true });
+  
   await page.locator('.admin-section.visible .btn-primary-glow').click();
   await page.waitForTimeout(FAST_WAIT);
   await page.screenshot({ path: `screenshot/${theme}/admin_cat_modal_new.png`, fullPage: true });
   await closeEsc();
+  
   if (await page.locator('.admin-section.visible .tbl-btn:has-text("Edit")').count() > 0) {
     await page.locator('.admin-section.visible .tbl-btn:has-text("Edit")').first().click();
     await page.waitForTimeout(FAST_WAIT);
     await page.screenshot({ path: `screenshot/${theme}/admin_cat_modal_edit.png`, fullPage: true });
     await closeEsc();
+    
     await page.locator('.admin-section.visible .tbl-btn-danger:has-text("Del")').first().click();
     await page.waitForTimeout(FAST_WAIT);
     await page.screenshot({ path: `screenshot/${theme}/admin_cat_modal_del.png`, fullPage: true });
@@ -138,16 +173,20 @@ async function runTheme(theme) {
 
   // Sub-categories
   await page.locator('[data-testid="admin-tab-subcategories"]').click();
-  await page.waitForTimeout(FAST_WAIT);
+  await page.waitForTimeout(WAIT_MS);
+  await page.screenshot({ path: `screenshot/${theme}/admin_list_subcategories.png`, fullPage: true });
+  
   await page.locator('.admin-section.visible .btn-primary-glow').click();
   await page.waitForTimeout(FAST_WAIT);
   await page.screenshot({ path: `screenshot/${theme}/admin_subcat_modal_new.png`, fullPage: true });
   await closeEsc();
+  
   if (await page.locator('.admin-section.visible .tbl-btn:has-text("Edit")').count() > 0) {
     await page.locator('.admin-section.visible .tbl-btn:has-text("Edit")').first().click();
     await page.waitForTimeout(FAST_WAIT);
     await page.screenshot({ path: `screenshot/${theme}/admin_subcat_modal_edit.png`, fullPage: true });
     await closeEsc();
+    
     await page.locator('.admin-section.visible .tbl-btn-danger:has-text("Del")').first().click();
     await page.waitForTimeout(FAST_WAIT);
     await page.screenshot({ path: `screenshot/${theme}/admin_subcat_modal_del.png`, fullPage: true });
@@ -156,16 +195,20 @@ async function runTheme(theme) {
 
   // Products
   await page.locator('[data-testid="admin-tab-products"]').click();
-  await page.waitForTimeout(FAST_WAIT);
+  await page.waitForTimeout(WAIT_MS);
+  await page.screenshot({ path: `screenshot/${theme}/admin_list_products.png`, fullPage: true });
+  
   await page.locator('.admin-section.visible .btn-primary-glow').click();
   await page.waitForTimeout(FAST_WAIT);
   await page.screenshot({ path: `screenshot/${theme}/admin_prod_modal_new.png`, fullPage: true });
   await closeEsc();
+  
   if (await page.locator('.admin-section.visible .tbl-btn:has-text("Edit")').count() > 0) {
     await page.locator('.admin-section.visible .tbl-btn:has-text("Edit")').first().click();
     await page.waitForTimeout(FAST_WAIT);
     await page.screenshot({ path: `screenshot/${theme}/admin_prod_modal_edit.png`, fullPage: true });
     await closeEsc();
+    
     await page.locator('.admin-section.visible .tbl-btn-danger:has-text("Del")').first().click();
     await page.waitForTimeout(FAST_WAIT);
     await page.screenshot({ path: `screenshot/${theme}/admin_prod_modal_del.png`, fullPage: true });
@@ -174,12 +217,15 @@ async function runTheme(theme) {
 
   // Orders
   await page.locator('[data-testid="admin-tab-orders"]').click();
-  await page.waitForTimeout(FAST_WAIT);
+  await page.waitForTimeout(WAIT_MS);
+  await page.screenshot({ path: `screenshot/${theme}/admin_list_orders.png`, fullPage: true });
+  
   if (await page.locator('.admin-section.visible .tbl-btn:has-text("Ticket")').count() > 0) {
     await page.locator('.admin-section.visible .tbl-btn:has-text("Ticket")').first().click();
     await page.waitForTimeout(FAST_WAIT);
     await page.screenshot({ path: `screenshot/${theme}/admin_order_ticket.png`, fullPage: true });
     await closeEsc();
+    
     await page.locator('.admin-section.visible .tbl-btn-danger:has-text("Del")').first().click();
     await page.waitForTimeout(FAST_WAIT);
     await page.screenshot({ path: `screenshot/${theme}/admin_order_modal_del.png`, fullPage: true });
@@ -195,7 +241,7 @@ async function runAll() {
 
   await runTheme('light');
   await runTheme('dark');
-  console.log('Screenshots completed.');
+  console.log('All screenshots completed.');
 }
 
 runAll().catch(console.error);
